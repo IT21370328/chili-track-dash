@@ -29,7 +29,7 @@ const Expenses = () => {
   }
 
   const filteredExpenses = mockExpenses.filter(expense => 
-    filter === '' || expense.category.toLowerCase().includes(filter.toLowerCase())
+    filter === 'all' || filter === '' || expense.category.toLowerCase().includes(filter.toLowerCase())
   )
 
   const categories = [...new Set(mockExpenses.map(e => e.category))]
@@ -119,7 +119,7 @@ const Expenses = () => {
                     <SelectValue placeholder="Filter by category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {categories.map(category => (
                       <SelectItem key={category} value={category}>{category}</SelectItem>
                     ))}
