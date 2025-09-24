@@ -1,0 +1,19 @@
+directories:
+  output: dist_electron
+  buildResources: build
+appId: com.yourcompany.vite-react-shadcn-ts
+productName: ViteReactShadcnTS
+files:
+  - filter:
+      - backend/**/*
+      - dist/**/*
+win:
+  target: nsis
+  icon: backend/assets/icon.png
+mac:
+  target: dmg
+  icon: backend/assets/icon.icns
+linux:
+  target: AppImage
+  icon: backend/assets/icon.png
+electronVersion: 38.1.0

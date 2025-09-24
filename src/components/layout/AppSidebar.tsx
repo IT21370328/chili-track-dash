@@ -6,77 +6,61 @@ import {
   Factory, 
   Truck, 
   FileText, 
-  Users 
-} from "lucide-react"
-import { NavLink } from "react-router-dom"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
-} from "@/components/ui/sidebar"
+  Users   
+} from "lucide-react";
+import { NavLink, Link } from "react-router-dom";
+import Logo from "../../assets/logo.jpg";
+
 
 const menuItems = [
-  { title: "Dashboard", url: "/", icon: Home },
+  { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Purchasing", url: "/purchasing", icon: ShoppingCart },
   { title: "Petty Cash", url: "/petty-cash", icon: Wallet },
   { title: "Expenses", url: "/expenses", icon: Receipt },
   { title: "Production", url: "/production", icon: Factory },
-  { title: "Prima Transactions", url: "/prima", icon: Truck },
-  { title: "Bills", url: "/bills", icon: FileText },
+  { title: "Prima Delivery", url: "/prima", icon: Truck },
   { title: "Employee Salaries", url: "/salaries", icon: Users },
-]
+];
 
 export function AppSidebar() {
-  const { state } = useSidebar()
-  const isCollapsed = state === "collapsed"
-
   return (
-    <Sidebar collapsible="icon">
-      <SidebarContent>
-        <div className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Factory className="w-5 h-5 text-primary-foreground" />
-            </div>
-            {!isCollapsed && (
-              <div>
-                <h2 className="font-semibold text-sidebar-foreground">Food Production</h2>
-                <p className="text-xs text-muted-foreground">Expense Tracker</p>
-              </div>
-            )}
-          </div>
+    <div className="fixed top-0 left-0 h-screen w-64 bg-gray-900 text-white shadow-lg flex flex-col">
+      
+      {/* Logo Section */}
+      <div className="flex items-center gap-3 p-4 border-b border-gray-700 pt-[50px]">
+        <div className="w-10 h-10 rounded-sm flex items-center justify-center shadow-lg">
+          <img src={Logo} alt="Logo" className="w-10 h-10 object-cover rounded-sm"/>
         </div>
-        
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink 
-                      to={item.url} 
-                      end
-                      className={({ isActive }) =>
-                        `sidebar-item ${isActive ? 'active' : ''}`
-                      }
-                    >
-                      <item.icon className="w-5 h-5" />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
-  )
+        <div>
+          <h2 className="font-bold text-lg">Ma's De Cozta</h2>
+          <p className="text-xs text-gray-400">Production Tracking System</p>
+        </div>
+      </div>
+
+      {/* Menu Items */}
+      <nav className="flex-1 mt-4 overflow-y-auto">
+        {menuItems.map((item) => (
+          <NavLink 
+            to={item.url} 
+            key={item.title}
+            className={({ isActive }) =>
+              `flex items-center gap-3 p-5 mx-2 rounded-xl transition-all duration-300
+               ${isActive ? "bg-blue-700 text-white shadow-md" : "text-gray-400 hover:bg-gray-800 hover:text-white"}`
+            }
+          >
+            <item.icon className="w-5 h-5" />
+            <span className="truncate">{item.title}</span>
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Sign Out */}
+      <div className="p-4 border-t border-gray-700">
+        <Link to="/"><button className="flex items-center gap-3 w-full p-3 rounded-xl hover:bg-gray-800 transition-all duration-300">
+          <FileText className="w-5 h-5" />
+          <span>Log Out</span>
+        </button></Link>
+      </div>
+    </div>
+  );
 }

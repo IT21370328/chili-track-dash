@@ -10,9 +10,9 @@ import PettyCash from "./pages/PettyCash";
 import Expenses from "./pages/Expenses";
 import Production from "./pages/Production";
 import PrimaTransactions from "./pages/PrimaTransactions";
-import Bills from "./pages/Bills";
 import Salaries from "./pages/Salaries";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -22,20 +22,22 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <MainLayout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
+        <Routes>
+          {/* Login page does NOT use MainLayout */}
+          <Route path="/" element={<Login />} />
+
+          {/* All other routes are wrapped in MainLayout */}
+          <Route element={<MainLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/purchasing" element={<Purchasing />} />
             <Route path="/petty-cash" element={<PettyCash />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/production" element={<Production />} />
             <Route path="/prima" element={<PrimaTransactions />} />
-            <Route path="/bills" element={<Bills />} />
             <Route path="/salaries" element={<Salaries />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </MainLayout>
+          </Route>
+        </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
