@@ -1,171 +1,166 @@
-import { TrendingUp, TrendingDown, DollarSign, ShoppingCart, Wallet, Receipt } from "lucide-react"
-import { SummaryCard } from "@/components/dashboard/SummaryCard"
-import { calculateSummary, mockExpenses, mockPrimaTransactions } from "@/lib/mockData"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts'
+import { useState, useEffect, useMemo } from "react";
+import { Plus, Clock, Package, DollarSign, Wallet, TrendingUp, TrendingDown, FileText } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from "chart.js";
+import { Bar, Line } from "react-chartjs-2";
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
+
+const API_URL = "http://localhost:5000";
+
+interface PrimaTransaction { id: number; poNumber: string; kilosDelivered: number; amount: number; paymentStatus: "Pending" | "Approved" | "Paid" | "Rejected"; }
+interface Production { id: number; kilosOut: number; }
+interface Purchase { id: number; quantity: number; color: "red" | "green"; }
+interface PettyCashTransaction { id: number; amount: number; type: "inflow" | "outflow"; }
+interface Expense { id: number; date: string; category: string; description: string; cost: number; }
+
+const DRY_RATIO = 0.1;
 
 const Dashboard = () => {
-  const summary = calculateSummary()
+  const [transactions, setTransactions] = useState<PrimaTransaction[]>([]);
+  const [production, setProduction] = useState<Production[]>([]);
+  const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [pettyCash, setPettyCash] = useState<PettyCashTransaction[]>([]);
+  const [pettyCashSummary, setPettyCashSummary] = useState({ totalInflow: 0, totalOutflow: 0, balance: 0, totalTransactions: 0 });
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const { toast } = useToast();
 
-  // Chart data
-  const expensesByCategory = mockExpenses.reduce((acc, expense) => {
-    const existing = acc.find(item => item.category === expense.category)
-    if (existing) {
-      existing.amount += expense.cost
-    } else {
-      acc.push({ category: expense.category, amount: expense.cost })
+  const fetchData = async () => {
+    try {
+      const [txRes, prodRes, purchaseRes, pettyRes, pettySummaryRes, expenseRes] = await Promise.all([
+        fetch(`${API_URL}/primatransactions`),
+        fetch(`${API_URL}/production`),
+        fetch(`${API_URL}/purchases`),
+        fetch(`${API_URL}/pettycash`),
+        fetch(`${API_URL}/pettycash/summary`),
+        fetch(`${API_URL}/expenses`)
+      ]);
+
+      setTransactions(await txRes.json());
+      setProduction(await prodRes.json());
+      setPurchases(await purchaseRes.json());
+      const pettyData = await pettyRes.json();
+      setPettyCash(pettyData);
+      const pettySummary = await pettySummaryRes.json();
+      setPettyCashSummary({ totalInflow: pettySummary.totalInflow, totalOutflow: pettySummary.totalOutflow, balance: pettySummary.balance, totalTransactions: pettyData.length });
+      setExpenses(await expenseRes.json());
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to fetch dashboard data", variant: "destructive" });
+      console.error(err);
     }
-    return acc
-  }, [] as { category: string; amount: number }[])
+  };
 
-  const monthlyData = [
-    { month: 'Nov', income: 3500, expenses: 2800 },
-    { month: 'Dec', income: 4200, expenses: 3100 },
-    { month: 'Jan', income: 3750, expenses: 2950 },
-  ]
+  useEffect(() => { fetchData(); }, []);
 
-  const paymentStatusData = mockPrimaTransactions.reduce((acc, transaction) => {
-    const existing = acc.find(item => item.status === transaction.paymentStatus)
-    if (existing) {
-      existing.count += 1
-      existing.amount += transaction.amount
-    } else {
-      acc.push({ 
-        status: transaction.paymentStatus, 
-        count: 1, 
-        amount: transaction.amount 
-      })
-    }
-    return acc
-  }, [] as { status: string; count: number; amount: number }[])
+  const totalQuantity = purchases.reduce((sum, p) => sum + (p.quantity || 0), 0);
+  const pendingPayments = transactions.filter(tx => tx.paymentStatus === "Pending" || tx.paymentStatus === "Approved").reduce((sum, tx) => sum + tx.amount, 0);
+  const paidAmount = transactions.filter(tx => tx.paymentStatus === "Paid").reduce((sum, tx) => sum + tx.amount, 0);
+  const totalDryKilos = production.reduce((sum, p) => sum + p.kilosOut, 0);
 
-  const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444']
+  // Charts data
+  const primaChartData = useMemo(() => {
+    const redQty = purchases.filter(p => p.color === "red").reduce((sum, p) => sum + (p.quantity || 0), 0);
+    const greenQty = purchases.filter(p => p.color === "green").reduce((sum, p) => sum + (p.quantity || 0), 0);
+    return { labels: ["Red Bonnets", "Green Bonnets"], datasets: [{ label: "Quantity (kg)", data: [redQty, greenQty], backgroundColor: ["#EF4444", "#10B981"] }] };
+  }, [purchases]);
+
+  const pettyCashChartData = useMemo(() => {
+    const inflow = pettyCash.filter(p => p.type === "inflow").reduce((sum, p) => sum + p.amount, 0);
+    const outflow = pettyCash.filter(p => p.type === "outflow").reduce((sum, p) => sum + p.amount, 0);
+    return { labels: ["Inflow", "Outflow"], datasets: [{ label: "Amount (Rs)", data: [inflow, outflow], backgroundColor: ["#10B981", "#EF4444"] }] };
+  }, [pettyCash]);
+
+  const expensesChartData = useMemo(() => {
+    const categories = Array.from(new Set(expenses.map(exp => exp.category)));
+    const data = categories.map(cat => expenses.filter(exp => exp.category === cat).reduce((sum, exp) => sum + exp.cost, 0));
+    const colors = ["#3B82F6", "#F59E0B", "#EF4444", "#10B981"];
+    return { labels: categories, datasets: [{ label: "Expenses (Rs)", data, backgroundColor: colors }] };
+  }, [expenses]);
+
+  const productionChartData = useMemo(() => {
+    const sorted = [...production].sort((a, b) => a.id - b.id);
+    return {
+      labels: sorted.map(p => `#${p.id}`),
+      datasets: [
+        { label: "Kilos Out", data: sorted.map(p => p.kilosOut), borderColor: "#10B981", backgroundColor: "#10B981", tension: 0.3 },
+        { label: "Dry Kilos", data: sorted.map(p => p.kilosOut * DRY_RATIO), borderColor: "#3B82F6", backgroundColor: "#3B82F6", tension: 0.3 }
+      ]
+    };
+  }, [production]);
+
+  const chartOptions = { responsive: true, plugins: { legend: { position: "top" as const }, title: { display: true } } };
+  const lineChartOptions = { ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: "Production Over Time" } } };
+
+  const SummaryCard = ({ title, value, icon: Icon, description }: { title: string; value: string; icon: any; description: string }) => (
+    <div className="bg-white/90 rounded-2xl p-6 shadow-lg flex flex-col justify-between">
+      <div className="flex items-center justify-between mb-3">
+        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+      </div>
+      <h3 className="text-sm font-medium text-slate-600 mb-1">{title}</h3>
+      <p className="text-2xl font-bold text-slate-900">{value}</p>
+      <p className="text-xs text-slate-500 mt-1">{description}</p>
+    </div>
+  );
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Dashboard Overview</h1>
-        <p className="text-muted-foreground">Welcome back! Here's what's happening with your business.</p>
+    <div className="min-h-screen p-6 bg-slate-50 space-y-6">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/50 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+            <Plus className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
+            <p className="text-slate-600 text-sm">Overview of purchases, production, payments, petty cash & expenses</p>
+          </div>
+        </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <SummaryCard
-          title="Total Revenue"
-          value={`$${summary.totalRevenue.toLocaleString()}`}
-          icon={DollarSign}
-          trend={{ value: "12.5%", isPositive: true }}
-          description="From Prima deliveries"
-        />
-        <SummaryCard
-          title="Total Expenses"
-          value={`$${summary.totalExpenses.toLocaleString()}`}
-          icon={Receipt}
-          trend={{ value: "8.2%", isPositive: false }}
-          description="All operational costs"
-        />
-        <SummaryCard
-          title="Net Profit"
-          value={`$${summary.netProfit.toLocaleString()}`}
-          icon={summary.netProfit >= 0 ? TrendingUp : TrendingDown}
-          trend={{ value: "15.3%", isPositive: summary.netProfit >= 0 }}
-          description="Revenue minus expenses"
-        />
-        <SummaryCard
-          title="Petty Cash Balance"
-          value={`$${summary.pettyCashBalance.toLocaleString()}`}
-          icon={Wallet}
-          description="Available cash on hand"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <SummaryCard title="Total Quantity" value={`${totalQuantity} kg`} icon={Plus} description="Sum of all purchased materials" />
+        <SummaryCard title="Pending Payments" value={`Rs ${pendingPayments.toLocaleString()}`} icon={Clock} description="Amount awaiting payment" />
+        <SummaryCard title="Paid Amount" value={`Rs ${paidAmount.toLocaleString()}`} icon={DollarSign} description="Cash received" />
+        <SummaryCard title="Total Dry Kilos" value={`${totalDryKilos.toFixed(2)} kg`} icon={Package} description="Usable stock after production" />
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Expenses by Category */}
-        <div className="card-primary p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Expenses by Category</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={expensesByCategory}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="category" stroke="hsl(var(--muted-foreground))" />
-              <YAxis stroke="hsl(var(--muted-foreground))" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--card))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
-                }} 
-              />
-              <Bar dataKey="amount" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+      {/* Charts: 2 per row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <div className="bg-white/90 rounded-2xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">Purchase Quantities by Color</h3>
+          <Bar data={primaChartData} options={{ ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: "Purchase Quantities by Color" } } }} />
         </div>
 
-        {/* Payment Status Pie Chart */}
-        <div className="card-primary p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Payment Status Distribution</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={paymentStatusData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ status, count }) => `${status} (${count})`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="amount"
-              >
-                {paymentStatusData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                formatter={(value) => [`$${value}`, 'Amount']}
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--card))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
-                }} 
-              />
-            </PieChart>
-          </ResponsiveContainer>
+        <div className="bg-white/90 rounded-2xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">Petty Cash Overview</h3>
+          <Bar data={pettyCashChartData} options={{ ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: "Petty Cash Inflow vs Outflow" } } }} />
         </div>
-      </div>
 
-      {/* Monthly Trends */}
-      <div className="card-primary p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4">Monthly Income vs Expenses Trend</h3>
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={monthlyData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-            <YAxis stroke="hsl(var(--muted-foreground))" />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'hsl(var(--card))', 
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px'
-              }} 
-            />
-            <Line 
-              type="monotone" 
-              dataKey="income" 
-              stroke="hsl(var(--success))" 
-              strokeWidth={3}
-              dot={{ fill: 'hsl(var(--success))' }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="expenses" 
-              stroke="hsl(var(--destructive))" 
-              strokeWidth={3}
-              dot={{ fill: 'hsl(var(--destructive))' }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <div className="bg-white/90 rounded-2xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">Expenses by Category</h3>
+          <Bar data={expensesChartData} options={{ ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: "Expenses by Category" } } }} />
+        </div>
+
+        <div className="bg-white/90 rounded-2xl p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-slate-800 mb-4">Production Overview</h3>
+          <Line data={productionChartData} options={lineChartOptions} />
+        </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;
