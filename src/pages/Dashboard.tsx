@@ -115,7 +115,7 @@ const Dashboard = () => {
   );
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 bg-slate-50 space-y-6">
+    <div className="min-h-screen p-4 sm:p-6 bg-slate-50 space-y-6 sm:ml-64 transition-all duration-300">
   {/* Header */}
   <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-200/50 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div className="flex items-center gap-3">
