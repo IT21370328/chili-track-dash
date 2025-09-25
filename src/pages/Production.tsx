@@ -28,7 +28,7 @@ interface Stock {
   green: number;
 }
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://chili-track-dash.onrender.com";
 const DRY_RATIO = 0.1;
 
 const ProductionPage = () => {

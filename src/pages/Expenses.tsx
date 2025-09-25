@@ -22,7 +22,7 @@ interface Expense {
   cost: number;
 }
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://chili-track-dash.onrender.com";
 
 const Expenses = () => {
   const [formData, setFormData] = useState({ date: "", category: "", description: "", cost: "" });

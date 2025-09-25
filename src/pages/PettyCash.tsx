@@ -46,7 +46,7 @@ interface Summary {
   balance: number;
 }
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://chili-track-dash.onrender.com/";
 
 const PettyCash = () => {
   const [formData, setFormData] = useState({
