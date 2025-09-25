@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, DollarSign, Clock, Check, Plus, Pencil, Trash2, X, Save, Download } from "lucide-react";
+import { Users, DollarSign, Clock, Check, Plus, Pencil, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -46,9 +46,7 @@ const Salaries = () => {
     }
   };
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
+  useEffect(() => { fetchEmployees(); }, []);
 
   // Add employee
   const handleAdd = async () => {
@@ -80,36 +78,35 @@ const Salaries = () => {
   };
 
   // Export employees as CSV
-const exportEmployees = () => {
-  if (filteredEmployees.length === 0) {
-    toast({ title: "No data", description: "No employees to export.", variant: "destructive" });
-    return;
-  }
+  const filteredEmployees = useMemo(() => {
+    return employees.filter(emp => {
+      if (!filterRange.start && !filterRange.end) return true;
+      if (filterRange.start && emp.startDate && emp.startDate < filterRange.start) return false;
+      if (filterRange.end && emp.endDate && emp.endDate > filterRange.end) return false;
+      return true;
+    });
+  }, [employees, filterRange]);
 
-  const csvContent = [
-    ["ID", "Name", "Salary", "Start Date", "End Date", "Status", "Last Paid"],
-    ...filteredEmployees.map(e => [
-      e.id,
-      e.name,
-      e.salary,
-      e.startDate || "-",
-      e.endDate || "-",
-      e.status,
-      e.lastPaid || "-"
-    ])
-  ]
-    .map(row => row.join(","))
-    .join("\n");
+  const exportEmployees = () => {
+    if (filteredEmployees.length === 0) {
+      toast({ title: "No data", description: "No employees to export.", variant: "destructive" });
+      return;
+    }
+    const csvContent = [
+      ["ID", "Name", "Salary", "Start Date", "End Date", "Status", "Last Paid"],
+      ...filteredEmployees.map(e => [
+        e.id, e.name, e.salary, e.startDate || "-", e.endDate || "-", e.status, e.lastPaid || "-"
+      ])
+    ].map(row => row.join(",")).join("\n");
 
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `employees_${new Date().toISOString().split("T")[0]}.csv`;
-  link.click();
-};
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `employees_${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+  };
 
-
-  // Open edit modal
+  // Edit modal
   const openEditModal = (emp: Employee) => {
     setEditModal(emp);
     setEditData({
@@ -119,8 +116,6 @@ const exportEmployees = () => {
       endDate: emp.endDate || "",
     });
   };
-
-  // Save edit from modal
   const saveEditModal = async () => {
     if (!editData.name || !editData.salary || !editData.startDate || !editData.endDate) {
       toast({ title: "Error", description: "Please fill all fields.", variant: "destructive" });
@@ -148,7 +143,6 @@ const exportEmployees = () => {
       toast({ title: "Error", description: "Failed to update employee.", variant: "destructive" });
     }
   };
-
   const cancelEditModal = () => setEditModal(null);
 
   // Delete employee
@@ -179,78 +173,62 @@ const exportEmployees = () => {
   const paidSalary = employees.filter(e => e.status === "paid").reduce((sum, e) => sum + e.salary, 0);
   const unpaidSalary = totalSalary - paidSalary;
 
-  // Filtered employees
-  const filteredEmployees = useMemo(() => {
-    return employees.filter(emp => {
-      if (!filterRange.start && !filterRange.end) return true;
-      if (filterRange.start && emp.startDate && emp.startDate < filterRange.start) return false;
-      if (filterRange.end && emp.endDate && emp.endDate > filterRange.end) return false;
-      return true;
-    });
-  }, [employees, filterRange]);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
 
         {/* Header */}
-      <div className="bg-white/80 rounded-2xl p-6 shadow-lg flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-          <Users className="w-5 h-5 text-white" />
+        <div className="bg-white/80 rounded-2xl p-4 sm:p-6 shadow-lg flex flex-col sm:flex-row items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+            <Users className="w-5 h-5 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-slate-800 flex-1">Prima Transactions</h1>
+          <Button variant="outline" size="sm" className="ml-auto gap-2 border border-black/10 text-black" onClick={exportEmployees}>
+            <Download className="w-4 h-4" /> Export
+          </Button>
         </div>
-        <h1 className="text-2xl font-bold text-slate-800">Prima Transactions</h1>
-        <Button
-  variant="outline"
-  size="sm"
-  className="ml-auto gap-2 border border-black/10 text-black"
-  onClick={exportEmployees}
->
-  <Download className="w-4 h-4" /> Export
-</Button>
-
-      </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { label: "Total Salary", value: totalSalary, icon: DollarSign },
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {[{ label: "Total Salary", value: totalSalary, icon: DollarSign },
             { label: "Paid Salary", value: paidSalary, icon: Check },
-            { label: "Unpaid Salary", value: unpaidSalary, icon: Clock },
-          ].map((card, i) => (
-            <Card key={i} className="p-6 bg-white/90 backdrop-blur-sm border border-slate-200/50 shadow-lg flex items-center gap-4">
+            { label: "Unpaid Salary", value: unpaidSalary, icon: Clock }].map((card, i) => (
+            <Card key={i} className="p-4 sm:p-6 bg-white/90 backdrop-blur-sm border border-slate-200/50 shadow-lg flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
                 <card.icon className="w-6 h-6 text-white" />
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-600">{card.label}</p>
-                <p className="text-2xl font-bold text-slate-900">Rs.{card.value.toLocaleString()}</p>
+                <p className="text-xl sm:text-2xl font-bold text-slate-900">Rs.{card.value.toLocaleString()}</p>
               </div>
             </Card>
           ))}
         </div>
 
         {/* Add Employee Form */}
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/50 shadow-lg">
+        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-200/50 shadow-lg">
           <h3 className="text-lg font-semibold text-slate-800 mb-4">Add New Employee</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <div><Label>Name</Label><Input value={formData.name} onChange={e=>setFormData({...formData,name:e.target.value})}/></div>
-            <div><Label>Salary</Label><Input type="number" value={formData.salary} onChange={e=>setFormData({...formData,salary:e.target.value})}/></div>
-            <div><Label>Start Date</Label><Input type="date" value={formData.startDate} onChange={e=>setFormData({...formData,startDate:e.target.value})}/></div>
-            <div><Label>End Date</Label><Input type="date" value={formData.endDate} onChange={e=>setFormData({...formData,endDate:e.target.value})}/></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div><Label>Name</Label><Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} /></div>
+            <div><Label>Salary</Label><Input type="number" value={formData.salary} onChange={e => setFormData({ ...formData, salary: e.target.value })} /></div>
+            <div><Label>Start Date</Label><Input type="date" value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} /></div>
+            <div><Label>End Date</Label><Input type="date" value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })} /></div>
           </div>
-          <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white h-11 font-medium" onClick={handleAdd}><Plus className="w-4 h-4 mr-2"/>Add Employee</Button>
+          <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white h-11 font-medium flex items-center justify-center gap-2" onClick={handleAdd}>
+            <Plus className="w-4 h-4" /> Add Employee
+          </Button>
         </Card>
 
         {/* Filter */}
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/50 shadow-lg flex flex-col md:flex-row gap-4 items-end">
-          <div><Label>Filter Start Date</Label><Input type="date" value={filterRange.start} onChange={e=>setFilterRange({...filterRange,start:e.target.value})}/></div>
-          <div><Label>Filter End Date</Label><Input type="date" value={filterRange.end} onChange={e=>setFilterRange({...filterRange,end:e.target.value})}/></div>
-          <Button variant="outline" onClick={()=>setFilterRange({start:"",end:""})}>Clear Filter</Button>
+        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-200/50 shadow-lg flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex-1"><Label>Filter Start Date</Label><Input type="date" value={filterRange.start} onChange={e => setFilterRange({ ...filterRange, start: e.target.value })} /></div>
+          <div className="flex-1"><Label>Filter End Date</Label><Input type="date" value={filterRange.end} onChange={e => setFilterRange({ ...filterRange, end: e.target.value })} /></div>
+          <Button variant="outline" className="h-10 self-stretch" onClick={() => setFilterRange({ start: "", end: "" })}>Clear Filter</Button>
         </Card>
 
         {/* Employee Table */}
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/50 shadow-lg">
-          <Table>
+        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl overflow-x-auto border border-slate-200/50 shadow-lg">
+          <Table className="min-w-[700px] md:min-w-full">
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
@@ -270,10 +248,10 @@ const exportEmployees = () => {
                   <TableCell><span className={`px-2 py-1 rounded-full text-xs font-semibold ${emp.status==='paid' ? 'bg-green-100 text-green-800':'bg-yellow-100 text-yellow-800'}`}>{emp.status.toUpperCase()}</span></TableCell>
                   <TableCell>{emp.lastPaid||'-'}</TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
-                      {emp.status==='unpaid' && <Button size="sm" onClick={()=>markPaid(emp)}>Mark Paid</Button>}
-                      <Button size="sm" variant="outline" onClick={()=>openEditModal(emp)}><Pencil className="w-3 h-3"/></Button>
-                      <Button size="sm" variant="destructive" onClick={()=>setDeleteConfirm(emp)}><Trash2 className="w-3 h-3"/></Button>
+                    <div className="flex flex-wrap gap-2">
+                      {emp.status==='unpaid' && <Button size="sm" onClick={() => markPaid(emp)}>Mark Paid</Button>}
+                      <Button size="sm" variant="outline" onClick={() => openEditModal(emp)}><Pencil className="w-3 h-3"/></Button>
+                      <Button size="sm" variant="destructive" onClick={() => setDeleteConfirm(emp)}><Trash2 className="w-3 h-3"/></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -286,16 +264,16 @@ const exportEmployees = () => {
 
       {/* Edit Modal */}
       {editModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="p-6 rounded-2xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="p-4 sm:p-6 rounded-2xl max-w-md w-full">
             <h3 className="text-lg font-semibold mb-4">Edit Employee</h3>
             <div className="grid grid-cols-1 gap-4 mb-4">
-              <div><Label>Name</Label><Input value={editData.name} onChange={e=>setEditData({...editData,name:e.target.value})}/></div>
-              <div><Label>Salary</Label><Input type="number" value={editData.salary} onChange={e=>setEditData({...editData,salary:e.target.value})}/></div>
-              <div><Label>Start Date</Label><Input type="date" value={editData.startDate} onChange={e=>setEditData({...editData,startDate:e.target.value})}/></div>
-              <div><Label>End Date</Label><Input type="date" value={editData.endDate} onChange={e=>setEditData({...editData,endDate:e.target.value})}/></div>
+              <div><Label>Name</Label><Input value={editData.name} onChange={e => setEditData({ ...editData, name: e.target.value })} /></div>
+              <div><Label>Salary</Label><Input type="number" value={editData.salary} onChange={e => setEditData({ ...editData, salary: e.target.value })} /></div>
+              <div><Label>Start Date</Label><Input type="date" value={editData.startDate} onChange={e => setEditData({ ...editData, startDate: e.target.value })} /></div>
+              <div><Label>End Date</Label><Input type="date" value={editData.endDate} onChange={e => setEditData({ ...editData, endDate: e.target.value })} /></div>
             </div>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-3">
               <Button variant="outline" onClick={cancelEditModal}>Cancel</Button>
               <Button onClick={saveEditModal}>Save</Button>
             </div>
@@ -305,13 +283,13 @@ const exportEmployees = () => {
 
       {/* Delete Modal */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="p-6 rounded-2xl max-w-sm w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <Card className="p-4 sm:p-6 rounded-2xl max-w-sm w-full">
             <h3 className="text-lg font-semibold mb-2">Delete Employee</h3>
             <p className="mb-4">Are you sure you want to delete <strong>{deleteConfirm.name}</strong>?</p>
-            <div className="flex gap-3 justify-end">
-              <Button variant="outline" onClick={()=>setDeleteConfirm(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={()=>deleteEmployee(deleteConfirm)}>Delete</Button>
+            <div className="flex flex-col sm:flex-row gap-3 justify-end">
+              <Button variant="outline" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
+              <Button variant="destructive" onClick={() => deleteEmployee(deleteConfirm)}>Delete</Button>
             </div>
           </Card>
         </div>
