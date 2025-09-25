@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Clock, Package, DollarSign, Wallet, TrendingUp, TrendingDown, FileText } from "lucide-react";
+import { Plus, Clock, Package, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Chart as ChartJS,
@@ -18,7 +18,13 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineEleme
 
 const API_URL = "https://chili-track-dash.onrender.com";
 
-interface PrimaTransaction { id: number; poNumber: string; kilosDelivered: number; amount: number; paymentStatus: "Pending" | "Approved" | "Paid" | "Rejected"; }
+interface PrimaTransaction {
+  id: number;
+  poNumber: string;
+  kilosDelivered: number;
+  amount: number;
+  paymentStatus: "Pending" | "Approved" | "Paid" | "Rejected";
+}
 interface Production { id: number; kilosOut: number; }
 interface Purchase { id: number; quantity: number; color: "red" | "green"; }
 interface PettyCashTransaction { id: number; amount: number; type: "inflow" | "outflow"; }
@@ -52,7 +58,12 @@ const Dashboard = () => {
       const pettyData = await pettyRes.json();
       setPettyCash(pettyData);
       const pettySummary = await pettySummaryRes.json();
-      setPettyCashSummary({ totalInflow: pettySummary.totalInflow, totalOutflow: pettySummary.totalOutflow, balance: pettySummary.balance, totalTransactions: pettyData.length });
+      setPettyCashSummary({
+        totalInflow: pettySummary.totalInflow,
+        totalOutflow: pettySummary.totalOutflow,
+        balance: pettySummary.balance,
+        totalTransactions: pettyData.length
+      });
       setExpenses(await expenseRes.json());
     } catch (err) {
       toast({ title: "Error", description: "Failed to fetch dashboard data", variant: "destructive" });
@@ -63,7 +74,9 @@ const Dashboard = () => {
   useEffect(() => { fetchData(); }, []);
 
   const totalQuantity = purchases.reduce((sum, p) => sum + (p.quantity || 0), 0);
-  const pendingPayments = transactions.filter(tx => tx.paymentStatus === "Pending" || tx.paymentStatus === "Approved").reduce((sum, tx) => sum + tx.amount, 0);
+  const pendingPayments = transactions
+    .filter(tx => tx.paymentStatus === "Pending" || tx.paymentStatus === "Approved")
+    .reduce((sum, tx) => sum + tx.amount, 0);
   const paidAmount = transactions.filter(tx => tx.paymentStatus === "Paid").reduce((sum, tx) => sum + tx.amount, 0);
   const totalDryKilos = production.reduce((sum, p) => sum + p.kilosOut, 0);
 
@@ -71,7 +84,10 @@ const Dashboard = () => {
   const primaChartData = useMemo(() => {
     const redQty = purchases.filter(p => p.color === "red").reduce((sum, p) => sum + (p.quantity || 0), 0);
     const greenQty = purchases.filter(p => p.color === "green").reduce((sum, p) => sum + (p.quantity || 0), 0);
-    return { labels: ["Red Bonnets", "Green Bonnets"], datasets: [{ label: "Quantity (kg)", data: [redQty, greenQty], backgroundColor: ["#EF4444", "#10B981"] }] };
+    return {
+      labels: ["Red Bonnets", "Green Bonnets"],
+      datasets: [{ label: "Quantity (kg)", data: [redQty, greenQty], backgroundColor: ["#EF4444", "#10B981"] }]
+    };
   }, [purchases]);
 
   const pettyCashChartData = useMemo(() => {
@@ -98,64 +114,64 @@ const Dashboard = () => {
     };
   }, [production]);
 
-  const chartOptions = { responsive: true, plugins: { legend: { position: "top" as const }, title: { display: true } } };
+  const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "top" as const }, title: { display: true } } };
   const lineChartOptions = { ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: "Production Over Time" } } };
 
   const SummaryCard = ({ title, value, icon: Icon, description }: { title: string; value: string; icon: any; description: string }) => (
-    <div className="bg-white/90 rounded-2xl p-6 shadow-lg flex flex-col justify-between">
+    <div className="bg-white/90 rounded-2xl p-4 sm:p-6 shadow-lg flex flex-col justify-between">
       <div className="flex items-center justify-between mb-3">
-        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-          <Icon className="w-6 h-6 text-white" />
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+          <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
         </div>
       </div>
-      <h3 className="text-sm font-medium text-slate-600 mb-1">{title}</h3>
-      <p className="text-2xl font-bold text-slate-900">{value}</p>
-      <p className="text-xs text-slate-500 mt-1">{description}</p>
+      <h3 className="text-xs sm:text-sm font-medium text-slate-600 mb-1">{title}</h3>
+      <p className="text-lg sm:text-2xl font-bold text-slate-900">{value}</p>
+      <p className="text-[10px] sm:text-xs text-slate-500 mt-1">{description}</p>
     </div>
   );
 
   return (
-    <div className="min-h-screen p-6 bg-slate-50 space-y-6">
+    <div className="min-h-screen p-4 sm:p-6 bg-slate-50 space-y-6">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/50 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-200/50 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-            <Plus className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-            <p className="text-slate-600 text-sm">Overview of purchases, production, payments, petty cash & expenses</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Dashboard</h1>
+            <p className="text-slate-600 text-xs sm:text-sm">Overview of purchases, production, payments, petty cash & expenses</p>
           </div>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
         <SummaryCard title="Total Quantity" value={`${totalQuantity} kg`} icon={Plus} description="Sum of all purchased materials" />
         <SummaryCard title="Pending Payments" value={`Rs ${pendingPayments.toLocaleString()}`} icon={Clock} description="Amount awaiting payment" />
         <SummaryCard title="Paid Amount" value={`Rs ${paidAmount.toLocaleString()}`} icon={DollarSign} description="Cash received" />
         <SummaryCard title="Total Dry Kilos" value={`${totalDryKilos.toFixed(2)} kg`} icon={Package} description="Usable stock after production" />
       </div>
 
-      {/* Charts: 2 per row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <div className="bg-white/90 rounded-2xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Purchase Quantities by Color</h3>
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6">
+        <div className="bg-white/90 rounded-2xl p-4 sm:p-6 shadow-lg h-[300px] sm:h-[400px] overflow-x-auto">
+          <h3 className="text-sm sm:text-lg font-semibold text-slate-800 mb-4">Purchase Quantities by Color</h3>
           <Bar data={primaChartData} options={{ ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: "Purchase Quantities by Color" } } }} />
         </div>
 
-        <div className="bg-white/90 rounded-2xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Petty Cash Overview</h3>
+        <div className="bg-white/90 rounded-2xl p-4 sm:p-6 shadow-lg h-[300px] sm:h-[400px] overflow-x-auto">
+          <h3 className="text-sm sm:text-lg font-semibold text-slate-800 mb-4">Petty Cash Overview</h3>
           <Bar data={pettyCashChartData} options={{ ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: "Petty Cash Inflow vs Outflow" } } }} />
         </div>
 
-        <div className="bg-white/90 rounded-2xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Expenses by Category</h3>
+        <div className="bg-white/90 rounded-2xl p-4 sm:p-6 shadow-lg h-[300px] sm:h-[400px] overflow-x-auto">
+          <h3 className="text-sm sm:text-lg font-semibold text-slate-800 mb-4">Expenses by Category</h3>
           <Bar data={expensesChartData} options={{ ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: "Expenses by Category" } } }} />
         </div>
 
-        <div className="bg-white/90 rounded-2xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Production Overview</h3>
+        <div className="bg-white/90 rounded-2xl p-4 sm:p-6 shadow-lg h-[300px] sm:h-[400px] overflow-x-auto">
+          <h3 className="text-sm sm:text-lg font-semibold text-slate-800 mb-4">Production Overview</h3>
           <Line data={productionChartData} options={lineChartOptions} />
         </div>
       </div>
