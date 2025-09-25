@@ -277,14 +277,6 @@ app.delete("/pos/:poNumber", asyncHandler(async (req, res) => {
   res.json(result);
 }));
 
-// =================== Serve React Frontend (Optional) ===================
-const clientBuildPath = path.join(process.cwd(), "client/build");
-app.use(express.static(clientBuildPath));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(clientBuildPath, "index.html"));
-});
-
 // =================== Start Server ===================
 app.listen(PORT, () => {
   console.log(`✅ Backend server running at http://localhost:${PORT}`);
