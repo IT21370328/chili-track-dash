@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
 
 // =================== Controllers ===================
 import { 
@@ -34,7 +35,7 @@ import {
 import { getStock, getStockHistory, addStock, updateStock, deleteStock } from "./controllers/stock.js";
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
@@ -43,6 +44,11 @@ app.use(express.json());
 const asyncHandler = fn => (req, res, next) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };
+
+// =================== Root Route ===================
+app.get("/", (req, res) => {
+  res.send("✅ Backend server is running!");
+});
 
 // =================== Purchases Routes ===================
 app.get("/purchases", asyncHandler(async (req, res) => {
@@ -270,6 +276,14 @@ app.delete("/pos/:poNumber", asyncHandler(async (req, res) => {
   const result = await deletePO(req.params.poNumber);
   res.json(result);
 }));
+
+// =================== Serve React Frontend (Optional) ===================
+const clientBuildPath = path.join(process.cwd(), "client/build");
+app.use(express.static(clientBuildPath));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(clientBuildPath, "index.html"));
+});
 
 // =================== Start Server ===================
 app.listen(PORT, () => {
