@@ -190,133 +190,138 @@ const exportEmployees = () => {
   }, [employees, filterRange]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 p-4 sm:p-6">
+  <div className="max-w-7xl mx-auto space-y-8">
 
-        {/* Header */}
-      <div className="bg-white/80 rounded-2xl p-6 shadow-lg flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-          <Users className="w-5 h-5 text-white" />
-        </div>
-        <h1 className="text-2xl font-bold text-slate-800">Prima Transactions</h1>
-        <Button
-  variant="outline"
-  size="sm"
-  className="ml-auto gap-2 border border-black/10 text-black"
-  onClick={exportEmployees}
->
-  <Download className="w-4 h-4" /> Export
-</Button>
-
+    {/* Header */}
+    <div className="bg-white/80 rounded-2xl p-4 sm:p-6 shadow-lg flex flex-col sm:flex-row items-start sm:items-center gap-3">
+      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+        <Users className="w-5 h-5 text-white" />
       </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { label: "Total Salary", value: totalSalary, icon: DollarSign },
-            { label: "Paid Salary", value: paidSalary, icon: Check },
-            { label: "Unpaid Salary", value: unpaidSalary, icon: Clock },
-          ].map((card, i) => (
-            <Card key={i} className="p-6 bg-white/90 backdrop-blur-sm border border-slate-200/50 shadow-lg flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-                <card.icon className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">{card.label}</p>
-                <p className="text-2xl font-bold text-slate-900">Rs.{card.value.toLocaleString()}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {/* Add Employee Form */}
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/50 shadow-lg">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Add New Employee</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <div><Label>Name</Label><Input value={formData.name} onChange={e=>setFormData({...formData,name:e.target.value})}/></div>
-            <div><Label>Salary</Label><Input type="number" value={formData.salary} onChange={e=>setFormData({...formData,salary:e.target.value})}/></div>
-            <div><Label>Start Date</Label><Input type="date" value={formData.startDate} onChange={e=>setFormData({...formData,startDate:e.target.value})}/></div>
-            <div><Label>End Date</Label><Input type="date" value={formData.endDate} onChange={e=>setFormData({...formData,endDate:e.target.value})}/></div>
-          </div>
-          <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white h-11 font-medium" onClick={handleAdd}><Plus className="w-4 h-4 mr-2"/>Add Employee</Button>
-        </Card>
-
-        {/* Filter */}
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/50 shadow-lg flex flex-col md:flex-row gap-4 items-end">
-          <div><Label>Filter Start Date</Label><Input type="date" value={filterRange.start} onChange={e=>setFilterRange({...filterRange,start:e.target.value})}/></div>
-          <div><Label>Filter End Date</Label><Input type="date" value={filterRange.end} onChange={e=>setFilterRange({...filterRange,end:e.target.value})}/></div>
-          <Button variant="outline" onClick={()=>setFilterRange({start:"",end:""})}>Clear Filter</Button>
-        </Card>
-
-        {/* Employee Table */}
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden border border-slate-200/50 shadow-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Salary</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Paid</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredEmployees.map(emp => (
-                <TableRow key={emp.id}>
-                  <TableCell>{emp.name}</TableCell>
-                  <TableCell>Rs.{emp.salary.toLocaleString()}</TableCell>
-                  <TableCell>{emp.startDate && emp.endDate ? `${emp.startDate} to ${emp.endDate}` : '-'}</TableCell>
-                  <TableCell><span className={`px-2 py-1 rounded-full text-xs font-semibold ${emp.status==='paid' ? 'bg-green-100 text-green-800':'bg-yellow-100 text-yellow-800'}`}>{emp.status.toUpperCase()}</span></TableCell>
-                  <TableCell>{emp.lastPaid||'-'}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      {emp.status==='unpaid' && <Button size="sm" onClick={()=>markPaid(emp)}>Mark Paid</Button>}
-                      <Button size="sm" variant="outline" onClick={()=>openEditModal(emp)}><Pencil className="w-3 h-3"/></Button>
-                      <Button size="sm" variant="destructive" onClick={()=>setDeleteConfirm(emp)}><Trash2 className="w-3 h-3"/></Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
-
-      </div>
-
-      {/* Edit Modal */}
-      {editModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="p-6 rounded-2xl max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">Edit Employee</h3>
-            <div className="grid grid-cols-1 gap-4 mb-4">
-              <div><Label>Name</Label><Input value={editData.name} onChange={e=>setEditData({...editData,name:e.target.value})}/></div>
-              <div><Label>Salary</Label><Input type="number" value={editData.salary} onChange={e=>setEditData({...editData,salary:e.target.value})}/></div>
-              <div><Label>Start Date</Label><Input type="date" value={editData.startDate} onChange={e=>setEditData({...editData,startDate:e.target.value})}/></div>
-              <div><Label>End Date</Label><Input type="date" value={editData.endDate} onChange={e=>setEditData({...editData,endDate:e.target.value})}/></div>
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={cancelEditModal}>Cancel</Button>
-              <Button onClick={saveEditModal}>Save</Button>
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Delete Modal */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="p-6 rounded-2xl max-w-sm w-full">
-            <h3 className="text-lg font-semibold mb-2">Delete Employee</h3>
-            <p className="mb-4">Are you sure you want to delete <strong>{deleteConfirm.name}</strong>?</p>
-            <div className="flex gap-3 justify-end">
-              <Button variant="outline" onClick={()=>setDeleteConfirm(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={()=>deleteEmployee(deleteConfirm)}>Delete</Button>
-            </div>
-          </Card>
-        </div>
-      )}
+      <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Employee Salary</h1>
+      <Button
+        variant="outline"
+        size="sm"
+        className="ml-auto mt-2 sm:mt-0 gap-2 border border-black/10 text-black"
+        onClick={exportEmployees}
+      >
+        <Download className="w-4 h-4" /> Export
+      </Button>
     </div>
+
+    {/* Summary Cards */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 overflow-x-auto">
+      {[
+        { label: "Total Salary", value: totalSalary, icon: DollarSign },
+        { label: "Paid Salary", value: paidSalary, icon: Check },
+        { label: "Unpaid Salary", value: unpaidSalary, icon: Clock },
+      ].map((card, i) => (
+        <Card key={i} className="p-6 bg-white/90 backdrop-blur-sm border border-slate-200/50 shadow-lg flex items-center gap-4 min-w-[220px]">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+            <card.icon className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-600">{card.label}</p>
+            <p className="text-2xl font-bold text-slate-900">Rs.{card.value.toLocaleString()}</p>
+          </div>
+        </Card>
+      ))}
+    </div>
+
+    {/* Add Employee Form */}
+    <Card className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-200/50 shadow-lg">
+      <h3 className="text-lg font-semibold text-slate-800 mb-4">Add New Employee</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div><Label>Name</Label><Input value={formData.name} onChange={e => setFormData({...formData, name:e.target.value})}/></div>
+        <div><Label>Salary</Label><Input type="number" value={formData.salary} onChange={e => setFormData({...formData, salary:e.target.value})}/></div>
+        <div><Label>Start Date</Label><Input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate:e.target.value})}/></div>
+        <div><Label>End Date</Label><Input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate:e.target.value})}/></div>
+      </div>
+      <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white h-11 font-medium flex items-center justify-center gap-2" onClick={handleAdd}>
+        <Plus className="w-4 h-4"/> Add Employee
+      </Button>
+    </Card>
+
+    {/* Filter */}
+    <Card className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-200/50 shadow-lg flex flex-col sm:flex-row gap-4 items-end">
+      <div><Label>Filter Start Date</Label><Input type="date" value={filterRange.start} onChange={e=>setFilterRange({...filterRange,start:e.target.value})}/></div>
+      <div><Label>Filter End Date</Label><Input type="date" value={filterRange.end} onChange={e=>setFilterRange({...filterRange,end:e.target.value})}/></div>
+      <Button variant="outline" onClick={()=>setFilterRange({start:"",end:""})} className="mt-2 sm:mt-0">Clear Filter</Button>
+    </Card>
+
+    {/* Employee Table */}
+    <Card className="bg-white/90 backdrop-blur-sm rounded-2xl overflow-x-auto border border-slate-200/50 shadow-lg">
+      <Table className="min-w-full">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Salary</TableHead>
+            <TableHead>Duration</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Last Paid</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredEmployees.map(emp => (
+            <TableRow key={emp.id}>
+              <TableCell>{emp.name}</TableCell>
+              <TableCell>Rs.{emp.salary.toLocaleString()}</TableCell>
+              <TableCell>{emp.startDate && emp.endDate ? `${emp.startDate} to ${emp.endDate}` : '-'}</TableCell>
+              <TableCell>
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${emp.status==='paid' ? 'bg-green-100 text-green-800':'bg-yellow-100 text-yellow-800'}`}>
+                  {emp.status.toUpperCase()}
+                </span>
+              </TableCell>
+              <TableCell>{emp.lastPaid||'-'}</TableCell>
+              <TableCell>
+                <div className="flex flex-wrap gap-2">
+                  {emp.status==='unpaid' && <Button size="sm" onClick={()=>markPaid(emp)}>Mark Paid</Button>}
+                  <Button size="sm" variant="outline" onClick={()=>openEditModal(emp)}><Pencil className="w-3 h-3"/></Button>
+                  <Button size="sm" variant="destructive" onClick={()=>setDeleteConfirm(emp)}><Trash2 className="w-3 h-3"/></Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Card>
+
+    {/* Edit Modal */}
+    {editModal && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <Card className="p-6 rounded-2xl max-w-md w-full">
+          <h3 className="text-lg font-semibold mb-4">Edit Employee</h3>
+          <div className="grid grid-cols-1 gap-4 mb-4">
+            <div><Label>Name</Label><Input value={editData.name} onChange={e=>setEditData({...editData,name:e.target.value})}/></div>
+            <div><Label>Salary</Label><Input type="number" value={editData.salary} onChange={e=>setEditData({...editData,salary:e.target.value})}/></div>
+            <div><Label>Start Date</Label><Input type="date" value={editData.startDate} onChange={e=>setEditData({...editData,startDate:e.target.value})}/></div>
+            <div><Label>End Date</Label><Input type="date" value={editData.endDate} onChange={e=>setEditData({...editData,endDate:e.target.value})}/></div>
+          </div>
+          <div className="flex flex-col sm:flex-row justify-end gap-3">
+            <Button variant="outline" onClick={cancelEditModal}>Cancel</Button>
+            <Button onClick={saveEditModal}>Save</Button>
+          </div>
+        </Card>
+      </div>
+    )}
+
+    {/* Delete Modal */}
+    {deleteConfirm && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <Card className="p-6 rounded-2xl max-w-sm w-full">
+          <h3 className="text-lg font-semibold mb-2">Delete Employee</h3>
+          <p className="mb-4">Are you sure you want to delete <strong>{deleteConfirm.name}</strong>?</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-end">
+            <Button variant="outline" onClick={()=>setDeleteConfirm(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={()=>deleteEmployee(deleteConfirm)}>Delete</Button>
+          </div>
+        </Card>
+      </div>
+    )}
+
+  </div>
+</div>
   );
 };
 
