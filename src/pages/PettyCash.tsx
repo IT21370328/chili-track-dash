@@ -192,17 +192,17 @@ const PettyCash = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
 
         {/* ==================== Header ==================== */}
-        <Card className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-slate-200/50 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <Card className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/50 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
               <Wallet className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-slate-800">Petty Cash Dashboard</h1>
+              <h1 className="text-2xl font-bold text-slate-800">Petty Cash Dashboard</h1>
               <p className="text-slate-600 text-sm">Manage cash inflow & outflow</p>
             </div>
           </div>
@@ -211,7 +211,7 @@ const PettyCash = () => {
           <Button
             variant="outline"
             size="sm"
-            className="flex items-center gap-2 w-full sm:w-auto"
+            className="flex items-center gap-2"
             onClick={handleExport}
           >
             <Download className="w-4 h-4" /> Export
@@ -219,29 +219,50 @@ const PettyCash = () => {
         </Card>
 
         {/* ==================== Summary Cards ==================== */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {[
-            { label: "Total Inflow", value: summary.totalInflow, icon: <TrendingUp className="w-6 h-6 text-white" /> },
-            { label: "Total Outflow", value: summary.totalOutflow, icon: <TrendingDown className="w-6 h-6 text-white" /> },
-            { label: "Current Balance", value: summary.balance, icon: <Wallet className="w-6 h-6 text-white" /> },
-            { label: "Total Transactions", value: transactions.length, icon: <Plus className="w-6 h-6 text-white" /> },
-          ].map((item, i) => (
-            <Card key={i} className="p-4 md:p-6 bg-white/90 backdrop-blur-sm border border-slate-200/50 shadow-lg">
-              <div className="flex items-center justify-between mb-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-                  {item.icon}
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="p-6 bg-white/90 backdrop-blur-sm border border-slate-200/50 shadow-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-white" />
               </div>
-              <h3 className="text-sm font-medium text-slate-600 mb-1">{item.label}</h3>
-              <p className="text-xl md:text-2xl font-bold text-slate-900">
-                {typeof item.value === "number" ? `Rs.${item.value.toLocaleString()}` : item.value}
-              </p>
-            </Card>
-          ))}
+            </div>
+            <h3 className="text-sm font-medium text-slate-600 mb-1">Total Inflow</h3>
+            <p className="text-2xl font-bold text-slate-900">Rs.{summary.totalInflow.toLocaleString()}</p>
+          </Card>
+
+          <Card className="p-6 bg-white/90 backdrop-blur-sm border border-slate-200/50 shadow-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+                <TrendingDown className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <h3 className="text-sm font-medium text-slate-600 mb-1">Total Outflow</h3>
+            <p className="text-2xl font-bold text-slate-900">Rs.{summary.totalOutflow.toLocaleString()}</p>
+          </Card>
+
+          <Card className="p-6 bg-white/90 backdrop-blur-sm border border-slate-200/50 shadow-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+                <Wallet className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <h3 className="text-sm font-medium text-slate-600 mb-1">Current Balance</h3>
+            <p className="text-2xl font-bold text-slate-900">Rs.{summary.balance.toLocaleString()}</p>
+          </Card>
+
+          <Card className="p-6 bg-white/90 backdrop-blur-sm border border-slate-200/50 shadow-lg">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+                <Plus className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <h3 className="text-sm font-medium text-slate-600 mb-1">Total Transactions</h3>
+            <p className="text-2xl font-bold text-slate-900">{transactions.length}</p>
+          </Card>
         </div>
 
-        {/* ==================== New Transaction Form ==================== */}
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-slate-200/50 shadow-lg">
+        {/* New Transaction Form */}
+        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/50 shadow-lg">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
               <Plus className="w-4 h-4 text-white" />
@@ -249,7 +270,7 @@ const PettyCash = () => {
             <h3 className="text-lg font-semibold text-slate-800">New Transaction</h3>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <Label htmlFor="amount">Amount (Rs)</Label>
               <Input
@@ -293,75 +314,77 @@ const PettyCash = () => {
           </form>
         </Card>
 
-        {/* ==================== Transaction History ==================== */}
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-lg">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 gap-4">
-            <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-              <Input
-                type="date"
-                value={dateFrom}
-                onChange={e => setDateFrom(e.target.value)}
-                className="w-full sm:w-40"
-              />
-              <Input
-                type="date"
-                value={dateTo}
-                onChange={e => setDateTo(e.target.value)}
-                className="w-full sm:w-40"
-              />
-              {(dateFrom || dateTo) && (
-                <Button variant="outline" size="sm" onClick={resetDateFilter} className="w-full sm:w-auto">
-                  Reset
-                </Button>
-              )}
-            </div>
-          </div>
+        {/* Transaction History Table */}
+        {/* Transaction History Table with Filters */}
+<Card className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-lg">
+  <div className="flex flex-col md:flex-row md:items-center md:justify-between p-4 gap-4">
+    <div className="flex items-center gap-3">
+      <Input
+        type="date"
+        value={dateFrom}
+        onChange={e => setDateFrom(e.target.value)}
+        placeholder="From"
+        className="w-40"
+      />
+      <Input
+        type="date"
+        value={dateTo}
+        onChange={e => setDateTo(e.target.value)}
+        placeholder="To"
+        className="w-40"
+      />
+      {(dateFrom || dateTo) && (
+        <Button variant="outline" size="sm" onClick={resetDateFilter}>Reset</Button>
+      )}
+    </div>
+  </div>
 
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-slate-200/50 bg-slate-50/50">
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTransactions.map((t) => (
-                  <TableRow key={t.id}>
-                    <TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
-                    <TableCell>{t.description}</TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        t.type === "inflow"
-                          ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                          : "bg-red-100 text-red-700 border border-red-200"
-                      }`}>{t.type.toUpperCase()}</span>
-                    </TableCell>
-                    <TableCell className="text-right">{t.amount.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">{t.balance.toFixed(2)}</TableCell>
-                    <TableCell className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleEdit(t)}><Pencil className="w-4 h-4" /></Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(t.id)}><Trash2 className="w-4 h-4" /></Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {filteredTransactions.length === 0 && (
-              <div className="text-center py-12">
-                <Wallet className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-600 mb-2">No transactions found</h3>
-                <p className="text-slate-500">Try adjusting your filters or add a new transaction.</p>
-              </div>
-            )}
-          </div>
-        </Card>
+  <div className="overflow-x-auto mt-2">
+    <Table>
+      <TableHeader>
+        <TableRow className="border-slate-200/50 bg-slate-50/50">
+          <TableHead>Date</TableHead>
+          <TableHead>Description</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead className="text-right">Amount</TableHead>
+          <TableHead className="text-right">Balance</TableHead>
+          <TableHead>Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {filteredTransactions.map((t) => (
+          <TableRow key={t.id}>
+            <TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
+            <TableCell>{t.description}</TableCell>
+            <TableCell>
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                t.type === "inflow"
+                  ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                  : "bg-red-100 text-red-700 border border-red-200"
+              }`}>{t.type.toUpperCase()}</span>
+            </TableCell>
+            <TableCell className="text-right">{t.amount.toFixed(2)}</TableCell>
+            <TableCell className="text-right">{t.balance.toFixed(2)}</TableCell>
+            <TableCell className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => handleEdit(t)}><Pencil className="w-4 h-4" /></Button>
+              <Button variant="destructive" size="sm" onClick={() => handleDelete(t.id)}><Trash2 className="w-4 h-4" /></Button>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+    {filteredTransactions.length === 0 && (
+      <div className="text-center py-12">
+        <Wallet className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-slate-600 mb-2">No transactions found</h3>
+        <p className="text-slate-500">Try adjusting your filters or add a new transaction.</p>
+      </div>
+    )}
+  </div>
+</Card>
 
-        {/* ==================== Edit Modal ==================== */}
+
+        {/* Edit Modal */}
         {editDialog.open && editDialog.transaction && (
           <Dialog open={editDialog.open} onOpenChange={(open) => setEditDialog({ ...editDialog, open })}>
             <DialogContent>
@@ -406,9 +429,7 @@ const PettyCash = () => {
                   </Select>
                 </div>
                 <DialogFooter className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setEditDialog({ open: false })}>
-                    <X className="w-4 h-4 mr-1" />Cancel
-                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setEditDialog({ open: false })}><X className="w-4 h-4 mr-1" />Cancel</Button>
                   <Button type="submit">Update</Button>
                 </DialogFooter>
               </form>
