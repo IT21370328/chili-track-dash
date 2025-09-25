@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Plus, Eye, Check, X, Truck, DollarSign, Clock, Package, Download, Pencil, Trash2 } from "lucide-react";
 
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://chili-track-dash.onrender.com";
 
 interface PO {
   id: number;

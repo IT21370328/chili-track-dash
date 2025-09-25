@@ -16,7 +16,7 @@ import { Bar, Line } from "react-chartjs-2";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://chili-track-dash.onrender.com";
 
 interface PrimaTransaction { id: number; poNumber: string; kilosDelivered: number; amount: number; paymentStatus: "Pending" | "Approved" | "Paid" | "Rejected"; }
 interface Production { id: number; kilosOut: number; }

@@ -26,7 +26,7 @@ interface Purchase {
   supplier: string;
 }
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://chili-track-dash.onrender.com";
 
 const Purchasing = () => {
   const [formData, setFormData] = useState({
