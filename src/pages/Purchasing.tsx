@@ -189,15 +189,17 @@ const Purchasing = () => {
     }
   };
 
-  // Mark as Paid
+  // 🔥 NEW: Mark as Paid
   const handleMarkAsPaid = async (id: number) => {
     try {
       const res = await fetch(`${API_URL}/purchases/${id}/pay`, { method: "PUT" });
       if (!res.ok) throw new Error("Failed to update payment");
       const updatedPurchase = await res.json();
+
       setPurchases(prev =>
         prev.map(p => (p.id === id ? { ...p, paymentMethod: "cash" } : p))
       );
+
       toast({
         title: "✅ Payment Updated",
         description: "Purchase marked as paid (cash).",
@@ -212,19 +214,20 @@ const Purchasing = () => {
     }
   };
 
-  return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+  const today = new Date().toISOString().split("T")[0];
 
+  return (
+    <div className="p-6 max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <div className="bg-white/80 rounded-2xl p-4 md:p-6 shadow-lg flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="bg-white/80 rounded-2xl p-6 shadow-lg flex items-center gap-3">
         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
           <Package className="w-5 h-5 text-white" />
         </div>
-        <h1 className="text-2xl font-bold text-slate-800 flex-1">Purchasing Dashboard</h1>
+        <h1 className="text-2xl font-bold text-slate-800">Purchasing Dashboard</h1>
         <Button
           variant="outline"
           size="sm"
-          className="mt-2 sm:mt-0 gap-2"
+          className="ml-auto gap-2"
           onClick={exportToCSV}
         >
           <Download className="w-4 h-4" /> Export
@@ -232,48 +235,112 @@ const Purchasing = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {[
-          { title: "Cash Purchases", value: `Rs.${summary.cash.toLocaleString()}`, icon: DollarSign, color: "emerald-600" },
-          { title: "Credit Purchases", value: `Rs.${summary.credit.toLocaleString()}`, icon: AlertCircle, color: "orange-600" },
-          { title: "Total Purchases", value: `Rs.${summary.total.toLocaleString()}`, icon: Package, color: "blue-600" },
-          { title: "Total Records", value: summary.totalRecords, icon: Calendar, color: "purple-600" },
-          { title: "Red Bonnets (kg)", value: `${summary.redKg.toLocaleString()} kg`, icon: Package, color: "red-600" },
-          { title: "Green Bonnets (kg)", value: `${summary.greenKg.toLocaleString()} kg`, icon: Package, color: "green-600" },
-        ].map((card, idx) => (
-          <Card key={idx} className="bg-white/90 shadow-lg rounded-2xl p-4 flex flex-col justify-between">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {/* Cash Purchases */}
+        <Card className="bg-white/90 shadow-lg rounded-2xl">
+          <CardContent className="flex flex-col justify-between p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-                <card.icon className="w-5 h-5 text-white" />
+                <DollarSign className="w-5 h-5 text-white" />
               </div>
-              <TrendingUp className={`w-5 h-5 text-${card.color}`} />
+              <TrendingUp className="w-5 h-5 text-emerald-600" />
             </div>
-            <h3 className="text-sm font-medium text-slate-600">{card.title}</h3>
-            <p className="text-xl font-bold text-slate-900">{card.value}</p>
-          </Card>
-        ))}
+            <h3 className="text-sm font-medium text-slate-600">Cash Purchases</h3>
+            <p className="text-xl font-bold text-slate-900">Rs.{summary.cash.toLocaleString()}</p>
+          </CardContent>
+        </Card>
+
+        {/* Credit Purchases */}
+        <Card className="bg-white/90 shadow-lg rounded-2xl">
+          <CardContent className="flex flex-col justify-between p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+                <AlertCircle className="w-5 h-5 text-white" />
+              </div>
+              <TrendingUp className="w-5 h-5 text-orange-600" />
+            </div>
+            <h3 className="text-sm font-medium text-slate-600">Credit Purchases</h3>
+            <p className="text-xl font-bold text-slate-900">Rs.{summary.credit.toLocaleString()}</p>
+          </CardContent>
+        </Card>
+
+        {/* Total Purchases */}
+        <Card className="bg-white/90 shadow-lg rounded-2xl">
+          <CardContent className="flex flex-col justify-between p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                <Package className="w-5 h-5 text-white" />
+              </div>
+              <TrendingUp className="w-5 h-5 text-blue-600" />
+            </div>
+            <h3 className="text-sm font-medium text-slate-600">Total Purchases</h3>
+            <p className="text-xl font-bold text-slate-900">Rs.{summary.total.toLocaleString()}</p>
+          </CardContent>
+        </Card>
+
+        {/* Total Records */}
+        <Card className="bg-white/90 shadow-lg rounded-2xl">
+          <CardContent className="flex flex-col justify-between p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-white" />
+              </div>
+              <TrendingUp className="w-5 h-5 text-purple-600" />
+            </div>
+            <h3 className="text-sm font-medium text-slate-600">Total Records</h3>
+            <p className="text-xl font-bold text-slate-900">{summary.totalRecords}</p>
+          </CardContent>
+        </Card>
+
+        {/* Red Bonnets */}
+        <Card className="bg-white/90 shadow-lg rounded-2xl">
+          <CardContent className="flex flex-col justify-between p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+                <Package className="w-5 h-5 text-white" />
+              </div>
+              <TrendingUp className="w-5 h-5 text-red-600" />
+            </div>
+            <h3 className="text-sm font-medium text-slate-600">Red Bonnets (kg)</h3>
+            <p className="text-xl font-bold text-slate-900">{summary.redKg.toLocaleString()} kg</p>
+          </CardContent>
+        </Card>
+
+        {/* Green Bonnets */}
+        <Card className="bg-white/90 shadow-lg rounded-2xl">
+          <CardContent className="flex flex-col justify-between p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+                <Package className="w-5 h-5 text-white" />
+              </div>
+              <TrendingUp className="w-5 h-5 text-green-600" />
+            </div>
+            <h3 className="text-sm font-medium text-slate-600">Green Bonnets (kg)</h3>
+            <p className="text-xl font-bold text-slate-900">{summary.greenKg.toLocaleString()} kg</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Add Purchase Form */}
       <Card>
         <CardHeader><CardTitle>Add Purchase</CardTitle></CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} required />
             <Input type="number" value={formData.quantity} onChange={e => setFormData({...formData, quantity: e.target.value})} required placeholder="Quantity (kg)" />
             <Input type="number" step="0.01" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} required placeholder="Price/kg" />
-            <select value={formData.paymentMethod} onChange={e => setFormData({...formData, paymentMethod: e.target.value})} required className="w-full">
+            <select value={formData.paymentMethod} onChange={e => setFormData({...formData, paymentMethod: e.target.value})} required>
               <option value="">Select payment</option>
               <option value="cash">Cash</option>
               <option value="credit">Credit</option>
             </select>
-            <select value={formData.color} onChange={e => setFormData({...formData, color: e.target.value})} required className="w-full">
+            <select value={formData.color} onChange={e => setFormData({...formData, color: e.target.value})} required>
               <option value="">Select color</option>
               <option value="red">Red</option>
               <option value="green">Green</option>
             </select>
             <Input type="text" value={formData.supplier} onChange={e => setFormData({...formData, supplier: e.target.value})} required placeholder="Supplier" />
-            <Button type="submit" className="col-span-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center gap-2 justify-center">
+            <Button type="submit" className="col-span-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center gap-2">
               <Plus className="w-4 h-4" /> Record Purchase
             </Button>
           </form>
@@ -283,17 +350,17 @@ const Purchasing = () => {
       {/* Table & Filters */}
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full flex-wrap">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full">
             <CardTitle>Purchase History</CardTitle>
-            <div className="flex flex-wrap items-center gap-3">
-              <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} placeholder="From" className="w-full sm:w-40" />
-              <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} placeholder="To" className="w-full sm:w-40" />
+            <div className="flex items-center gap-3">
+              <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} placeholder="From" className="w-40" />
+              <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} placeholder="To" className="w-40" />
               {(dateFrom || dateTo) && <Button variant="outline" size="sm" onClick={resetDateFilter}>Reset</Button>}
             </div>
           </div>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <Table className="min-w-[700px] md:min-w-full">
+          <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
@@ -315,21 +382,47 @@ const Purchasing = () => {
                   <TableCell className="capitalize">{p.paymentMethod}</TableCell>
                   <TableCell className="capitalize">{p.color}</TableCell>
                   <TableCell>{p.supplier}</TableCell>
-                  <TableCell className="text-right">Rs.{(p.quantity * p.price).toFixed(2)}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col sm:flex-row sm:justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => handleEdit(p)}><Pencil className="w-4 h-4" /></Button>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(p.id)}><Trash2 className="w-4 h-4" /></Button>
-                      {p.paymentMethod === "credit" && <Button variant="secondary" size="sm" onClick={() => handleMarkAsPaid(p.id)}>Mark as Paid</Button>}
+                  <TableCell className="text-right">
+                    Rs.{(p.quantity * p.price).toFixed(2)}
+                  </TableCell>
+
+                  {/* ✅ Fixed alignment */}
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(p)}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(p.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+
+                      {p.paymentMethod === "credit" && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleMarkAsPaid(p.id)}
+                        >
+                          Mark as Paid
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
+
           </Table>
         </CardContent>
       </Card>
-
     </div>
   );
 };
