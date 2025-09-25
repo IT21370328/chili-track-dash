@@ -120,7 +120,7 @@ const Dashboard = () => {
   <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-200/50 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
     <div className="flex items-center gap-3">
       <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-        <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+        <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-white opacity-0" />
       </div>
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Dashboard</h1>
