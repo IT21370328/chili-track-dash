@@ -1,68 +1,65 @@
 // controllers/pos.js
-import { db } from "../db.js";
+import dotenv from "dotenv";
+import { createClient } from "@libsql/client";
+
+dotenv.config(); // Load .env
+
+const client = createClient({
+  url: process.env.TURSO_URL,
+  authToken: process.env.TURSO_API_KEY,
+});
 
 // Create a new PO
-export const addPO = (poData, callback) => {
+export const addPO = async (poData) => {
   const { poNumber, date, totalKilos, amount } = poData;
-  const query = `
-    INSERT INTO pos (poNumber, date, totalKilos, remainingKilos, amount, status)
-    VALUES (?, ?, ?, ?, ?, 'Pending')
-  `;
-  
-  db.run(query, [poNumber, date, totalKilos, totalKilos, amount], function (err) {
-    if (err) return callback(err);
-    callback(null, { 
-      id: this.lastID, 
-      poNumber, 
-      date, 
-      totalKilos, 
-      remainingKilos: totalKilos, 
-      amount, 
-      status: "Pending" 
-    });
-  });
+  if (!poNumber || !date || totalKilos === undefined || amount === undefined) {
+    throw new Error("All fields are required");
+  }
+
+  const remainingKilos = totalKilos;
+
+  const { lastInsertRowid } = await client.execute(
+    `INSERT INTO pos (poNumber, date, totalKilos, remainingKilos, amount, status)
+     VALUES (?, ?, ?, ?, ?, 'Pending')`,
+    [poNumber, date, totalKilos, remainingKilos, amount]
+  );
+
+  return { id: lastInsertRowid, poNumber, date, totalKilos, remainingKilos, amount, status: "Pending" };
 };
 
 // Get all POs
-export const getPOs = (callback) => {
-  db.all(`SELECT * FROM pos ORDER BY date DESC`, [], callback);
+export const getPOs = async () => {
+  const { rows } = await client.execute(`SELECT * FROM pos ORDER BY date DESC`);
+  return rows;
 };
 
 // Get PO by poNumber
-export const getPOByNumber = (poNumber, callback) => {
-  db.get(`SELECT * FROM pos WHERE poNumber = ?`, [poNumber], (err, row) => {
-    if (err) return callback(err);
-    callback(null, row || null);
-  });
+export const getPOByNumber = async (poNumber) => {
+  const { rows } = await client.execute(`SELECT * FROM pos WHERE poNumber = ?`, [poNumber]);
+  return rows[0] || null;
 };
 
 // Update PO by poNumber
-export const updatePO = (poNumber, updates, callback) => {
+export const updatePO = async (poNumber, updates) => {
   const { totalKilos, remainingKilos, status, amount } = updates;
-  const query = `
-    UPDATE pos SET 
-      totalKilos = COALESCE(?, totalKilos), 
-      remainingKilos = COALESCE(?, remainingKilos), 
-      amount = COALESCE(?, amount),
-      status = COALESCE(?, status),
-      updated_at = CURRENT_TIMESTAMP
-    WHERE poNumber = ?
-  `;
-  
-  db.run(query, [totalKilos, remainingKilos, amount, status, poNumber], function(err) {
-    if (err) return callback(err);
-    db.get(`SELECT * FROM pos WHERE poNumber = ?`, [poNumber], (err, row) => {
-      if (err) return callback(err);
-      callback(null, row);
-    });
-  });
+
+  await client.execute(
+    `UPDATE pos SET 
+       totalKilos = COALESCE(?, totalKilos), 
+       remainingKilos = COALESCE(?, remainingKilos), 
+       amount = COALESCE(?, amount), 
+       status = COALESCE(?, status), 
+       updated_at = CURRENT_TIMESTAMP
+     WHERE poNumber = ?`,
+    [totalKilos, remainingKilos, amount, status, poNumber]
+  );
+
+  const { rows } = await client.execute(`SELECT * FROM pos WHERE poNumber = ?`, [poNumber]);
+  return rows[0];
 };
 
 // Delete PO by poNumber
-export const deletePO = (poNumber, callback) => {
-  const query = `DELETE FROM pos WHERE poNumber = ?`;
-  db.run(query, [poNumber], function (err) {
-    if (err) return callback(err);
-    callback(null, { message: "PO deleted successfully", poNumber });
-  });
+export const deletePO = async (poNumber) => {
+  await client.execute(`DELETE FROM pos WHERE poNumber = ?`, [poNumber]);
+  return { message: "PO deleted successfully", poNumber };
 };
