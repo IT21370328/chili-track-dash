@@ -234,7 +234,7 @@ const ProductionPage = () => {
       <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
         <Package className="w-5 h-5 text-white" />
       </div>
-      <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Purchasing Dashboard</h1>
+      <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Production Dashboard</h1>
       <Button
         variant="outline"
         size="sm"

@@ -514,16 +514,18 @@ const PrimaPage = () => {
       {/* Header */}
       <div className="bg-white/80 rounded-2xl p-6 shadow-lg flex flex-col md:flex-row items-center gap-3">
         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-          <Package className="w-5 h-5 text-white" />
-        </div>
-        <h1 className="text-2xl font-bold text-slate-800">Prima Transactions</h1>
-        <button
-          className="ml-auto gap-2 border border-black/10 text-black px-4 py-2 rounded-lg w-full md:w-auto mt-4 md:mt-0"
-          onClick={exportTransactions}
-        >
-          <Download className="w-4 h-4" /> Export
-        </button>
+        <Package className="w-5 h-5 text-white" />
       </div>
+      <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Production Dashboard</h1>
+      <Button
+        variant="outline"
+        size="sm"
+        className="ml-auto mt-2 sm:mt-0 gap-2"
+        onClick={exportTransactions}
+      >
+        <Download className="w-4 h-4" /> Export
+      </Button>
+    </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <SummaryCard title="Total Delivered" value={`${totalDelivered}kg`} icon={Truck} description="All deliveries including paid, pending, and rejected" />
