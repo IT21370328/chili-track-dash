@@ -512,18 +512,17 @@ const PrimaPage = () => {
       )}
 
       {/* Header */}
-      <div className="bg-white/80 rounded-2xl p-6 shadow-lg flex items-center gap-3">
+      <div className="bg-white/80 rounded-2xl p-6 shadow-lg flex flex-col md:flex-row items-center gap-3">
         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
           <Package className="w-5 h-5 text-white" />
         </div>
         <h1 className="text-2xl font-bold text-slate-800">Prima Transactions</h1>
         <button
-  className="ml-auto gap-2 border border-black/10 text-black"
-  onClick={exportTransactions}
->
-  <Download className="w-4 h-4" /> Export
-</button>
-
+          className="ml-auto gap-2 border border-black/10 text-black px-4 py-2 rounded-lg w-full md:w-auto mt-4 md:mt-0"
+          onClick={exportTransactions}
+        >
+          <Download className="w-4 h-4" /> Export
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -573,21 +572,21 @@ const PrimaPage = () => {
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full">
             <CardTitle>PO List</CardTitle>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
               <Input 
                 type="date"
                 value={dateFrom}
                 onChange={e => setDateFrom(e.target.value)}
                 placeholder="From"
-                className="w-40" min={undefined} max={undefined} step={undefined}              />
+                className="w-full sm:w-40" min={undefined} max={undefined} step={undefined}              />
               <Input 
                 type="date"
                 value={dateTo}
                 onChange={e => setDateTo(e.target.value)}
                 placeholder="To"
-                className="w-40" min={undefined} max={undefined} step={undefined}              />
+                className="w-full sm:w-40" min={undefined} max={undefined} step={undefined}              />
               {(dateFrom || dateTo) && 
-                <Button variant="outline" size="sm" onClick={resetDateFilter}>
+                <Button variant="outline" size="sm" onClick={resetDateFilter} className="w-full sm:w-auto">
                   Reset
                 </Button>
               }
@@ -595,28 +594,28 @@ const PrimaPage = () => {
           </div>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <div className="w-full border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+          <div className="w-full border border-slate-200 rounded-xl overflow-hidden shadow-sm min-w-[600px]">
             <div className="bg-slate-100 sticky top-0 z-10">
-              <div className="grid grid-cols-8 gap-4 p-4 font-semibold text-sm">
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 p-4 font-semibold text-sm">
                 <div>PO Number</div>
                 <div>Date</div>
-                <div>Total Kilos</div>
-                <div>Remaining Kilos</div>
-                <div>Amount (Rs)</div>
+                <div className="hidden md:block">Total Kilos</div>
+                <div className="hidden md:block">Remaining Kilos</div>
+                <div className="hidden lg:block">Amount (Rs)</div>
                 <div>Status</div>
                 <div className="text-right">Actions</div>
-                <div className="text-right">Edit/Delete</div>
+                <div className="hidden sm:block text-right">Edit/Delete</div>
               </div>
             </div>
             <div>
               {filteredPOs.map(po => (
                 <React.Fragment key={po.id}>
-                  <div className="grid grid-cols-8 gap-4 p-4 hover:bg-slate-50 transition-colors border-b border-slate-200">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 p-4 hover:bg-slate-50 transition-colors border-b border-slate-200 text-sm">
                     <div className="font-medium">{po.poNumber}</div>
                     <div>{new Date(po.date).toLocaleDateString()}</div>
-                    <div>{po.totalKilos}</div>
-                    <div>{getRemainingKilos(po)}</div>
-                    <div>Rs {po.amount.toLocaleString()}</div>
+                    <div className="hidden md:block">{po.totalKilos}</div>
+                    <div className="hidden md:block">{getRemainingKilos(po)}</div>
+                    <div className="hidden lg:block">Rs {po.amount.toLocaleString()}</div>
                     <div>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${po.status === "Pending" ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>
                         {po.status}
@@ -627,7 +626,7 @@ const PrimaPage = () => {
                         <Eye className="w-4 h-4" /> View
                       </Button>
                     </div>
-                    <div className="text-right space-x-1">
+                    <div className="hidden sm:flex justify-end space-x-1">
                       <Button size="sm" variant="outline" onClick={() => handleEditPO(po)}>
                         <Pencil className="w-3 h-3" />
                       </Button>
@@ -637,12 +636,12 @@ const PrimaPage = () => {
                     </div>
                   </div>
 
+                  {/* Expanded section remains same, wrapped in responsive classes */}
                   {expandedPO === po.poNumber && (
-                    <div className="col-span-8 bg-slate-50 p-4 border-b border-slate-200">
+                    <div className="col-span-8 bg-slate-50 p-4 border-b border-slate-200 overflow-x-auto">
                       {/* Delivery Form */}
                       {po.status === "Pending" && getRemainingKilos(po) > 0 && (
                         <div className="mb-4">
-                          {/* Stock Warning */}
                           {availableStock < getRemainingKilos(po) && (
                             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
                               <div className="flex items-center gap-2 text-yellow-800">
@@ -653,15 +652,14 @@ const PrimaPage = () => {
                               </div>
                             </div>
                           )}
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                             <Input 
                               type="date"
                               value={deliveryForm[po.poNumber]?.date || ""}
                               onChange={e => setDeliveryForm(prev => ({
                                 ...prev,
                                 [po.poNumber]: { ...prev[po.poNumber], date: e.target.value }
-                              }))} min={undefined} step={undefined} max={undefined}                            />
+                              }))} min={undefined} max={undefined} step={undefined}                            />
                             <Input 
                               type="number" 
                               min={0.01}
@@ -685,14 +683,8 @@ const PrimaPage = () => {
                                 }
                               }} 
                             />
-                            <Input 
-                              readOnly
-                              placeholder="Amount (Rs)"
-                              value={deliveryForm[po.poNumber]?.amount || ""} onChange={undefined} min={undefined} max={undefined} step={undefined}                            />
-                            <Button 
-                              onClick={() => handleAddDelivery(po)}
-                              disabled={getMaxDeliverable(po) <= 0}
-                            >
+                            <Input readOnly placeholder="Amount (Rs)" value={deliveryForm[po.poNumber]?.amount || ""} onChange={undefined} min={undefined} max={undefined} step={undefined} />
+                            <Button onClick={() => handleAddDelivery(po)} disabled={getMaxDeliverable(po) <= 0} className="w-full md:w-auto">
                               {getMaxDeliverable(po) <= 0 ? "No Stock" : "Add Delivery"}
                             </Button>
                           </div>
@@ -700,40 +692,40 @@ const PrimaPage = () => {
                       )}
 
                       {/* Transactions Table */}
-                      <div className="w-full border border-slate-200 rounded-lg overflow-hidden">
-                        <div className="bg-slate-200/60">
-                          <div className="grid grid-cols-6 gap-4 p-3 font-semibold text-sm">
+                      <div className="w-full border border-slate-200 rounded-lg overflow-x-auto min-w-[500px]">
+                        <div className="bg-slate-200/60 sticky top-0 z-10">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4 p-3 font-semibold text-sm">
                             <div>Date</div>
-                            <div>Kilos Delivered</div>
-                            <div>Amount</div>
+                            <div>Kilos</div>
+                            <div className="hidden sm:block">Amount</div>
                             <div>Status</div>
                             <div className="text-right">Actions</div>
-                            <div className="text-right">Edit/Delete</div>
+                            <div className="hidden sm:block text-right">Edit/Delete</div>
                           </div>
                         </div>
                         <div>
                           {transactions.filter(t => t.poNumber === po.poNumber).map(tx => (
-                            <div key={tx.id} className="grid grid-cols-6 gap-4 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0">
+                            <div key={tx.id} className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0 text-sm">
                               <div>{tx.date}</div>
                               <div>{tx.kilosDelivered}</div>
-                              <div>Rs {tx.amount.toLocaleString()}</div>
+                              <div className="hidden sm:block">Rs {tx.amount.toLocaleString()}</div>
                               <div>
                                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${tx.paymentStatus === "Pending" ? "bg-yellow-100 text-yellow-700" : tx.paymentStatus === "Approved" ? "bg-blue-100 text-blue-700" : tx.paymentStatus === "Rejected" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
                                   {tx.paymentStatus}
                                 </span>
                               </div>
-                              <div className="text-right space-x-2">
+                              <div className="text-right space-x-2 flex flex-wrap gap-2 justify-end">
                                 {tx.paymentStatus === "Pending" && (
                                   <>
-                                    <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white" onClick={() => confirmStatusUpdate(tx.id, "Approved")}>Approve</Button>
-                                    <Button size="sm" variant="destructive" onClick={() => confirmStatusUpdate(tx.id, "Rejected")}>Reject</Button>
+                                    <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white w-full sm:w-auto" onClick={() => confirmStatusUpdate(tx.id, "Approved")}>Approve</Button>
+                                    <Button size="sm" variant="destructive" className="w-full sm:w-auto" onClick={() => confirmStatusUpdate(tx.id, "Rejected")}>Reject</Button>
                                   </>
                                 )}
                                 {tx.paymentStatus === "Approved" && (
-                                  <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white" onClick={() => confirmStatusUpdate(tx.id, "Paid")}>Mark Paid</Button>
+                                  <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white w-full sm:w-auto" onClick={() => confirmStatusUpdate(tx.id, "Paid")}>Mark Paid</Button>
                                 )}
                               </div>
-                              <div className="text-right space-x-1">
+                              <div className="hidden sm:flex justify-end space-x-1">
                                 <Button size="sm" variant="outline" onClick={() => handleEditTransaction(tx)}>
                                   <Pencil className="w-3 h-3" />
                                 </Button>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Clock, Package, DollarSign, Wallet, TrendingUp, TrendingDown, FileText } from "lucide-react";
+import { Plus, Clock, Package, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Chart as ChartJS,
@@ -22,7 +22,7 @@ interface PrimaTransaction { id: number; poNumber: string; kilosDelivered: numbe
 interface Production { id: number; kilosOut: number; }
 interface Purchase { id: number; quantity: number; color: "red" | "green"; }
 interface PettyCashTransaction { id: number; amount: number; type: "inflow" | "outflow"; }
-interface Expense { id: number; date: string; category: string; description: string; cost: number; }
+interface Expense { id: string; date: string; category: string; description: string; cost: number; }
 
 const DRY_RATIO = 0.1;
 
@@ -102,64 +102,156 @@ const Dashboard = () => {
   const lineChartOptions = { ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: "Production Over Time" } } };
 
   const SummaryCard = ({ title, value, icon: Icon, description }: { title: string; value: string; icon: any; description: string }) => (
-    <div className="bg-white/90 rounded-2xl p-6 shadow-lg flex flex-col justify-between">
+    <div className="bg-white/90 rounded-2xl p-4 sm:p-6 shadow-lg flex flex-col justify-between">
       <div className="flex items-center justify-between mb-3">
-        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-          <Icon className="w-6 h-6 text-white" />
+        <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+          <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
         </div>
       </div>
-      <h3 className="text-sm font-medium text-slate-600 mb-1">{title}</h3>
-      <p className="text-2xl font-bold text-slate-900">{value}</p>
-      <p className="text-xs text-slate-500 mt-1">{description}</p>
+      <h3 className="text-sm sm:text-base font-medium text-slate-600 mb-1">{title}</h3>
+      <p className="text-xl sm:text-2xl font-bold text-slate-900">{value}</p>
+      <p className="text-xs sm:text-sm text-slate-500 mt-1">{description}</p>
     </div>
   );
 
   return (
-    <div className="min-h-screen p-6 bg-slate-50 space-y-6">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/50 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-            <Plus className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-            <p className="text-slate-600 text-sm">Overview of purchases, production, payments, petty cash & expenses</p>
-          </div>
-        </div>
+    <div className="min-h-screen p-4 sm:p-6 bg-slate-50 space-y-6">
+  {/* Header */}
+  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-200/50 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+        <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
       </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <SummaryCard title="Total Quantity" value={`${totalQuantity} kg`} icon={Plus} description="Sum of all purchased materials" />
-        <SummaryCard title="Pending Payments" value={`Rs ${pendingPayments.toLocaleString()}`} icon={Clock} description="Amount awaiting payment" />
-        <SummaryCard title="Paid Amount" value={`Rs ${paidAmount.toLocaleString()}`} icon={DollarSign} description="Cash received" />
-        <SummaryCard title="Total Dry Kilos" value={`${totalDryKilos.toFixed(2)} kg`} icon={Package} description="Usable stock after production" />
-      </div>
-
-      {/* Charts: 2 per row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <div className="bg-white/90 rounded-2xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Purchase Quantities by Color</h3>
-          <Bar data={primaChartData} options={{ ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: "Purchase Quantities by Color" } } }} />
-        </div>
-
-        <div className="bg-white/90 rounded-2xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Petty Cash Overview</h3>
-          <Bar data={pettyCashChartData} options={{ ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: "Petty Cash Inflow vs Outflow" } } }} />
-        </div>
-
-        <div className="bg-white/90 rounded-2xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Expenses by Category</h3>
-          <Bar data={expensesChartData} options={{ ...chartOptions, plugins: { ...chartOptions.plugins, title: { display: true, text: "Expenses by Category" } } }} />
-        </div>
-
-        <div className="bg-white/90 rounded-2xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Production Overview</h3>
-          <Line data={productionChartData} options={lineChartOptions} />
-        </div>
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Dashboard</h1>
+        <p className="text-sm sm:text-base text-slate-600">
+          Overview of purchases, production, payments, petty cash & expenses
+        </p>
       </div>
     </div>
+  </div>
+
+  {/* Summary Cards */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+    <SummaryCard
+      title="Total Quantity"
+      value={`${totalQuantity} kg`}
+      icon={Plus}
+      description="Sum of all purchased materials"
+    />
+    <SummaryCard
+      title="Pending Payments"
+      value={`Rs ${pendingPayments.toLocaleString()}`}
+      icon={Clock}
+      description="Amount awaiting payment"
+    />
+    <SummaryCard
+      title="Paid Amount"
+      value={`Rs ${paidAmount.toLocaleString()}`}
+      icon={DollarSign}
+      description="Cash received"
+    />
+    <SummaryCard
+      title="Total Dry Kilos"
+      value={`${totalDryKilos.toFixed(2)} kg`}
+      icon={Package}
+      description="Usable stock after production"
+    />
+  </div>
+
+  {/* Charts */}
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+    {/* Chart 1 */}
+    <div className="bg-white/90 rounded-2xl p-4 sm:p-6 shadow-lg">
+      <h3 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4">
+        Purchase Quantities by Color
+      </h3>
+      <div className="h-64 sm:h-80">
+        <Bar
+          data={primaChartData}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            ...chartOptions,
+            plugins: {
+              ...chartOptions.plugins,
+              title: {
+                display: true,
+                text: "Purchase Quantities by Color",
+              },
+            },
+          }}
+        />
+      </div>
+    </div>
+
+    {/* Chart 2 */}
+    <div className="bg-white/90 rounded-2xl p-4 sm:p-6 shadow-lg">
+      <h3 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4">
+        Petty Cash Overview
+      </h3>
+      <div className="h-64 sm:h-80">
+        <Bar
+          data={pettyCashChartData}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            ...chartOptions,
+            plugins: {
+              ...chartOptions.plugins,
+              title: {
+                display: true,
+                text: "Petty Cash Inflow vs Outflow",
+              },
+            },
+          }}
+        />
+      </div>
+    </div>
+
+    {/* Chart 3 */}
+    <div className="bg-white/90 rounded-2xl p-4 sm:p-6 shadow-lg">
+      <h3 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4">
+        Expenses by Category
+      </h3>
+      <div className="h-64 sm:h-80">
+        <Bar
+          data={expensesChartData}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            ...chartOptions,
+            plugins: {
+              ...chartOptions.plugins,
+              title: {
+                display: true,
+                text: "Expenses by Category",
+              },
+            },
+          }}
+        />
+      </div>
+    </div>
+
+    {/* Chart 4 */}
+    <div className="bg-white/90 rounded-2xl p-4 sm:p-6 shadow-lg">
+      <h3 className="text-lg sm:text-xl font-semibold text-slate-800 mb-4">
+        Production Overview
+      </h3>
+      <div className="h-64 sm:h-80">
+        <Line
+          data={productionChartData}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+            ...lineChartOptions,
+          }}
+        />
+      </div>
+    </div>
+  </div>
+</div>
+
   );
 };
 
