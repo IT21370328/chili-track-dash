@@ -1,57 +1,59 @@
-import { db } from "../db.js";
+// controllers/expenses.js
+import dotenv from "dotenv";
+import { createClient } from "@libsql/client";
+
+dotenv.config(); // Load .env
+
+const client = createClient({
+  url: process.env.TURSO_URL,
+  authToken: process.env.TURSO_API_KEY,
+});
+
 
 // Get all expenses
-export const getExpenses = (callback) => {
-  db.all("SELECT * FROM expenses ORDER BY date DESC", [], callback);
+export const getExpenses = async () => {
+  const { rows } = await client.execute("SELECT * FROM expenses ORDER BY date DESC");
+  return rows;
 };
 
 // Add a new expense
-export const addExpense = (expense, callback) => {
+export const addExpense = async (expense) => {
   const { date, category, description, cost } = expense;
-  db.run(
+
+  if (!date || !category || !description || cost === undefined) {
+    throw new Error("All fields are required");
+  }
+
+  const { lastInsertRowid } = await client.execute(
     "INSERT INTO expenses (date, category, description, cost) VALUES (?, ?, ?, ?)",
-    [date, category, description, cost],
-    function (err) {
-      if (err) callback(err);
-      else callback(null, { id: this.lastID });
-    }
+    [date, category, description, cost]
   );
+
+  const { rows } = await client.execute("SELECT * FROM expenses WHERE id = ?", [lastInsertRowid]);
+  return rows[0];
 };
 
 // Update an existing expense
-export const updateExpense = (id, expense, callback) => {
+export const updateExpense = async (id, expense) => {
   const { date, category, description, cost } = expense;
-  db.run(
-    "UPDATE expenses SET date = ?, category = ?, description = ?, cost = ? WHERE id = ?",
-    [date, category, description, cost, id],
-    function (err) {
-      if (err) return callback(err);
 
-      // Return the updated row
-      db.get("SELECT * FROM expenses WHERE id = ?", [id], (err, row) => {
-        if (err) return callback(err);
-        callback(null, row);
-      });
-    }
+  await client.execute(
+    "UPDATE expenses SET date = ?, category = ?, description = ?, cost = ? WHERE id = ?",
+    [date, category, description, cost, id]
   );
+
+  const { rows } = await client.execute("SELECT * FROM expenses WHERE id = ?", [id]);
+  return rows[0];
 };
 
 // Delete an expense
-export const deleteExpense = (id, callback) => {
-  db.run("DELETE FROM expenses WHERE id = ?", [id], function (err) {
-    if (err) return callback(err);
-    callback(null, { message: "Expense deleted successfully", id });
-  });
+export const deleteExpense = async (id) => {
+  await client.execute("DELETE FROM expenses WHERE id = ?", [id]);
+  return { message: "Expense deleted successfully", id };
 };
 
 // Get total expenses summary
-export const getExpensesSummary = (callback) => {
-  db.get(
-    "SELECT SUM(cost) as totalExpenses FROM expenses",
-    [],
-    (err, row) => {
-      if (err) callback(err);
-      else callback(null, row || { totalExpenses: 0 });
-    }
-  );
+export const getExpensesSummary = async () => {
+  const { rows } = await client.execute("SELECT SUM(cost) as totalExpenses FROM expenses");
+  return rows[0] || { totalExpenses: 0 };
 };

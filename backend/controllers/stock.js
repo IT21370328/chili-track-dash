@@ -1,19 +1,24 @@
 // controllers/stock.js
-import { db } from "../db.js";
+import dotenv from "dotenv";
+import { createClient } from "@libsql/client";
 
-// ✅ Get total stock (total quantity purchased)
-export function getStock(callback) {
-  const query = `SELECT SUM(quantity) as totalQuantity FROM purchases`;
-  db.get(query, [], (err, row) => {
-    if (err) return callback(err);
-    const totalQuantity = row?.totalQuantity || 0;
-    callback(null, { totalQuantity });
-  });
-}
+dotenv.config(); // Load .env
+
+const client = createClient({
+  url: process.env.TURSO_URL,
+  authToken: process.env.TURSO_API_KEY,
+});
+
+// ✅ Get total stock (sum of quantity purchased)
+export const getStock = async () => {
+  const { rows } = await client.execute(`SELECT SUM(quantity) as totalQuantity FROM purchases`);
+  const totalQuantity = rows[0]?.totalQuantity || 0;
+  return { totalQuantity };
+};
 
 // ✅ Get stock history (all purchases)
-export function getStockHistory(callback) {
-  const query = `
+export const getStockHistory = async () => {
+  const { rows } = await client.execute(`
     SELECT 
       id, 
       date, 
@@ -23,52 +28,45 @@ export function getStockHistory(callback) {
       (quantity * price) as totalValue 
     FROM purchases 
     ORDER BY date DESC
-  `;
-  db.all(query, [], (err, rows) => {
-    if (err) return callback(err);
-    callback(null, rows || []);
-  });
-}
+  `);
+  return rows || [];
+};
 
 // ✅ Add new stock (purchase record)
-export function addStock(stockData, callback) {
+export const addStock = async (stockData) => {
   const { date, quantity, price, paymentMethod } = stockData;
-  if (!quantity || !price) return callback(new Error("Quantity and price are required"));
+  if (!quantity || !price) throw new Error("Quantity and price are required");
 
-  const query = `
-    INSERT INTO purchases (date, quantity, price, paymentMethod)
-    VALUES (?, ?, ?, ?)
-  `;
-  db.run(query, [date, quantity, price, paymentMethod], function (err) {
-    if (err) return callback(err);
-    db.get(`SELECT * FROM purchases WHERE id = ?`, [this.lastID], callback);
-  });
-}
+  const { lastInsertRowid } = await client.execute(
+    `INSERT INTO purchases (date, quantity, price, paymentMethod) VALUES (?, ?, ?, ?)`,
+    [date, quantity, price, paymentMethod]
+  );
+
+  const { rows } = await client.execute("SELECT * FROM purchases WHERE id = ?", [lastInsertRowid]);
+  return rows[0];
+};
 
 // ✅ Update stock (purchase record)
-export function updateStock(id, updates, callback) {
+export const updateStock = async (id, updates) => {
   const { date, quantity, price, paymentMethod } = updates;
-  const query = `
-    UPDATE purchases SET
+
+  await client.execute(
+    `UPDATE purchases SET
       date = COALESCE(?, date),
       quantity = COALESCE(?, quantity),
       price = COALESCE(?, price),
       paymentMethod = COALESCE(?, paymentMethod),
       updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `;
+     WHERE id = ?`,
+    [date, quantity, price, paymentMethod, id]
+  );
 
-  db.run(query, [date, quantity, price, paymentMethod, id], function (err) {
-    if (err) return callback(err);
-    db.get(`SELECT * FROM purchases WHERE id = ?`, [id], callback);
-  });
-}
+  const { rows } = await client.execute("SELECT * FROM purchases WHERE id = ?", [id]);
+  return rows[0];
+};
 
 // ✅ Delete stock (purchase record)
-export function deleteStock(id, callback) {
-  const query = `DELETE FROM purchases WHERE id = ?`;
-  db.run(query, [id], function (err) {
-    if (err) return callback(err);
-    callback(null, { message: "Stock record deleted successfully", id });
-  });
-}
+export const deleteStock = async (id) => {
+  await client.execute("DELETE FROM purchases WHERE id = ?", [id]);
+  return { message: "Stock record deleted successfully", id };
+};

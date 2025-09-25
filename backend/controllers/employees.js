@@ -1,73 +1,79 @@
 // controllers/employees.js
-import { db } from "../db.js";
+import dotenv from "dotenv";
+import { createClient } from "@libsql/client";
+
+dotenv.config(); // Load .env
+
+const client = createClient({
+  url: process.env.TURSO_URL,
+  authToken: process.env.TURSO_API_KEY,
+});
 
 // Get all employees
-export function getEmployees(callback) {
-  const query = `SELECT * FROM employees ORDER BY id DESC`;
-  db.all(query, [], callback);
+export async function getEmployees() {
+  const { rows } = await client.execute("SELECT * FROM employees ORDER BY id DESC");
+  return rows;
 }
 
 // Add employee
-export function addEmployee(employee, callback) {
+export async function addEmployee(employee) {
   const { name, salary, startDate, endDate } = employee;
-  if (!name || salary === undefined) return callback(new Error("Name and salary are required"));
+  if (!name || salary === undefined) throw new Error("Name and salary are required");
 
-  const query = `
-    INSERT INTO employees (name, salary, startDate, endDate)
-    VALUES (?, ?, ?, ?)
-  `;
-  db.run(query, [name, salary, startDate, endDate], function (err) {
-    if (err) return callback(err);
-    db.get(`SELECT * FROM employees WHERE id = ?`, [this.lastID], callback);
-  });
+  const { lastInsertRowid } = await client.execute(
+    `INSERT INTO employees (name, salary, startDate, endDate) VALUES (?, ?, ?, ?)`,
+    [name, salary, startDate, endDate]
+  );
+
+  const { rows } = await client.execute(`SELECT * FROM employees WHERE id = ?`, [lastInsertRowid]);
+  return rows[0];
 }
 
 // Update employee
-export function updateEmployee(id, employee, callback) {
+export async function updateEmployee(id, employee) {
   const { name, salary, startDate, endDate } = employee;
-  const query = `
-    UPDATE employees
-    SET name = ?, salary = ?, startDate = ?, endDate = ?, updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `;
-  db.run(query, [name, salary, startDate, endDate, id], function (err) {
-    if (err) return callback(err);
-    db.get(`SELECT * FROM employees WHERE id = ?`, [id], callback);
-  });
+
+  await client.execute(
+    `UPDATE employees 
+     SET name = ?, salary = ?, startDate = ?, endDate = ?, updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [name, salary, startDate, endDate, id]
+  );
+
+  const { rows } = await client.execute(`SELECT * FROM employees WHERE id = ?`, [id]);
+  return rows[0];
 }
 
 // Delete employee
-export function deleteEmployee(id, callback) {
-  const query = `DELETE FROM employees WHERE id = ?`;
-  db.run(query, [id], function (err) {
-    if (err) return callback(err);
-    callback(null, { message: "Employee deleted successfully", id });
-  });
+export async function deleteEmployee(id) {
+  await client.execute(`DELETE FROM employees WHERE id = ?`, [id]);
+  return { message: "Employee deleted successfully", id };
 }
 
 // Mark salary as paid
-export function markSalaryPaid(id, callback) {
+export async function markSalaryPaid(id) {
   const today = new Date().toISOString().split("T")[0];
-  const query = `
-    UPDATE employees 
-    SET status = 'paid', lastPaid = ?, updated_at = CURRENT_TIMESTAMP 
-    WHERE id = ?
-  `;
-  db.run(query, [today, id], function (err) {
-    if (err) return callback(err);
-    db.get(`SELECT * FROM employees WHERE id = ?`, [id], callback);
-  });
+
+  await client.execute(
+    `UPDATE employees
+     SET status = 'paid', lastPaid = ?, updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [today, id]
+  );
+
+  const { rows } = await client.execute(`SELECT * FROM employees WHERE id = ?`, [id]);
+  return rows[0];
 }
 
-// Reset to unpaid (optional)
-export function resetSalaryStatus(id, callback) {
-  const query = `
-    UPDATE employees 
-    SET status = 'unpaid', updated_at = CURRENT_TIMESTAMP 
-    WHERE id = ?
-  `;
-  db.run(query, [id], function (err) {
-    if (err) return callback(err);
-    db.get(`SELECT * FROM employees WHERE id = ?`, [id], callback);
-  });
+// Reset to unpaid
+export async function resetSalaryStatus(id) {
+  await client.execute(
+    `UPDATE employees
+     SET status = 'unpaid', updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [id]
+  );
+
+  const { rows } = await client.execute(`SELECT * FROM employees WHERE id = ?`, [id]);
+  return rows[0];
 }

@@ -2,33 +2,35 @@ import express from "express";
 import cors from "cors";
 
 // =================== Controllers ===================
-import { addPurchase, getPurchases, getSummary, updatePurchase, deletePurchase, markAsPaid  } from "./controllers/purchases.js";
-import { addPettyCash, getPettyCash, getPettyCashSummary, updatePettyCash, deletePettyCash } from "./controllers/pettycash.js";
-import { addExpense, getExpenses, getExpensesSummary, updateExpense, deleteExpense } from "./controllers/expenses.js";
 import { 
-  addProduction, 
-  getProduction, 
-  getProductionSummary, 
-  getProductionByDateRange, 
-  updateProduction, 
-  deleteProduction 
+  addPurchase, getPurchases, getSummary, updatePurchase, deletePurchase, markAsPaid 
+} from "./controllers/purchases.js";
+
+import { 
+  addPettyCash, getPettyCash, getPettyCashSummary, updatePettyCash, deletePettyCash 
+} from "./controllers/pettycash.js";
+
+import { 
+  addExpense, getExpenses, getExpensesSummary, updateExpense, deleteExpense 
+} from "./controllers/expenses.js";
+
+import { 
+  addProduction, getProduction, getProductionSummary, getProductionByDateRange, 
+  updateProduction, deleteProduction 
 } from "./controllers/production.js";
+
 import { addPO, getPOs, updatePO, getPOByNumber, deletePO } from "./controllers/po.js";
+
 import { 
-  addPrimaTransaction, 
-  getPrimaTransactions, 
-  updatePrimaTransactionStatus, 
-  updatePrimaTransaction, 
-  deletePrimaTransaction 
+  addPrimaTransaction, getPrimaTransactions, updatePrimaTransactionStatus, 
+  updatePrimaTransaction, deletePrimaTransaction 
 } from "./controllers/primatransactions.js";
+
 import { 
-  getEmployees, 
-  addEmployee, 
-  markSalaryPaid, 
-  resetSalaryStatus, 
-  updateEmployee, 
-  deleteEmployee 
+  getEmployees, addEmployee, markSalaryPaid, resetSalaryStatus, 
+  updateEmployee, deleteEmployee 
 } from "./controllers/employees.js";
+
 import { getStock, getStockHistory, addStock, updateStock, deleteStock } from "./controllers/stock.js";
 
 const app = express();
@@ -37,197 +39,239 @@ const PORT = 5000;
 app.use(cors());
 app.use(express.json());
 
-/* =================== Purchases Routes =================== */
-app.get("/purchases", (req, res) => {
-  getPurchases((err, rows) => err ? res.status(500).json({ error: err.message }) : res.json(rows));
-});
+// =================== Helper for async handlers ===================
+const asyncHandler = fn => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
 
-app.post("/purchases", (req, res) => {
-  addPurchase(req.body, (err, result) => err ? res.status(500).json({ error: err.message }) : res.status(201).json(result));
-});
+// =================== Purchases Routes ===================
+app.get("/purchases", asyncHandler(async (req, res) => {
+  const rows = await getPurchases();
+  res.json(rows);
+}));
 
-app.put("/purchases/:id", (req, res) => {
-  updatePurchase(req.params.id, req.body, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+app.post("/purchases", asyncHandler(async (req, res) => {
+  const result = await addPurchase(req.body);
+  res.status(201).json(result);
+}));
 
-app.delete("/purchases/:id", (req, res) => {
-  deletePurchase(req.params.id, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+app.put("/purchases/:id", asyncHandler(async (req, res) => {
+  const result = await updatePurchase(req.params.id, req.body);
+  res.json(result);
+}));
 
-app.get("/summary", (req, res) => {
-  getSummary((err, summary) => err ? res.status(500).json({ error: err.message }) : res.json(summary));
-});
+app.delete("/purchases/:id", asyncHandler(async (req, res) => {
+  const result = await deletePurchase(req.params.id);
+  res.json(result);
+}));
 
-/* =================== Petty Cash Routes =================== */
-app.get("/pettycash", (req, res) => {
-  getPettyCash((err, rows) => err ? res.status(500).json({ error: err.message }) : res.json(rows));
-});
+app.get("/summary", asyncHandler(async (req, res) => {
+  const summary = await getSummary();
+  res.json(summary);
+}));
 
-app.post("/pettycash", (req, res) => {
-  addPettyCash(req.body, (err, result) => err ? res.status(500).json({ error: err.message }) : res.json(result));
-});
+app.put("/purchases/:id/pay", asyncHandler(async (req, res) => {
+  const updatedPurchase = await markAsPaid(req.params.id);
+  res.json(updatedPurchase);
+}));
 
-app.put("/pettycash/:id", (req, res) => {
-  updatePettyCash(req.params.id, req.body, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+// =================== Petty Cash Routes ===================
+app.get("/pettycash", asyncHandler(async (req, res) => {
+  const rows = await getPettyCash();
+  res.json(rows);
+}));
 
-app.delete("/pettycash/:id", (req, res) => {
-  deletePettyCash(req.params.id, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+app.post("/pettycash", asyncHandler(async (req, res) => {
+  const result = await addPettyCash(req.body);
+  res.json(result);
+}));
 
-app.get("/pettycash/summary", (req, res) => {
-  getPettyCashSummary((err, summary) => err ? res.status(500).json({ error: err.message }) : res.json(summary));
-});
+app.put("/pettycash/:id", asyncHandler(async (req, res) => {
+  const result = await updatePettyCash(req.params.id, req.body);
+  res.json(result);
+}));
 
-/* =================== Expenses Routes =================== */
-app.get("/expenses", (req, res) => {
-  getExpenses((err, rows) => err ? res.status(500).json({ error: err.message }) : res.json(rows));
-});
+app.delete("/pettycash/:id", asyncHandler(async (req, res) => {
+  const result = await deletePettyCash(req.params.id);
+  res.json(result);
+}));
 
-app.post("/expenses", (req, res) => {
-  addExpense(req.body, (err, result) => err ? res.status(500).json({ error: err.message }) : res.json(result));
-});
+app.get("/pettycash/summary", asyncHandler(async (req, res) => {
+  const summary = await getPettyCashSummary();
+  res.json(summary);
+}));
 
-app.put("/expenses/:id", (req, res) => {
-  updateExpense(req.params.id, req.body, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+// =================== Expenses Routes ===================
+app.get("/expenses", asyncHandler(async (req, res) => {
+  const rows = await getExpenses();
+  res.json(rows);
+}));
 
-app.delete("/expenses/:id", (req, res) => {
-  deleteExpense(req.params.id, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+app.post("/expenses", asyncHandler(async (req, res) => {
+  const result = await addExpense(req.body);
+  res.json(result);
+}));
 
-app.get("/expenses/summary", (req, res) => {
-  getExpensesSummary((err, summary) => err ? res.status(500).json({ error: err.message }) : res.json(summary));
-});
+app.put("/expenses/:id", asyncHandler(async (req, res) => {
+  const result = await updateExpense(req.params.id, req.body);
+  res.json(result);
+}));
 
-/* =================== Production Routes =================== */
-app.get("/production", (req, res) => {
-  getProduction((err, rows) => err ? res.status(500).json({ error: err.message }) : res.json(rows));
-});
+app.delete("/expenses/:id", asyncHandler(async (req, res) => {
+  const result = await deleteExpense(req.params.id);
+  res.json(result);
+}));
 
-app.get("/production/summary", (req, res) => {
-  getProductionSummary((err, summary) => err ? res.status(500).json({ error: err.message }) : res.json(summary));
-});
+app.get("/expenses/summary", asyncHandler(async (req, res) => {
+  const summary = await getExpensesSummary();
+  res.json(summary);
+}));
 
-app.post("/production", (req, res) => {
-  addProduction(req.body, (err, result) => err ? res.status(500).json({ error: err.message }) : res.json(result));
-});
+// =================== Production Routes ===================
+app.get("/production", asyncHandler(async (req, res) => {
+  const rows = await getProduction();
+  res.json(rows);
+}));
 
-app.get("/production/range", (req, res) => {
+app.get("/production/summary", asyncHandler(async (req, res) => {
+  const summary = await getProductionSummary();
+  res.json(summary);
+}));
+
+app.post("/production", asyncHandler(async (req, res) => {
+  const result = await addProduction(req.body);
+  res.json(result);
+}));
+
+app.get("/production/range", asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
   if (!startDate || !endDate) return res.status(400).json({ error: "startDate and endDate are required" });
+  const rows = await getProductionByDateRange(startDate, endDate);
+  res.json(rows);
+}));
 
-  getProductionByDateRange(startDate, endDate, (err, rows) => err ? res.status(500).json({ error: err.message }) : res.json(rows));
-});
+app.put("/production/:id", asyncHandler(async (req, res) => {
+  const result = await updateProduction(req.params.id, req.body);
+  res.json(result);
+}));
 
-app.put("/production/:id", (req, res) => {
-  updateProduction(req.params.id, req.body, (err, result) => err ? res.status(500).json({ error: err.message }) : res.json(result));
-});
+app.delete("/production/:id", asyncHandler(async (req, res) => {
+  const result = await deleteProduction(req.params.id);
+  res.json(result);
+}));
 
-app.delete("/production/:id", (req, res) => {
-  deleteProduction(req.params.id, (err, result) => err ? res.status(500).json({ error: err.message }) : res.json(result));
-});
+// =================== Prima Transactions Routes ===================
+app.get("/primatransactions", asyncHandler(async (req, res) => {
+  const rows = await getPrimaTransactions();
+  res.json(rows);
+}));
 
-/* =================== Prima Transactions Routes =================== */
-app.get("/primatransactions", (req, res) => {
-  getPrimaTransactions((err, rows) => err ? res.status(500).json({ error: err.message }) : res.json(rows));
-});
+app.post("/primatransactions", asyncHandler(async (req, res) => {
+  const result = await addPrimaTransaction(req.body);
+  res.json(result);
+}));
 
-app.post("/primatransactions", (req, res) => {
-  addPrimaTransaction(req.body, (err, result) => err ? res.status(500).json({ error: err.message }) : res.json(result));
-});
+app.put("/primatransactions/:id", asyncHandler(async (req, res) => {
+  const result = await updatePrimaTransaction(req.params.id, req.body);
+  res.json(result);
+}));
 
-app.put("/primatransactions/:id", (req, res) => {
-  updatePrimaTransaction(req.params.id, req.body, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
-
-app.put("/primatransactions/:id/status", (req, res) => {
+app.put("/primatransactions/:id/status", asyncHandler(async (req, res) => {
   const { paymentStatus } = req.body;
   if (!paymentStatus) return res.status(400).json({ error: "paymentStatus is required" });
+  const result = await updatePrimaTransactionStatus(req.params.id, paymentStatus);
+  res.json(result);
+}));
 
-  updatePrimaTransactionStatus(req.params.id, paymentStatus, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+app.delete("/primatransactions/:id", asyncHandler(async (req, res) => {
+  const result = await deletePrimaTransaction(req.params.id);
+  res.json(result);
+}));
 
-app.delete("/primatransactions/:id", (req, res) => {
-  deletePrimaTransaction(req.params.id, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+// =================== Employees Routes ===================
+app.get("/employees", asyncHandler(async (req, res) => {
+  const rows = await getEmployees();
+  res.json(rows);
+}));
 
-/* =================== Employees Routes =================== */
-app.get("/employees", (req, res) => {
-  getEmployees((err, rows) => err ? res.status(500).json({ error: err.message }) : res.json(rows));
-});
+app.post("/employees", asyncHandler(async (req, res) => {
+  const result = await addEmployee(req.body);
+  res.json(result);
+}));
 
-app.post("/employees", (req, res) => {
-  addEmployee(req.body, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+app.put("/employees/:id", asyncHandler(async (req, res) => {
+  const result = await updateEmployee(req.params.id, req.body);
+  res.json(result);
+}));
 
-app.put("/employees/:id", (req, res) => {
-  updateEmployee(req.params.id, req.body, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+app.put("/employees/:id/pay", asyncHandler(async (req, res) => {
+  const result = await markSalaryPaid(req.params.id);
+  res.json(result);
+}));
 
-app.put("/employees/:id/pay", (req, res) => {
-  markSalaryPaid(req.params.id, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+app.put("/employees/:id/reset", asyncHandler(async (req, res) => {
+  const result = await resetSalaryStatus(req.params.id);
+  res.json(result);
+}));
 
-app.put("/employees/:id/reset", (req, res) => {
-  resetSalaryStatus(req.params.id, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+app.delete("/employees/:id", asyncHandler(async (req, res) => {
+  const result = await deleteEmployee(req.params.id);
+  res.json(result);
+}));
 
-app.delete("/employees/:id", (req, res) => {
-  deleteEmployee(req.params.id, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+// =================== Stock Routes ===================
+app.get("/stock", asyncHandler(async (req, res) => {
+  const stock = await getStock();
+  res.json(stock);
+}));
 
-/* =================== Stock Routes =================== */
-app.get("/stock", (req, res) => {
-  getStock((err, stock) => err ? res.status(500).json({ error: err.message }) : res.json(stock));
-});
+app.get("/stock/history", asyncHandler(async (req, res) => {
+  const rows = await getStockHistory();
+  res.json(rows);
+}));
 
-app.get("/stock/history", (req, res) => {
-  getStockHistory((err, rows) => err ? res.status(500).json({ error: err.message }) : res.json(rows));
-});
+app.post("/stock", asyncHandler(async (req, res) => {
+  const result = await addStock(req.body);
+  res.json(result);
+}));
 
-app.post("/stock", (req, res) => {
-  addStock(req.body, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+app.put("/stock/:id", asyncHandler(async (req, res) => {
+  const result = await updateStock(req.params.id, req.body);
+  res.json(result);
+}));
 
-app.put("/stock/:id", (req, res) => {
-  updateStock(req.params.id, req.body, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+app.delete("/stock/:id", asyncHandler(async (req, res) => {
+  const result = await deleteStock(req.params.id);
+  res.json(result);
+}));
 
-app.delete("/stock/:id", (req, res) => {
-  deleteStock(req.params.id, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
-});
+// =================== Purchase Orders Routes ===================
+app.post("/pos", asyncHandler(async (req, res) => {
+  const result = await addPO(req.body);
+  res.json(result);
+}));
 
-/* =================== Purchase Orders =================== */
-app.post("/pos", (req, res) => {
-  addPO(req.body, (err, result) => err ? res.status(500).json({ error: err.message }) : res.json(result));
-});
+app.get("/pos", asyncHandler(async (req, res) => {
+  const rows = await getPOs();
+  res.json(rows);
+}));
 
-app.get("/pos", (req, res) => {
-  getPOs((err, rows) => err ? res.status(500).json({ error: err.message }) : res.json(rows));
-});
+app.get("/pos/:poNumber", asyncHandler(async (req, res) => {
+  const po = await getPOByNumber(req.params.poNumber);
+  res.json(po);
+}));
 
-app.get("/pos/:poNumber", (req, res) => {
-  getPOByNumber(req.params.poNumber, (err, po) => err ? res.status(500).json({ error: err.message }) : res.json(po));
-});
+app.put("/pos/:poNumber", asyncHandler(async (req, res) => {
+  const result = await updatePO(req.params.poNumber, req.body);
+  res.json(result);
+}));
 
-app.put("/pos/:poNumber", (req, res) => {
-  updatePO(req.params.poNumber, req.body, (err, result) => err ? res.status(500).json({ error: err.message }) : res.json(result));
-});
+app.delete("/pos/:poNumber", asyncHandler(async (req, res) => {
+  const result = await deletePO(req.params.poNumber);
+  res.json(result);
+}));
 
-app.delete("/pos/:poNumber", (req, res) => {
-  deletePO(req.params.poNumber, (err, result) => err ? res.status(500).json({ error: err.message }) : res.json(result));
-});
-
-app.put("/purchases/:id/pay", (req, res) => {
-  const { id } = req.params;
-  markAsPaid(id, (err, updatedPurchase) => {
-    if (err) return res.status(500).json({ error: "Failed to mark as paid" });
-    res.json(updatedPurchase);
-  });
-});
-
-/* =================== Start Server =================== */
+// =================== Start Server ===================
 app.listen(PORT, () => {
   console.log(`✅ Backend server running at http://localhost:${PORT}`);
 });

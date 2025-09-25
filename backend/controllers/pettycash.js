@@ -1,132 +1,109 @@
-import { db } from "../db.js";
+// controllers/pettycash.js
+import dotenv from "dotenv";
+import { createClient } from "@libsql/client";
+
+dotenv.config(); // Load .env
+
+const client = createClient({
+  url: process.env.TURSO_URL,
+  authToken: process.env.TURSO_API_KEY,
+});
+
+
+// Helper: recalculate balances from a starting ID
+const recalcBalances = async (startId) => {
+  // Get previous balance
+  const prevResult = await client.execute(
+    "SELECT balance FROM pettycash WHERE id < ? ORDER BY id DESC LIMIT 1",
+    [startId]
+  );
+  let balance = prevResult.rows[0] ? prevResult.rows[0].balance : 0;
+
+  // Get all following transactions
+  const { rows: transactions } = await client.execute(
+    "SELECT id, amount, type FROM pettycash WHERE id >= ? ORDER BY id ASC",
+    [startId]
+  );
+
+  for (const t of transactions) {
+    balance = t.type === "inflow" ? balance + t.amount : balance - t.amount;
+    await client.execute("UPDATE pettycash SET balance = ? WHERE id = ?", [balance, t.id]);
+  }
+};
 
 // Add petty cash transaction
-export function addPettyCash(transaction, callback) {
+export const addPettyCash = async (transaction) => {
   const { amount, description, type } = transaction;
-  const date = new Date().toISOString();
+  if (!amount || !description || !type) throw new Error("All fields are required");
   const amt = parseFloat(amount);
+  const date = new Date().toISOString();
 
-  db.get("SELECT balance FROM pettycash ORDER BY id DESC LIMIT 1", [], (err, row) => {
-    if (err) return callback(err);
+  // Get current balance
+  const { rows: lastRow } = await client.execute(
+    "SELECT balance FROM pettycash ORDER BY id DESC LIMIT 1"
+  );
+  const currentBalance = lastRow[0] ? lastRow[0].balance : 0;
+  const newBalance = type === "inflow" ? currentBalance + amt : currentBalance - amt;
 
-    let currentBalance = row ? row.balance : 0;
-    let newBalance = type === "inflow" ? currentBalance + amt : currentBalance - amt;
+  const { lastInsertRowid } = await client.execute(
+    "INSERT INTO pettycash (date, amount, description, type, balance) VALUES (?, ?, ?, ?, ?)",
+    [date, amt, description, type, newBalance]
+  );
 
-    db.run(
-      "INSERT INTO pettycash (date, amount, description, type, balance) VALUES (?, ?, ?, ?, ?)",
-      [date, amt, description, type, newBalance],
-      function (err) {
-        callback(err, { id: this.lastID, balance: newBalance });
-      }
-    );
-  });
-}
+  return { id: lastInsertRowid, balance: newBalance };
+};
 
 // Get all petty cash transactions
-export function getPettyCash(callback) {
-  db.all("SELECT * FROM pettycash ORDER BY date DESC", (err, rows) => {
-    callback(err, rows);
-  });
-}
+export const getPettyCash = async () => {
+  const { rows } = await client.execute("SELECT * FROM pettycash ORDER BY date DESC");
+  return rows;
+};
 
 // Get petty cash summary
-export function getPettyCashSummary(callback) {
-  db.all(
-    "SELECT type, SUM(amount) as total FROM pettycash GROUP BY type",
-    (err, rows) => {
-      if (err) return callback(err);
+export const getPettyCashSummary = async () => {
+  const { rows } = await client.execute("SELECT type, SUM(amount) as total FROM pettycash GROUP BY type");
+  let totalInflow = 0, totalOutflow = 0;
+  rows.forEach(row => {
+    if (row.type === "inflow") totalInflow = row.total;
+    if (row.type === "outflow") totalOutflow = row.total;
+  });
 
-      let totalInflow = 0;
-      let totalOutflow = 0;
+  const { rows: lastRow } = await client.execute("SELECT balance FROM pettycash ORDER BY id DESC LIMIT 1");
+  const balance = lastRow[0] ? lastRow[0].balance : 0;
 
-      rows.forEach(row => {
-        if (row.type === "inflow") totalInflow = row.total;
-        else if (row.type === "outflow") totalOutflow = row.total;
-      });
-
-      db.get("SELECT balance FROM pettycash ORDER BY id DESC LIMIT 1", [], (err, row) => {
-        if (err) return callback(err);
-        const balance = row ? row.balance : 0;
-        callback(null, { totalInflow, totalOutflow, balance });
-      });
-    }
-  );
-}
+  return { totalInflow, totalOutflow, balance };
+};
 
 // Update a petty cash transaction
-export function updatePettyCash(id, transaction, callback) {
+export const updatePettyCash = async (id, transaction) => {
   const { amount, description, type } = transaction;
+  if (!amount || !description || !type) throw new Error("All fields are required");
   const amt = parseFloat(amount);
 
-  // Get the previous transaction to recalculate balances
-  db.get("SELECT * FROM pettycash WHERE id = ?", [id], (err, oldRow) => {
-    if (err) return callback(err);
-    if (!oldRow) return callback(new Error("Transaction not found"));
+  const { rows: oldRow } = await client.execute("SELECT * FROM pettycash WHERE id = ?", [id]);
+  if (!oldRow[0]) throw new Error("Transaction not found");
 
-    // Get the balance before this transaction
-    db.get(
-      "SELECT balance FROM pettycash WHERE id < ? ORDER BY id DESC LIMIT 1",
-      [id],
-      (err, prevRow) => {
-        if (err) return callback(err);
-        let prevBalance = prevRow ? prevRow.balance : 0;
+  await client.execute(
+    "UPDATE pettycash SET amount = ?, description = ?, type = ? WHERE id = ?",
+    [amt, description, type, id]
+  );
 
-        // New balance after update
-        let newBalance = type === "inflow" ? prevBalance + amt : prevBalance - amt;
+  // Recalculate balances
+  await recalcBalances(id);
 
-        // Update the transaction
-        db.run(
-          "UPDATE pettycash SET amount = ?, description = ?, type = ?, balance = ? WHERE id = ?",
-          [amt, description, type, newBalance, id],
-          function (err) {
-            if (err) return callback(err);
-
-            // Recalculate balances for following transactions
-            db.all("SELECT id, amount, type FROM pettycash WHERE id > ? ORDER BY id ASC", [id], (err, rows) => {
-              if (err) return callback(err);
-
-              let balance = newBalance;
-              rows.forEach(row => {
-                balance = row.type === "inflow" ? balance + row.amount : balance - row.amount;
-                db.run("UPDATE pettycash SET balance = ? WHERE id = ?", [balance, row.id]);
-              });
-
-              callback(null, { id, balance: newBalance });
-            });
-          }
-        );
-      }
-    );
-  });
-}
+  const { rows } = await client.execute("SELECT * FROM pettycash WHERE id = ?", [id]);
+  return rows[0];
+};
 
 // Delete a petty cash transaction
-export function deletePettyCash(id, callback) {
-  // Get the transaction to delete
-  db.get("SELECT * FROM pettycash WHERE id = ?", [id], (err, rowToDelete) => {
-    if (err) return callback(err);
-    if (!rowToDelete) return callback(new Error("Transaction not found"));
+export const deletePettyCash = async (id) => {
+  const { rows: rowToDelete } = await client.execute("SELECT * FROM pettycash WHERE id = ?", [id]);
+  if (!rowToDelete[0]) throw new Error("Transaction not found");
 
-    db.run("DELETE FROM pettycash WHERE id = ?", [id], function (err) {
-      if (err) return callback(err);
+  await client.execute("DELETE FROM pettycash WHERE id = ?", [id]);
 
-      // Recalculate balances for following transactions
-      db.all("SELECT id, amount, type FROM pettycash WHERE id > ? ORDER BY id ASC", [id], (err, rows) => {
-        if (err) return callback(err);
+  // Recalculate balances
+  await recalcBalances(id);
 
-        // Get previous balance
-        db.get("SELECT balance FROM pettycash WHERE id < ? ORDER BY id DESC LIMIT 1", [id], (err, prevRow) => {
-          if (err) return callback(err);
-          let balance = prevRow ? prevRow.balance : 0;
-
-          rows.forEach(row => {
-            balance = row.type === "inflow" ? balance + row.amount : balance - row.amount;
-            db.run("UPDATE pettycash SET balance = ? WHERE id = ?", [balance, row.id]);
-          });
-
-          callback(null, { message: "Transaction deleted successfully", id });
-        });
-      });
-    });
-  });
-}
+  return { message: "Transaction deleted successfully", id };
+};
