@@ -46,7 +46,7 @@ interface Summary {
   balance: number;
 }
 
-const API_URL = "https://chili-track-dash.onrender.com/";
+const API_URL = "https://chili-track-dash.onrender.com";
 
 const PettyCash = () => {
   const [formData, setFormData] = useState({
@@ -150,7 +150,7 @@ const PettyCash = () => {
           type: formData.type
         })
       });
-      toast({ title: "✅ Transaction Recorded", description: `${formData.type === "inflow" ? "Added" : "Removed"} Rs.${parseFloat(formData.amount).toFixed(2)}` });
+      toast({ title: "Transaction Recorded", description: `${formData.type === "inflow" ? "Added" : "Removed"} Rs.${parseFloat(formData.amount).toFixed(2)}` });
       setFormData({ amount: "", description: "", type: "inflow" });
       fetchData();
     } catch (err) {
