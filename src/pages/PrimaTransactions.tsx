@@ -512,8 +512,8 @@ const PrimaPage = () => {
       )}
 
       {/* Header */}
-      <div className="bg-white/80 rounded-2xl p-6 shadow-lg flex flex-col md:flex-row items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+      <div className="bg-white/80 rounded-2xl p-4 sm:p-6 shadow-lg flex flex-col sm:flex-row items-start sm:items-center gap-3">
+      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
         <Package className="w-5 h-5 text-white" />
       </div>
       <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Production Dashboard</h1>
