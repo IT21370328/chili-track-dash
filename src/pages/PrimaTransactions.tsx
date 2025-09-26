@@ -215,7 +215,7 @@ const PrimaPage = () => {
       return; 
     }
     try {
-      const res = await fetch(`${API_URL}/po`, { 
+      const res = await fetch(`${API_URL}/pos`, { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
         body: JSON.stringify({ poNumber, date, totalKilos: Number(totalKilos), amount: Number(amount), status: "Pending" }) 
