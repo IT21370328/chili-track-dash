@@ -252,7 +252,7 @@ app.delete("/stock/:id", asyncHandler(async (req, res) => {
 }));
 
 // =================== Purchase Orders Routes ===================
-app.post("/pos", asyncHandler(async (req, res) => {
+app.post("/po", asyncHandler(async (req, res) => {
   const result = await addPO(req.body);
   res.json(result);
 }));
