@@ -108,7 +108,7 @@ const PrimaPage = () => {
       numBoxes: string; 
       expirationDate: string;
       productCode: string;
-      batchCode: string;
+      batchNo: string;
       truckNo: string;
     } 
   }>({});
@@ -279,9 +279,9 @@ const PrimaPage = () => {
       showToast({ title: "PO Completed", description: "Cannot add deliveries to a completed PO", variant: "destructive" }); 
       return; 
     }
-    const { date = "", kilosDelivered = "", amount = "", productCode = "", batchCode = "", truckNo = "", expirationDate = "" } = deliveryForm[po.poNumber] || {};
+    const { date = "", kilosDelivered = "", amount = "", productCode = "", batchNo = "", truckNo = "", expirationDate = "" } = deliveryForm[po.poNumber] || {};
     const kilos = parseFloat(kilosDelivered), amt = parseFloat(amount);
-    if (!date || !kilos || !productCode || !batchCode || !truckNo || !expirationDate) { 
+    if (!date || !kilos || !productCode || !batchNo || !truckNo || !expirationDate) { 
       showToast({ title: "Error", description: "Please fill all required fields", variant: "destructive" }); 
       return; 
     }
@@ -303,7 +303,7 @@ const PrimaPage = () => {
           numBoxes,
           expirationDate,
           productCode,
-          batchCode,
+          batchNo,
           truckNo
         }) 
       });
@@ -318,7 +318,7 @@ const PrimaPage = () => {
           numBoxes: "", 
           expirationDate: "",
           productCode: "",
-          batchCode: "",
+          batchNo: "",
           truckNo: ""
         } 
       }));
@@ -814,10 +814,10 @@ const PrimaPage = () => {
                     <div className="flex flex-col space-y-1">
                       <Label>Batch Code</Label>
                       <Input 
-                        value={deliveryForm[selectedPO.poNumber]?.batchCode || ""}
+                        value={deliveryForm[selectedPO.poNumber]?.batchNo || ""}
                         onChange={e => setDeliveryForm(prev => ({
                           ...prev,
-                          [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], batchCode: e.target.value }
+                          [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], batchNo: e.target.value }
                         }))}
                         required min={undefined} max={undefined} step={undefined}                      />
                     </div>
@@ -1050,10 +1050,10 @@ const PrimaPage = () => {
                 <div>
                   <Label>Batch Code</Label>
                   <Input 
-                    value={editModal.data.batchCode}
+                    value={editModal.data.batchNo}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
-                      data: { ...prev.data, batchCode: e.target.value }
+                      data: { ...prev.data, batchNo: e.target.value }
                     }))} min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
