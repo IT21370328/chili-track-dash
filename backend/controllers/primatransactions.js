@@ -1,4 +1,3 @@
-// controllers/primatransactions.js
 import dotenv from "dotenv";
 import { createClient } from "@libsql/client";
 
@@ -9,10 +8,29 @@ const client = createClient({
   authToken: process.env.TURSO_API_KEY,
 });
 
+// Create or update the primatransactions table with new fields
+await client.execute(`
+  CREATE TABLE IF NOT EXISTS primatransactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    kilosDelivered REAL NOT NULL,
+    amount REAL NOT NULL,
+    paymentStatus TEXT NOT NULL,
+    poId INTEGER NOT NULL,
+    poNumber TEXT,
+    dateOfExpiration TEXT,
+    productCode TEXT,
+    batchCode TEXT,
+    numberOfBoxes INTEGER,
+    truckNo TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (poId) REFERENCES pos(id) ON DELETE CASCADE
+  )
+`);
 
 // Add Prima Transaction (with poId lookup)
 export const addPrimaTransaction = async (transactionData) => {
-  const { date, kilosDelivered, amount, paymentStatus, poNumber } = transactionData;
+  const { date, kilosDelivered, amount, paymentStatus, poNumber, dateOfExpiration, productCode, batchCode, numberOfBoxes, truckNo } = transactionData;
 
   if (!poNumber) throw new Error("poNumber is required");
 
@@ -27,9 +45,9 @@ export const addPrimaTransaction = async (transactionData) => {
 
   const { lastInsertRowid } = await client.execute(
     `INSERT INTO primatransactions 
-      (date, kilosDelivered, amount, paymentStatus, poId, poNumber)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [date, kilosDelivered, amount, paymentStatus, poId, poNumber]
+      (date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchCode, numberOfBoxes, truckNo)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchCode, numberOfBoxes, truckNo]
   );
 
   const { rows } = await client.execute(
@@ -50,7 +68,7 @@ export const getPrimaTransactions = async () => {
 
 // Update Prima Transaction (general update)
 export const updatePrimaTransaction = async (id, transactionData) => {
-  const { date, kilosDelivered, amount, paymentStatus, poNumber } = transactionData;
+  const { date, kilosDelivered, amount, paymentStatus, poNumber, dateOfExpiration, productCode, batchCode, numberOfBoxes, truckNo } = transactionData;
 
   const { rows: poRows } = await client.execute(
     "SELECT id FROM pos WHERE poNumber = ?",
@@ -62,9 +80,10 @@ export const updatePrimaTransaction = async (id, transactionData) => {
 
   await client.execute(
     `UPDATE primatransactions 
-     SET date = ?, kilosDelivered = ?, amount = ?, paymentStatus = ?, poId = ?, poNumber = ?
+     SET date = ?, kilosDelivered = ?, amount = ?, paymentStatus = ?, poId = ?, poNumber = ?, 
+         dateOfExpiration = ?, productCode = ?, batchCode = ?, numberOfBoxes = ?, truckNo = ?
      WHERE id = ?`,
-    [date, kilosDelivered, amount, paymentStatus, poId, poNumber, id]
+    [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchCode, numberOfBoxes, truckNo, id]
   );
 
   const { rows } = await client.execute(
