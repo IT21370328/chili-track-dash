@@ -20,11 +20,6 @@ interface PrimaTransaction {
   kilosDelivered: number;
   amount: number;
   paymentStatus: "Pending" | "Approved" | "Paid" | "Rejected";
-  dateOfExpiration?: string;
-  productCode?: string;
-  batchCode?: string;
-  numberOfBoxes?: number;
-  truckNo?: string;
 }
 
 interface Production {
@@ -74,6 +69,7 @@ const Input = ({ value, onChange, type = "text", placeholder = "", required = fa
     onChange={onChange}
     placeholder={placeholder}
     required={required}
+    min={min}
     step={step}
     readOnly={readOnly}
     className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${readOnly ? 'bg-gray-100' : ''} ${className}`}
@@ -98,7 +94,7 @@ const PrimaPage = () => {
   const [production, setProduction] = useState<Production[]>([]);
   const [newPO, setNewPO] = useState({ poNumber: "", date: "", totalKilos: "", amount: "" });
   const [expandedPO, setExpandedPO] = useState<string | null>(null);
-  const [deliveryForm, setDeliveryForm] = useState<{ [poNumber: string]: { date: string; kilosDelivered: string; amount: string; dateOfExpiration: string; productCode: string; batchCode: string; numberOfBoxes: string; truckNo: string } }>({});
+  const [deliveryForm, setDeliveryForm] = useState<{ [poNumber: string]: { date: string; kilosDelivered: string; amount: string } }>({});
   const [confirmModal, setConfirmModal] = useState<{ 
     show: boolean; 
     type: "status" | "delete" | "edit";
@@ -257,10 +253,10 @@ const PrimaPage = () => {
       showToast({ title: "PO Completed", description: "Cannot add deliveries to a completed PO", variant: "destructive" }); 
       return; 
     }
-    const { date = "", kilosDelivered = "", amount = "", dateOfExpiration = "", productCode = "", batchCode = "", numberOfBoxes = "", truckNo = "" } = deliveryForm[po.poNumber] || {};
-    const kilos = parseFloat(kilosDelivered), amt = parseFloat(amount), boxes = parseInt(numberOfBoxes);
-    if (!date || !kilos || !amt || !productCode || !batchCode || !numberOfBoxes || !truckNo) { 
-      showToast({ title: "Error", description: "Please fill all required delivery fields", variant: "destructive" }); 
+    const { date = "", kilosDelivered = "", amount = "" } = deliveryForm[po.poNumber] || {};
+    const kilos = parseFloat(kilosDelivered), amt = parseFloat(amount);
+    if (!date || !kilos || !amt) { 
+      showToast({ title: "Error", description: "Please fill delivery date, kilos, and amount", variant: "destructive" }); 
       return; 
     }
     if (kilos > getMaxDeliverable(po)) { 
@@ -271,22 +267,11 @@ const PrimaPage = () => {
       const res = await fetch(`${API_URL}/primatransactions`, { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ 
-          poNumber: po.poNumber, 
-          date, 
-          kilosDelivered: kilos, 
-          amount: amt, 
-          paymentStatus: "Pending",
-          dateOfExpiration,
-          productCode,
-          batchCode,
-          numberOfBoxes: boxes,
-          truckNo
-        }) 
+        body: JSON.stringify({ poNumber: po.poNumber, date, kilosDelivered: kilos, amount: amt, paymentStatus: "Pending" }) 
       });
       const savedTransaction = await res.json();
       setTransactions(prev => [...prev, savedTransaction]);
-      setDeliveryForm(prev => ({ ...prev, [po.poNumber]: { date: "", kilosDelivered: "", amount: "", dateOfExpiration: "", productCode: "", batchCode: "", numberOfBoxes: "", truckNo: "" } }));
+      setDeliveryForm(prev => ({ ...prev, [po.poNumber]: { date: "", kilosDelivered: "", amount: "" } }));
       
       const statusMessage = await updatePOStatusBasedOnDeliveries(po.poNumber);
       const message = statusMessage 
@@ -507,32 +492,14 @@ const PrimaPage = () => {
 
   const exportTransactions = () => {
     const csvContent = [
-      ["PO Number", "Date", "Kilos Delivered", "Amount", "Payment Status", "Date of Expiration", "Product Code", "Batch Code", "Number of Boxes", "Truck No"],
-      ...filteredTransactions.map(t => [
-        t.poNumber, 
-        t.date, 
-        t.kilosDelivered, 
-        t.amount, 
-        t.paymentStatus, 
-        t.dateOfExpiration || '', 
-        t.productCode || '', 
-        t.batchCode || '', 
-        t.numberOfBoxes || '', 
-        t.truckNo || ''
-      ])
+      ["PO Number", "Date", "Kilos Delivered", "Amount", "Payment Status"],
+      ...filteredTransactions.map(t => [t.poNumber, t.date, t.kilosDelivered, t.amount, t.paymentStatus])
     ].map(e => e.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = `prima_transactions_${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
-  };
-
-  // Function to calculate one year ahead date
-  const calculateExpirationDate = (deliveryDate: string) => {
-    const date = new Date(deliveryDate);
-    date.setFullYear(date.getFullYear() + 1);
-    return date.toISOString().split("T")[0]; // Return in YYYY-MM-DD format
   };
 
   return (
@@ -681,108 +648,47 @@ const PrimaPage = () => {
                             </div>
                           )}
                           
-                          <div className="grid grid-cols-1 md:grid-cols-8 gap-4">
-                            <div className="flex flex-col space-y-1">
-                              <Label>Date</Label>
-                              <Input 
-                                type="date"
-                                value={deliveryForm[po.poNumber]?.date || ""}
-                                onChange={e => {
-                                  const newDate = e.target.value;
-                                  const newExpiration = calculateExpirationDate(newDate);
-                                  setDeliveryForm(prev => ({
-                                    ...prev,
-                                    [po.poNumber]: { ...prev[po.poNumber], date: newDate, dateOfExpiration: newExpiration }
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <Input 
+                              type="date"
+                              value={deliveryForm[po.poNumber]?.date || ""}
+                              onChange={e => setDeliveryForm(prev => ({
+                                ...prev,
+                                [po.poNumber]: { ...prev[po.poNumber], date: e.target.value }
+                              }))} min={undefined} max={undefined} step={undefined}                            />
+                            <Input 
+                              type="number" 
+                              min={0.01}
+                              max={getMaxDeliverable(po)} 
+                              step="0.01"
+                              placeholder={`Max ${getMaxDeliverable(po)}kg`} 
+                              value={deliveryForm[po.poNumber]?.kilosDelivered || ""} 
+                              onChange={e => {
+                                const kilos = parseFloat(e.target.value) || 0;
+                                const maxAllowed = getMaxDeliverable(po);
+                                if (kilos <= maxAllowed) {
+                                  const amount = ((kilos / po.totalKilos) * po.amount).toFixed(2);
+                                  setDeliveryForm(prev => ({ 
+                                    ...prev, 
+                                    [po.poNumber]: { 
+                                      ...prev[po.poNumber], 
+                                      kilosDelivered: e.target.value, 
+                                      amount 
+                                    } 
                                   }));
-                                }} min={undefined} max={undefined} step={undefined}                              />
-                            </div>
-                            <div className="flex flex-col space-y-1">
-                              <Label>Kilos Delivered</Label>
-                              <Input 
-                                type="number" 
-                                min={0.01}
-                                max={getMaxDeliverable(po)} 
-                                step="0.01"
-                                placeholder={`Max ${getMaxDeliverable(po)}kg`} 
-                                value={deliveryForm[po.poNumber]?.kilosDelivered || ""} 
-                                onChange={e => {
-                                  const kilos = parseFloat(e.target.value) || 0;
-                                  const maxAllowed = getMaxDeliverable(po);
-                                  if (kilos <= maxAllowed) {
-                                    const amount = ((kilos / po.totalKilos) * po.amount).toFixed(2);
-                                    setDeliveryForm(prev => ({ 
-                                      ...prev, 
-                                      [po.poNumber]: { 
-                                        ...prev[po.poNumber], 
-                                        kilosDelivered: e.target.value, 
-                                        amount 
-                                      } 
-                                    }));
-                                  }
-                                }} 
-                              />
-                            </div>
-                            <div className="flex flex-col space-y-1">
-                              <Label>Amount (Rs)</Label>
-                              <Input 
-                                readOnly
-                                placeholder="Amount (Rs)"
-                                value={deliveryForm[po.poNumber]?.amount || ""} onChange={undefined} min={undefined} max={undefined} step={undefined}                              />
-                            </div>
-                            <div className="flex flex-col space-y-1">
-                              <Label>Date of Expiration</Label>
-                              <Input 
-                                type="date"
-                                value={deliveryForm[po.poNumber]?.dateOfExpiration || ""}
-                                readOnly
-                                className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                              />
-                            </div>
-                            <div className="flex flex-col space-y-1">
-                              <Label>Product Code</Label>
-                              <Input 
-                                value={deliveryForm[po.poNumber]?.productCode || ""}
-                                onChange={e => setDeliveryForm(prev => ({
-                                  ...prev,
-                                  [po.poNumber]: { ...prev[po.poNumber], productCode: e.target.value }
-                                }))} min={undefined} max={undefined} step={undefined}                              />
-                            </div>
-                            <div className="flex flex-col space-y-1">
-                              <Label>Batch Code</Label>
-                              <Input 
-                                value={deliveryForm[po.poNumber]?.batchCode || ""}
-                                onChange={e => setDeliveryForm(prev => ({
-                                  ...prev,
-                                  [po.poNumber]: { ...prev[po.poNumber], batchCode: e.target.value }
-                                }))} min={undefined} max={undefined} step={undefined}                              />
-                            </div>
-                            <div className="flex flex-col space-y-1">
-                              <Label>Number of Boxes</Label>
-                              <Input 
-                                type="number"
-                                min={1}
-                                value={deliveryForm[po.poNumber]?.numberOfBoxes || ""}
-                                onChange={e => setDeliveryForm(prev => ({
-                                  ...prev,
-                                  [po.poNumber]: { ...prev[po.poNumber], numberOfBoxes: e.target.value }
-                                }))}  max={undefined} step={undefined}                              />
-                            </div>
-                            <div className="flex flex-col space-y-1">
-                              <Label>Truck No</Label>
-                              <Input 
-                                value={deliveryForm[po.poNumber]?.truckNo || ""}
-                                onChange={e => setDeliveryForm(prev => ({
-                                  ...prev,
-                                  [po.poNumber]: { ...prev[po.poNumber], truckNo: e.target.value }
-                                }))} min={undefined} max={undefined} step={undefined}                              />
-                            </div>
-                            <div className="flex flex-col space-y-1">
-                              <Button 
-                                onClick={() => handleAddDelivery(po)}
-                                disabled={getMaxDeliverable(po) <= 0}
-                              >
-                                {getMaxDeliverable(po) <= 0 ? "No Stock" : "Add Delivery"}
-                              </Button>
-                            </div>
+                                }
+                              }} 
+                            />
+                            <Input 
+                              readOnly
+                              placeholder="Amount (Rs)"
+                              value={deliveryForm[po.poNumber]?.amount || ""} onChange={undefined} min={undefined} max={undefined} step={undefined}                            />
+                            <Button 
+                              onClick={() => handleAddDelivery(po)}
+                              disabled={getMaxDeliverable(po) <= 0}
+                            >
+                              {getMaxDeliverable(po) <= 0 ? "No Stock" : "Add Delivery"}
+                            </Button>
                           </div>
                         </div>
                       )}
@@ -957,7 +863,7 @@ const PrimaPage = () => {
                           amount: parseFloat(calculatedAmount.toFixed(2))
                         }
                       }));
-                    }} min={undefined} max={undefined}                  />
+                    } } min={undefined} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Amount (Rs) - Auto-calculated</Label>
@@ -967,54 +873,6 @@ const PrimaPage = () => {
                     readOnly
                     className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                  />
                   <p className="text-xs text-gray-500 mt-1">Amount is calculated based on kilos and PO rate</p>
-                </div>
-                <div>
-                  <Label>Date of Expiration</Label>
-                  <Input 
-                    type="date"
-                    value={editModal.data.dateOfExpiration || ""}
-                    onChange={e => setEditModal(prev => ({
-                      ...prev,
-                      data: { ...prev.data, dateOfExpiration: e.target.value }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
-                </div>
-                <div>
-                  <Label>Product Code</Label>
-                  <Input 
-                    value={editModal.data.productCode || ""}
-                    onChange={e => setEditModal(prev => ({
-                      ...prev,
-                      data: { ...prev.data, productCode: e.target.value }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
-                </div>
-                <div>
-                  <Label>Batch Code</Label>
-                  <Input 
-                    value={editModal.data.batchCode || ""}
-                    onChange={e => setEditModal(prev => ({
-                      ...prev,
-                      data: { ...prev.data, batchCode: e.target.value }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
-                </div>
-                <div>
-                  <Label>Number of Boxes</Label>
-                  <Input 
-                    type="number"
-                    min={1}
-                    value={editModal.data.numberOfBoxes || ""}
-                    onChange={e => setEditModal(prev => ({
-                      ...prev,
-                      data: { ...prev.data, numberOfBoxes: parseInt(e.target.value) || 0 }
-                    }))} max={undefined} step={undefined}                  />
-                </div>
-                <div>
-                  <Label>Truck No</Label>
-                  <Input 
-                    value={editModal.data.truckNo || ""}
-                    onChange={e => setEditModal(prev => ({
-                      ...prev,
-                      data: { ...prev.data, truckNo: e.target.value }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Payment Status</Label>
