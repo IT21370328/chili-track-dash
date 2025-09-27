@@ -93,7 +93,7 @@ async function initializeTables() {
         truckNo TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (poId) REFERENCES pos(id) ON DELETE CASCADE
-      )
+)
     `);
 
     await db.execute(`

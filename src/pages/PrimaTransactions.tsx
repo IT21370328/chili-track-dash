@@ -19,7 +19,7 @@ interface PrimaTransaction {
   date: string;
   kilosDelivered: number;
   amount: number;
-  numBoxes: number;
+  numBoxes: string; // Changed to string to match backend
   dateOfExpiration: string;
   productCode: string;
   batchNo: string;
@@ -288,10 +288,15 @@ const PrimaPage = () => {
       return; 
     }
     const { date = "", kilosDelivered = "", amount = "", productCode = "", batchNo = "", truckNo = "", dateOfExpiration = "" } = deliveryForm[po.poNumber] || {};
-    const kilos = parseFloat(kilosDelivered), amt = parseFloat(amount);
+    const kilos = parseFloat(kilosDelivered);
+    const amt = parseFloat(amount);
     if (!date || !kilos || !amt || !productCode || !batchNo || !truckNo || !dateOfExpiration) { 
       showToast({ title: "Error", description: "Please fill all required fields (date, kilos, product code, batch number, truck number, expiration date)", variant: "destructive" }); 
       return; 
+    }
+    if (isNaN(kilos) || isNaN(amt)) {
+      showToast({ title: "Error", description: "Kilos Delivered and Amount must be valid numbers", variant: "destructive" });
+      return;
     }
     if (kilos > getMaxDeliverable(po)) { 
       showToast({ title: "Error", description: `Exceeds max deliverable (${getMaxDeliverable(po)}kg) or available stock (${getAvailableStock()}kg)`, variant: "destructive" }); 
@@ -311,7 +316,7 @@ const PrimaPage = () => {
         batchNo,
         truckNo
       };
-      console.log("Sending delivery data:", transactionData);
+      console.log("Sending delivery data:", JSON.stringify(transactionData, null, 2));
       const res = await fetch(`${API_URL}/primatransactions`, { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
@@ -322,7 +327,7 @@ const PrimaPage = () => {
         throw new Error(errorData.error || `Failed to add delivery: ${res.statusText} (${res.status})`);
       }
       const savedTransaction = await res.json();
-      setTransactions(prev => [...prev, savedTransaction]);
+      setTransactions(prev => [...prev, { ...savedTransaction, numBoxes: String(savedTransaction.numBoxes) }]);
       setDeliveryForm(prev => ({ 
         ...prev, 
         [po.poNumber]: { 
@@ -386,6 +391,19 @@ const PrimaPage = () => {
       let endpoint = "";
       let successMessage = "";
       
+      if (type === "transaction") {
+        // Validate data types for transaction
+        if (typeof data.kilosDelivered !== "number" || isNaN(data.kilosDelivered)) {
+          throw new Error("Kilos Delivered must be a valid number");
+        }
+        if (typeof data.amount !== "number" || isNaN(data.amount)) {
+          throw new Error("Amount must be a valid number");
+        }
+        if (typeof data.numBoxes !== "string") {
+          data.numBoxes = String(data.numBoxes);
+        }
+      }
+
       switch (type) {
         case "po":
           endpoint = `${API_URL}/pos/${data.poNumber}`;
@@ -530,7 +548,7 @@ const PrimaPage = () => {
       
       const statusMessage = await updatePOStatusBasedOnDeliveries(updatedTransaction.poNumber);
       
-      setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
+      setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? { ...updatedTransaction, numBoxes: String(updatedTransaction.numBoxes) } : t));
       
       const message = statusMessage 
         ? `Transaction marked as ${confirmModal.status}. ${statusMessage}`
