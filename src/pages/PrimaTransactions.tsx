@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Eye, X, Truck, DollarSign, Clock, Package, Download, Pencil, Trash2 } from "lucide-react";
-import { generateInvoice } from './Invoice'; // Updated import
+import { generateInvoice } from './Invoice';
 
 const API_URL = "https://chili-track-dash.onrender.com";
 
@@ -164,27 +164,30 @@ const PrimaPage = () => {
   const fetchPOs = async () => { 
     try { 
       const res = await fetch(`${API_URL}/pos`); 
+      if (!res.ok) throw new Error(`Failed to fetch POs: ${res.statusText}`);
       setPOs(await res.json() || []); 
-    } catch { 
-      showToast({ title: "Error", description: "Failed to fetch POs", variant: "destructive" }); 
+    } catch (error: any) { 
+      showToast({ title: "Error", description: error.message, variant: "destructive" }); 
     } 
   };
 
   const fetchTransactions = async () => { 
     try { 
       const res = await fetch(`${API_URL}/primatransactions`); 
+      if (!res.ok) throw new Error(`Failed to fetch transactions: ${res.statusText}`);
       setTransactions(await res.json() || []); 
-    } catch { 
-      showToast({ title: "Error", description: "Failed to fetch transactions", variant: "destructive" }); 
+    } catch (error: any) { 
+      showToast({ title: "Error", description: error.message, variant: "destructive" }); 
     } 
   };
 
   const fetchProduction = async () => { 
     try { 
       const res = await fetch(`${API_URL}/production`); 
+      if (!res.ok) throw new Error(`Failed to fetch production data: ${res.statusText}`);
       setProduction(await res.json() || []); 
-    } catch { 
-      showToast({ title: "Error", description: "Failed to fetch production data", variant: "destructive" }); 
+    } catch (error: any) { 
+      showToast({ title: "Error", description: error.message, variant: "destructive" }); 
     } 
   };
 
@@ -197,6 +200,7 @@ const PrimaPage = () => {
         fetch(`${API_URL}/primatransactions`), 
         fetch(`${API_URL}/pos`)
       ]);
+      if (!freshTransactionsRes.ok || !freshPOsRes.ok) throw new Error("Failed to fetch data for PO status update");
       const [freshTransactions, freshPOs] = await Promise.all([
         freshTransactionsRes.json(), 
         freshPOsRes.json()
@@ -227,8 +231,8 @@ const PrimaPage = () => {
       }
       
       return null;
-    } catch (error) {
-      console.error("Failed to update PO status:", error);
+    } catch (error: any) {
+      console.error("Failed to update PO status:", error.message);
       return null;
     }
   };
@@ -247,14 +251,18 @@ const PrimaPage = () => {
         headers: { "Content-Type": "application/json" }, 
         body: JSON.stringify({ poNumber, date, totalKilos: Number(totalKilos), amount: Number(amount), status: "Pending" }) 
       });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || `Failed to create PO: ${res.statusText}`);
+      }
       const savedPO = await res.json();
       
       await Promise.all([fetchPOs(), fetchTransactions(), fetchProduction()]);
       
       showToast({ title: "PO Created", description: `PO ${poNumber} created successfully` });
       setNewPO({ poNumber: "", date: "", totalKilos: "", amount: "" });
-    } catch { 
-      showToast({ title: "Error", description: "Failed to create PO", variant: "destructive" }); 
+    } catch (error: any) { 
+      showToast({ title: "Error", description: error.message, variant: "destructive" }); 
     }
   };
 
@@ -265,7 +273,7 @@ const PrimaPage = () => {
 
   const getMaxDeliverable = (po: PO) => Math.min(getRemainingKilos(po), getAvailableStock());
 
-  const calculateNumBoxes = (kilos: number) => Math.ceil(kilos / 10); // 1 box = 10kg
+  const calculateNumBoxes = (kilos: number) => Math.ceil(kilos / 10).toString();
 
   const calculateExpirationDate = (date: string) => {
     if (!date) return "";
@@ -281,32 +289,38 @@ const PrimaPage = () => {
     }
     const { date = "", kilosDelivered = "", amount = "", productCode = "", batchNo = "", truckNo = "", dateOfExpiration = "" } = deliveryForm[po.poNumber] || {};
     const kilos = parseFloat(kilosDelivered), amt = parseFloat(amount);
-    if (!date || !kilos || !productCode || !batchNo || !truckNo || !dateOfExpiration) { 
-      showToast({ title: "Error", description: "Please fill all required fields", variant: "destructive" }); 
+    if (!date || !kilos || !amt || !productCode || !batchNo || !truckNo || !dateOfExpiration) { 
+      showToast({ title: "Error", description: "Please fill all required fields (date, kilos, product code, batch number, truck number, expiration date)", variant: "destructive" }); 
       return; 
     }
     if (kilos > getMaxDeliverable(po)) { 
-      showToast({ title: "Error", description: "Exceeds max deliverable or available stock", variant: "destructive" }); 
+      showToast({ title: "Error", description: `Exceeds max deliverable (${getMaxDeliverable(po)}kg) or available stock (${getAvailableStock()}kg)`, variant: "destructive" }); 
       return; 
     }
     try {
       const numBoxes = calculateNumBoxes(kilos);
+      const transactionData = { 
+        poNumber: po.poNumber, 
+        date, 
+        kilosDelivered: kilos, 
+        amount: amt, 
+        paymentStatus: "Pending",
+        numBoxes,
+        dateOfExpiration,
+        productCode,
+        batchNo,
+        truckNo
+      };
+      console.log("Sending delivery data:", transactionData);
       const res = await fetch(`${API_URL}/primatransactions`, { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ 
-          poNumber: po.poNumber, 
-          date, 
-          kilosDelivered: kilos, 
-          amount: amt, 
-          paymentStatus: "Pending",
-          numBoxes,
-          dateOfExpiration,
-          productCode,
-          batchNo,
-          truckNo
-        }) 
+        body: JSON.stringify(transactionData) 
       });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to add delivery: ${res.statusText} (${res.status})`);
+      }
       const savedTransaction = await res.json();
       setTransactions(prev => [...prev, savedTransaction]);
       setDeliveryForm(prev => ({ 
@@ -329,8 +343,9 @@ const PrimaPage = () => {
         : `${kilos}kg delivered for PO ${po.poNumber}`;
         
       showToast({ title: "Delivery Added", description: message });
-    } catch { 
-      showToast({ title: "Error", description: "Failed to add delivery", variant: "destructive" }); 
+    } catch (error: any) { 
+      console.error("Delivery addition failed:", error.message);
+      showToast({ title: "Error", description: `Failed to add delivery: ${error.message}`, variant: "destructive" }); 
     }
   };
 
@@ -347,7 +362,7 @@ const PrimaPage = () => {
     setEditModal({ 
       show: true, 
       type: "transaction", 
-      data: { ...transaction }
+      data: { ...transaction, numBoxes: String(transaction.numBoxes) } // Ensure string
     });
   };
 
@@ -392,7 +407,10 @@ const PrimaPage = () => {
         body: JSON.stringify(data)
       });
 
-      if (!res.ok) throw new Error("Failed to update record");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to update record: ${res.statusText}`);
+      }
 
       if (type === "transaction") {
         const statusMessage = await updatePOStatusBasedOnDeliveries(data.poNumber);
@@ -463,7 +481,10 @@ const PrimaPage = () => {
       }
 
       const res = await fetch(endpoint, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete record");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to delete record: ${res.statusText}`);
+      }
 
       if (recordType === "transaction" && data) {
         const statusMessage = await updatePOStatusBasedOnDeliveries(data.poNumber);
@@ -500,13 +521,16 @@ const PrimaPage = () => {
         headers: { "Content-Type": "application/json" }, 
         body: JSON.stringify({ paymentStatus: confirmModal.status }) 
       });
-      if (!transactionRes.ok) throw new Error("Failed to update transaction status");
+      if (!transactionRes.ok) {
+        const errorData = await transactionRes.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to update transaction status: ${transactionRes.statusText}`);
+      }
       
       const updatedTransaction = await transactionRes.json();
       
       const statusMessage = await updatePOStatusBasedOnDeliveries(updatedTransaction.poNumber);
       
-      setTransactions(prev => prev.map(t => t.id === confirmModal.id ? updatedTransaction : t));
+      setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
       
       const message = statusMessage 
         ? `Transaction marked as ${confirmModal.status}. ${statusMessage}`
@@ -721,9 +745,7 @@ const PrimaPage = () => {
                   </div>
                 )}
 
-                {/* Add Delivery Form with 3 rows */}
                 <div className="space-y-4">
-                  {/* Row 1: Dates */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col space-y-1">
                       <Label>Date</Label>
@@ -755,7 +777,6 @@ const PrimaPage = () => {
                     </div>
                   </div>
 
-                  {/* Row 2: Kilos, Boxes, Amount, Product Code, Batch Code, Truck No */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex flex-col space-y-1">
                       <Label>Kilos Delivered</Label>
@@ -771,7 +792,7 @@ const PrimaPage = () => {
                           const maxAllowed = getMaxDeliverable(selectedPO);
                           if (kilos <= maxAllowed) {
                             const amount = ((kilos / selectedPO.totalKilos) * selectedPO.amount).toFixed(2);
-                            const numBoxes = calculateNumBoxes(kilos).toString();
+                            const numBoxes = calculateNumBoxes(kilos);
                             setDeliveryForm(prev => ({ 
                               ...prev, 
                               [selectedPO.poNumber]: { 
@@ -833,7 +854,6 @@ const PrimaPage = () => {
                     </div>
                   </div>
 
-                  {/* Row 3: Button */}
                   <div className="flex justify-end">
                     <Button 
                       onClick={() => handleAddDelivery(selectedPO)}
@@ -1022,7 +1042,7 @@ const PrimaPage = () => {
                 <div>
                   <Label>Number of Boxes</Label>
                   <Input 
-                    type="number"
+                    type="text"
                     value={editModal.data.numBoxes}
                     readOnly
                     className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                  />

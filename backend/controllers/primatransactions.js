@@ -1,61 +1,62 @@
 import dotenv from "dotenv";
 import { createClient } from "@libsql/client";
 
-dotenv.config(); // Load .env
+dotenv.config();
 
 const client = createClient({
   url: process.env.TURSO_URL,
   authToken: process.env.TURSO_API_KEY,
 });
 
-// Create or update the primatransactions table with new fields
-await client.execute(`
-  CREATE TABLE IF NOT EXISTS primatransactions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT NOT NULL,
-    kilosDelivered REAL NOT NULL,
-    amount REAL NOT NULL,
-    paymentStatus TEXT NOT NULL,
-    poId INTEGER NOT NULL,
-    poNumber TEXT,
-    dateOfExpiration TEXT,
-    productCode TEXT,
-    batchNo TEXT,
-    numberOfBoxes INTEGER,
-    truckNo TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (poId) REFERENCES pos(id) ON DELETE CASCADE
-  )
-`);
-
-// Add Prima Transaction (with poId lookup)
+// Add Prima Transaction
 export const addPrimaTransaction = async (transactionData) => {
   const { date, kilosDelivered, amount, paymentStatus, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo } = transactionData;
 
   if (!poNumber) throw new Error("poNumber is required");
+  if (!date || !kilosDelivered || !amount || !paymentStatus || !productCode || !batchNo || !truckNo || !dateOfExpiration) {
+    throw new Error("Missing required fields: date, kilosDelivered, amount, paymentStatus, productCode, batchNo, truckNo, or dateOfExpiration");
+  }
 
-  const { rows: poRows } = await client.execute(
-    "SELECT id FROM pos WHERE poNumber = ?",
-    [poNumber]
-  );
+  try {
+    const { rows: poRows } = await client.execute(
+      "SELECT id, totalKilos FROM pos WHERE poNumber = ?",
+      [poNumber]
+    );
 
-  if (!poRows[0]) throw new Error(`PO number ${poNumber} not found`);
+    if (!poRows[0]) throw new Error(`PO number ${poNumber} not found`);
 
-  const poId = poRows[0].id;
+    const poId = poRows[0].id;
+    const totalKilos = poRows[0].totalKilos;
 
-  const { lastInsertRowid } = await client.execute(
-    `INSERT INTO primatransactions 
-      (date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo]
-  );
+    // Validate kilosDelivered
+    const { rows: transactionRows } = await client.execute(
+      "SELECT SUM(kilosDelivered) as delivered FROM primatransactions WHERE poNumber = ? AND paymentStatus != 'Rejected'",
+      [poNumber]
+    );
+    const deliveredSoFar = transactionRows[0]?.delivered || 0;
+    if (kilosDelivered + deliveredSoFar > totalKilos) {
+      throw new Error(`Delivery exceeds PO total: ${kilosDelivered + deliveredSoFar}kg > ${totalKilos}kg`);
+    }
 
-  const { rows } = await client.execute(
-    "SELECT * FROM primatransactions WHERE id = ?",
-    [lastInsertRowid]
-  );
+    console.log("Inserting transaction:", { date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo });
 
-  return rows[0];
+    const { lastInsertRowid } = await client.execute(
+      `INSERT INTO primatransactions 
+        (date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo]
+    );
+
+    const { rows } = await client.execute(
+      "SELECT * FROM primatransactions WHERE id = ?",
+      [lastInsertRowid]
+    );
+
+    return rows[0];
+  } catch (error) {
+    console.error("Error in addPrimaTransaction:", error.message);
+    throw error;
+  }
 };
 
 // Get all Prima Transactions
@@ -66,35 +67,40 @@ export const getPrimaTransactions = async () => {
   return rows;
 };
 
-// Update Prima Transaction (general update)
+// Update Prima Transaction
 export const updatePrimaTransaction = async (id, transactionData) => {
   const { date, kilosDelivered, amount, paymentStatus, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo } = transactionData;
 
-  const { rows: poRows } = await client.execute(
-    "SELECT id FROM pos WHERE poNumber = ?",
-    [poNumber]
-  );
+  try {
+    const { rows: poRows } = await client.execute(
+      "SELECT id FROM pos WHERE poNumber = ?",
+      [poNumber]
+    );
 
-  if (!poRows[0]) throw new Error(`PO number ${poNumber} not found`);
-  const poId = poRows[0].id;
+    if (!poRows[0]) throw new Error(`PO number ${poNumber} not found`);
+    const poId = poRows[0].id;
 
-  await client.execute(
-    `UPDATE primatransactions 
-     SET date = ?, kilosDelivered = ?, amount = ?, paymentStatus = ?, poId = ?, poNumber = ?, 
-         dateOfExpiration = ?, productCode = ?, batchNo = ?, numberOfBoxes = ?, truckNo = ?
-     WHERE id = ?`,
-    [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo, id]
-  );
+    await client.execute(
+      `UPDATE primatransactions 
+       SET date = ?, kilosDelivered = ?, amount = ?, paymentStatus = ?, poId = ?, poNumber = ?, 
+           dateOfExpiration = ?, productCode = ?, batchNo = ?, numberOfBoxes = ?, truckNo = ?
+       WHERE id = ?`,
+      [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo, id]
+    );
 
-  const { rows } = await client.execute(
-    "SELECT * FROM primatransactions WHERE id = ?",
-    [id]
-  );
+    const { rows } = await client.execute(
+      "SELECT * FROM primatransactions WHERE id = ?",
+      [id]
+    );
 
-  return rows[0];
+    return rows[0];
+  } catch (error) {
+    console.error("Error in updatePrimaTransaction:", error.message);
+    throw error;
+  }
 };
 
-// Update transaction status only (with allowed transitions)
+// Update transaction status
 export const updatePrimaTransactionStatus = async (id, newStatus) => {
   const { rows } = await client.execute(
     "SELECT * FROM primatransactions WHERE id = ?",

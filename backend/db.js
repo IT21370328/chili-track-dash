@@ -84,6 +84,7 @@ async function initializeTables() {
         kilosDelivered REAL NOT NULL,
         amount REAL NOT NULL,
         paymentStatus TEXT NOT NULL,
+        poId INTEGER NOT NULL,
         poNumber TEXT,
         dateOfExpiration TEXT,
         productCode TEXT,
