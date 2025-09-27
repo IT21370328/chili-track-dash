@@ -19,7 +19,7 @@ interface PrimaTransaction {
   date: string;
   kilosDelivered: number;
   amount: number;
-  numBoxes: string; // Changed to string to match backend
+  numBoxes: string;
   dateOfExpiration: string;
   productCode: string;
   batchNo: string;
@@ -175,7 +175,9 @@ const PrimaPage = () => {
     try { 
       const res = await fetch(`${API_URL}/primatransactions`); 
       if (!res.ok) throw new Error(`Failed to fetch transactions: ${res.statusText}`);
-      setTransactions(await res.json() || []); 
+      const data = await res.json() || [];
+      // Ensure numBoxes is a string for all transactions
+      setTransactions(data.map(tx => ({ ...tx, numBoxes: String(tx.numBoxes) }))); 
     } catch (error: any) { 
       showToast({ title: "Error", description: error.message, variant: "destructive" }); 
     } 
@@ -273,7 +275,10 @@ const PrimaPage = () => {
 
   const getMaxDeliverable = (po: PO) => Math.min(getRemainingKilos(po), getAvailableStock());
 
-  const calculateNumBoxes = (kilos: number) => Math.ceil(kilos / 10).toString();
+  const calculateNumBoxes = (kilos: number) => {
+    if (isNaN(kilos) || kilos <= 0) return "0";
+    return Math.ceil(kilos / 10).toString();
+  };
 
   const calculateExpirationDate = (date: string) => {
     if (!date) return "";
@@ -310,7 +315,7 @@ const PrimaPage = () => {
         kilosDelivered: kilos, 
         amount: amt, 
         paymentStatus: "Pending",
-        numBoxes,
+        numBoxes: String(numBoxes), // Explicitly convert to string
         dateOfExpiration,
         productCode,
         batchNo,
@@ -399,8 +404,8 @@ const PrimaPage = () => {
         if (typeof data.amount !== "number" || isNaN(data.amount)) {
           throw new Error("Amount must be a valid number");
         }
-        if (typeof data.numBoxes !== "string") {
-          data.numBoxes = String(data.numBoxes);
+        if (typeof data.numBoxes !== "string" || data.numBoxes === "") {
+          throw new Error(`Invalid data type for numBoxes: expected non-empty string, got ${typeof data.numBoxes} (${data.numBoxes})`);
         }
       }
 
@@ -418,6 +423,8 @@ const PrimaPage = () => {
           successMessage = "Production record updated successfully";
           break;
       }
+
+      console.log("Sending edit data:", JSON.stringify(data, null, 2));
 
       const res = await fetch(endpoint, {
         method: "PUT",
@@ -448,6 +455,7 @@ const PrimaPage = () => {
       showToast({ title: "Success", description: successMessage });
       setEditModal({ show: false, type: "po", data: null });
     } catch (error: any) {
+      console.error("Edit failed:", error.message);
       showToast({ title: "Error", description: `Failed to update: ${error.message}`, variant: "destructive" });
     }
   };

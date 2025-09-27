@@ -27,7 +27,11 @@ export const addPrimaTransaction = async (transactionData) => {
   if (typeof dateOfExpiration !== "string") throw new Error(`Invalid data type for dateOfExpiration: expected string, got ${typeof dateOfExpiration}`);
   if (typeof productCode !== "string") throw new Error(`Invalid data type for productCode: expected string, got ${typeof productCode}`);
   if (typeof batchNo !== "string") throw new Error(`Invalid data type for batchNo: expected string, got ${typeof batchNo}`);
-  if (typeof numberOfBoxes !== "string") throw new Error(`Invalid data type for numberOfBoxes: expected string, got ${typeof numberOfBoxes}`);
+  // Explicitly convert numberOfBoxes to string and validate
+  const validatedNumberOfBoxes = String(numberOfBoxes);
+  if (typeof validatedNumberOfBoxes !== "string" || validatedNumberOfBoxes === "") {
+    throw new Error(`Invalid data type for numberOfBoxes: expected non-empty string, got ${typeof numberOfBoxes} (${numberOfBoxes})`);
+  }
   if (typeof truckNo !== "string") throw new Error(`Invalid data type for truckNo: expected string, got ${typeof truckNo}`);
 
   try {
@@ -51,13 +55,25 @@ export const addPrimaTransaction = async (transactionData) => {
       throw new Error(`Delivery exceeds PO total: ${kilosDelivered + deliveredSoFar}kg > ${totalKilos}kg`);
     }
 
-    console.log("Inserting transaction:", { date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo });
+    console.log("Inserting transaction:", {
+      date,
+      kilosDelivered,
+      amount,
+      paymentStatus,
+      poId,
+      poNumber,
+      dateOfExpiration,
+      productCode,
+      batchNo,
+      numberOfBoxes: validatedNumberOfBoxes,
+      truckNo
+    });
 
     const { lastInsertRowid } = await client.execute(
       `INSERT INTO primatransactions 
         (date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo]
+      [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, validatedNumberOfBoxes, truckNo]
     );
 
     const { rows } = await client.execute(
@@ -93,7 +109,11 @@ export const updatePrimaTransaction = async (id, transactionData) => {
   if (typeof dateOfExpiration !== "string") throw new Error(`Invalid data type for dateOfExpiration: expected string, got ${typeof dateOfExpiration}`);
   if (typeof productCode !== "string") throw new Error(`Invalid data type for productCode: expected string, got ${typeof productCode}`);
   if (typeof batchNo !== "string") throw new Error(`Invalid data type for batchNo: expected string, got ${typeof batchNo}`);
-  if (typeof numberOfBoxes !== "string") throw new Error(`Invalid data type for numberOfBoxes: expected string, got ${typeof numberOfBoxes}`);
+  // Explicitly convert numberOfBoxes to string and validate
+  const validatedNumberOfBoxes = String(numberOfBoxes);
+  if (typeof validatedNumberOfBoxes !== "string" || validatedNumberOfBoxes === "") {
+    throw new Error(`Invalid data type for numberOfBoxes: expected non-empty string, got ${typeof numberOfBoxes} (${numberOfBoxes})`);
+  }
   if (typeof truckNo !== "string") throw new Error(`Invalid data type for truckNo: expected string, got ${typeof truckNo}`);
 
   try {
@@ -105,12 +125,27 @@ export const updatePrimaTransaction = async (id, transactionData) => {
     if (!poRows[0]) throw new Error(`PO number ${poNumber} not found`);
     const poId = poRows[0].id;
 
+    console.log("Updating transaction:", {
+      id,
+      date,
+      kilosDelivered,
+      amount,
+      paymentStatus,
+      poId,
+      poNumber,
+      dateOfExpiration,
+      productCode,
+      batchNo,
+      numberOfBoxes: validatedNumberOfBoxes,
+      truckNo
+    });
+
     await client.execute(
       `UPDATE primatransactions 
        SET date = ?, kilosDelivered = ?, amount = ?, paymentStatus = ?, poId = ?, poNumber = ?, 
            dateOfExpiration = ?, productCode = ?, batchNo = ?, numberOfBoxes = ?, truckNo = ?
        WHERE id = ?`,
-      [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo, id]
+      [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, validatedNumberOfBoxes, truckNo, id]
     );
 
     const { rows } = await client.execute(
