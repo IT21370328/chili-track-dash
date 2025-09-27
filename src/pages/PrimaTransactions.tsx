@@ -20,7 +20,7 @@ interface PrimaTransaction {
   kilosDelivered: number;
   amount: number;
   numBoxes: number;
-  expirationDate: string;
+  dateOfExpiration: string;
   productCode: string;
   batchNo: string;
   truckNo: string;
@@ -548,7 +548,7 @@ const PrimaPage = () => {
         t.date, 
         t.kilosDelivered, 
         t.numBoxes, 
-        t.expirationDate, 
+        t.dateOfExpiration, 
         t.productCode, 
         t.batchNo, 
         t.truckNo, 
@@ -867,7 +867,7 @@ const PrimaPage = () => {
                     <div>{tx.date}</div>
                     <div>{tx.kilosDelivered}</div>
                     <div>{tx.numBoxes}</div>
-                    <div>{tx.expirationDate}</div>
+                    <div>{tx.dateOfExpiration}</div>
                     <div>{tx.productCode}</div>
                     <div>{tx.batchNo}</div>
                     <div>{tx.truckNo}</div>
