@@ -25,9 +25,9 @@ interface PrimaTransaction {
   numberOfBoxes: number | null;
   dateOfExpiration: string | null;
   productCode: string | null;
-  invoiceNo: string | null;
   batchCode: string | null;
   truckNo: string | null;
+  invoiceNo: string | null;
   paymentStatus: "Pending" | "Approved" | "Paid" | "Rejected";
 }
 
@@ -104,23 +104,23 @@ const PrimaPage = () => {
   const [production, setProduction] = useState<Production[]>([]);
   const [newPO, setNewPO] = useState({ poNumber: "", date: "", totalKilos: "", amount: "" });
   const [selectedPO, setSelectedPO] = useState<PO | null>(null);
-  const [deliveryForm, setDeliveryForm] = useState<{ 
-    [poNumber: string]: { 
-      date: string; 
-      kilosDelivered: string; 
-      amount: string; 
+  const [deliveryForm, setDeliveryForm] = useState<{
+    [poNumber: string]: {
+      date: string;
+      kilosDelivered: string;
+      amount: string;
       numberOfBoxes: string;
-      invoiceNo: string;
       dateOfExpiration: string;
       productCode: string;
       batchCode: string;
       truckNo: string;
-    } 
+      invoiceNo: string;
+    }
   }>({});
-  const [confirmModal, setConfirmModal] = useState<{ 
-    show: boolean; 
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean;
     type: "status" | "delete" | "edit";
-    id?: number; 
+    id?: number;
     status?: "Approved" | "Paid" | "Rejected";
     recordType?: "po" | "transaction" | "production";
     data?: any;
@@ -133,9 +133,11 @@ const PrimaPage = () => {
   const [toast, setToast] = useState<{ title: string; description: string; variant?: string } | null>(null);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [sortConfig, setSortConfig] = useState<{ key: keyof PrimaTransaction; direction: 'asc' | 'desc' } | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const today = new Date().toISOString().split("T")[0];
 
-  // -------------------- Filter Functions --------------------
+  // -------------------- Filter and Sort Functions --------------------
   const filteredPOs = pos.filter(po => {
     const poDate = new Date(po.date);
     const fromMatch = !dateFrom || poDate >= new Date(dateFrom + "T00:00:00");
@@ -143,14 +145,40 @@ const PrimaPage = () => {
     return fromMatch && toMatch;
   });
 
-  const filteredTransactions = transactions.filter(tx => {
-    const txDate = new Date(tx.date);
-    const fromMatch = !dateFrom || txDate >= new Date(dateFrom + "T00:00:00");
-    const toMatch = !dateTo || txDate <= new Date(dateTo + "T23:59:59");
-    return fromMatch && toMatch;
-  });
+  const filteredAndSortedTransactions = (poNumber: string) => {
+    let filtered = transactions.filter(tx => {
+      const txDate = new Date(tx.date);
+      const fromMatch = !dateFrom || txDate >= new Date(dateFrom + "T00:00:00");
+      const toMatch = !dateTo || txDate <= new Date(dateTo + "T23:59:59");
+      const searchMatch = !searchQuery || 
+        (tx.invoiceNo?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+         tx.productCode?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+         tx.batchCode?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+         tx.truckNo?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+         tx.paymentStatus.toLowerCase().includes(searchQuery.toLowerCase()));
+      return tx.poNumber === poNumber && fromMatch && toMatch && searchMatch;
+    });
 
-  const resetDateFilter = () => { setDateFrom(""); setDateTo(""); };
+    if (sortConfig) {
+      filtered.sort((a, b) => {
+        const aValue = a[sortConfig.key] ?? '';
+        const bValue = b[sortConfig.key] ?? '';
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    return filtered;
+  };
+
+  const resetDateFilter = () => { setDateFrom(""); setDateTo(""); setSearchQuery(""); };
+
+  const handleSort = (key: keyof PrimaTransaction) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev?.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  };
 
   // -------------------- Toast --------------------
   const showToast = (toastData: { title: string; description: string; variant?: string }) => {
@@ -167,23 +195,29 @@ const PrimaPage = () => {
     return Math.max(totalProduced - totalDelivered, 0);
   };
 
+  const getTotalDeliveredForPO = (poNumber: string) => {
+    return transactions
+      .filter(t => t.poNumber === poNumber && t.paymentStatus !== "Rejected")
+      .reduce((sum, t) => sum + t.kilosDelivered, 0);
+  };
+
   // -------------------- Fetch Data --------------------
-  const fetchPOs = async () => { 
-    try { 
-      const res = await fetch(`${API_URL}/pos`); 
+  const fetchPOs = async () => {
+    try {
+      const res = await fetch(`${API_URL}/pos`);
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || `Failed to fetch POs: ${res.statusText}`);
       }
-      setPOs(await res.json() || []); 
-    } catch (error: any) { 
-      showToast({ title: "Error", description: error.message, variant: "destructive" }); 
-    } 
+      setPOs(await res.json() || []);
+    } catch (error: any) {
+      showToast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
-  const fetchTransactions = async () => { 
-    try { 
-      const res = await fetch(`${API_URL}/primatransactions`); 
+  const fetchTransactions = async () => {
+    try {
+      const res = await fetch(`${API_URL}/primatransactions`);
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || `Failed to fetch transactions: ${res.statusText}`);
@@ -192,37 +226,38 @@ const PrimaPage = () => {
       setTransactions(data.map(tx => ({
         ...tx,
         numberOfBoxes: tx.numberOfBoxes != null ? Number(tx.numberOfBoxes) : null,
+        invoiceNo: tx.invoiceNo || null,
         poNumber: tx.poNumber,
-      }))); 
-    } catch (error: any) { 
-      showToast({ title: "Error", description: error.message, variant: "destructive" }); 
-    } 
+      })));
+    } catch (error: any) {
+      showToast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
-  const fetchProduction = async () => { 
-    try { 
-      const res = await fetch(`${API_URL}/production`); 
+  const fetchProduction = async () => {
+    try {
+      const res = await fetch(`${API_URL}/production`);
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || `Failed to fetch production data: ${res.statusText}`);
       }
-      setProduction(await res.json() || []); 
-    } catch (error: any) { 
-      showToast({ title: "Error", description: error.message, variant: "destructive" }); 
-    } 
+      setProduction(await res.json() || []);
+    } catch (error: any) {
+      showToast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
-  useEffect(() => { 
-    fetchPOs(); 
-    fetchTransactions(); 
-    fetchProduction(); 
+  useEffect(() => {
+    fetchPOs();
+    fetchTransactions();
+    fetchProduction();
   }, []);
 
   // -------------------- Auto Update PO Status Function --------------------
   const updatePOStatusBasedOnDeliveries = async (poNumber: string) => {
     try {
       const [freshTransactionsRes, freshPOsRes] = await Promise.all([
-        fetch(`${API_URL}/primatransactions`), 
+        fetch(`${API_URL}/primatransactions`),
         fetch(`${API_URL}/pos`)
       ]);
       if (!freshTransactionsRes.ok || !freshPOsRes.ok) {
@@ -233,38 +268,38 @@ const PrimaPage = () => {
         throw new Error(errorData[0].error || errorData[1].error || "Failed to fetch data for PO status update");
       }
       const [freshTransactions, freshPOs] = await Promise.all([
-        freshTransactionsRes.json(), 
+        freshTransactionsRes.json(),
         freshPOsRes.json()
       ]);
-      
+
       const relatedPO = freshPOs.find(po => po.poNumber === poNumber);
       if (!relatedPO) return null;
-      
+
       const totalDelivered = freshTransactions
         .filter(t => t.poNumber === poNumber && t.paymentStatus !== "Rejected")
         .reduce((sum, t) => sum + t.kilosDelivered, 0);
-      
+
       const newPOStatus = totalDelivered >= relatedPO.totalKilos ? "Completed" : "Pending";
-      
+
       if (newPOStatus !== relatedPO.status) {
-        const res = await fetch(`${API_URL}/pos/${relatedPO.poNumber}`, { 
-          method: "PUT", 
-          headers: { "Content-Type": "application/json" }, 
-          body: JSON.stringify({ 
-            status: newPOStatus, 
-            remainingKilos: Math.max(relatedPO.totalKilos - totalDelivered, 0) 
-          }) 
+        const res = await fetch(`${API_URL}/pos/${relatedPO.poNumber}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            status: newPOStatus,
+            remainingKilos: Math.max(relatedPO.totalKilos - totalDelivered, 0)
+          })
         });
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
           throw new Error(errorData.error || `Failed to update PO status: ${res.statusText}`);
         }
-        
+
         await fetchPOs();
-        
+
         return `PO ${poNumber} status changed to ${newPOStatus}`;
       }
-      
+
       return null;
     } catch (error: any) {
       console.error("Failed to update PO status:", error.message);
@@ -276,9 +311,9 @@ const PrimaPage = () => {
   const handleCreatePO = async (e: React.FormEvent) => {
     e.preventDefault();
     const { poNumber, date, totalKilos, amount } = newPO;
-    if (!poNumber || !date || !totalKilos || !amount) { 
-      showToast({ title: "Error", description: "Please fill all fields", variant: "destructive" }); 
-      return; 
+    if (!poNumber || !date || !totalKilos || !amount) {
+      showToast({ title: "Error", description: "Please fill all fields", variant: "destructive" });
+      return;
     }
     const totalKilosNum = parseFloat(totalKilos);
     const amountNum = parseFloat(amount);
@@ -287,21 +322,21 @@ const PrimaPage = () => {
       return;
     }
     try {
-      const res = await fetch(`${API_URL}/po`, { 
-        method: "POST", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ poNumber, date, totalKilos: totalKilosNum, amount: amountNum, status: "Pending" }) 
+      const res = await fetch(`${API_URL}/po`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ poNumber, date, totalKilos: totalKilosNum, amount: amountNum, status: "Pending" })
       });
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || `Failed to create PO: ${res.statusText}`);
       }
       await Promise.all([fetchPOs(), fetchTransactions(), fetchProduction()]);
-      
+
       showToast({ title: "PO Created", description: `PO ${poNumber} created successfully` });
       setNewPO({ poNumber: "", date: "", totalKilos: "", amount: "" });
-    } catch (error: any) { 
-      showToast({ title: "Error", description: error.message, variant: "destructive" }); 
+    } catch (error: any) {
+      showToast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
@@ -326,112 +361,114 @@ const PrimaPage = () => {
     return expDate.toISOString().split("T")[0];
   };
 
+  const calculateAmountForTransaction = (kilos: number, poNumber: string | null) => {
+    if (!poNumber) return 0;
+    const relatedPO = pos.find(po => po.poNumber === poNumber);
+    if (!relatedPO) return 0;
+    return (kilos / relatedPO.totalKilos) * relatedPO.amount;
+  };
+
   const handleAddDelivery = async (po: PO) => {
-    if (po.status === "Completed") { 
-      showToast({ title: "PO Completed", description: "Cannot add deliveries to a completed PO", variant: "destructive" }); 
-      return; 
+    if (po.status === "Completed") {
+      showToast({ title: "PO Completed", description: "Cannot add deliveries to a completed PO", variant: "destructive" });
+      return;
     }
-    const { date = "", kilosDelivered = "", amount = "", productCode = "", batchCode = "", truckNo = "", dateOfExpiration = "" } = deliveryForm[po.poNumber] || {};
+    const { date = "", kilosDelivered = "", amount = "", productCode = "", batchCode = "", truckNo = "", dateOfExpiration = "", invoiceNo = "" } = deliveryForm[po.poNumber] || {};
     const kilos = parseFloat(kilosDelivered);
     const amt = parseFloat(amount);
-    if (!date || !kilos || !amt || !productCode || !batchCode || !truckNo || !dateOfExpiration) { 
-      showToast({ title: "Error", description: "Please fill all required fields (date, kilos, product code, batch number, truck number, expiration date)", variant: "destructive" }); 
-      return; 
+    if (!date || !kilos || !amt || !productCode || !batchCode || !truckNo || !dateOfExpiration || !invoiceNo) {
+      showToast({ title: "Error", description: "Please fill all required fields (date, kilos, amount, product code, batch number, truck number, expiration date, invoice number)", variant: "destructive" });
+      return;
     }
     if (isNaN(kilos) || isNaN(amt) || kilos <= 0 || amt <= 0) {
       showToast({ title: "Error", description: "Kilos Delivered and Amount must be positive numbers", variant: "destructive" });
       return;
     }
-    if (kilos > getMaxDeliverable(po)) { 
-      showToast({ title: "Error", description: `Exceeds max deliverable (${getMaxDeliverable(po)}kg) or available stock (${getAvailableStock()}kg)`, variant: "destructive" }); 
-      return; 
+    if (kilos > getMaxDeliverable(po)) {
+      showToast({ title: "Error", description: `Exceeds max deliverable (${getMaxDeliverable(po)}kg) or available stock (${getAvailableStock()}kg)`, variant: "destructive" });
+      return;
     }
     try {
       const numberOfBoxes = calculateNumberOfBoxes(kilos);
-      const transactionData = { 
+      const transactionData = {
         poId: po.id,
-        poNumber: po.poNumber, 
-        date, 
-        kilosDelivered: kilos, 
-        amount: amt, 
+        poNumber: po.poNumber,
+        date,
+        kilosDelivered: kilos,
+        amount: amt,
         paymentStatus: "Pending",
         numberOfBoxes,
         dateOfExpiration,
         productCode,
         batchCode,
-        truckNo
+        truckNo,
+        invoiceNo
       };
-      const res = await fetch(`${API_URL}/primatransactions`, { 
-        method: "POST", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify(transactionData) 
+      const res = await fetch(`${API_URL}/primatransactions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(transactionData)
       });
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || `Failed to add delivery: ${res.statusText} (${res.status})`);
       }
       const savedTransaction = await res.json();
-      setTransactions(prev => [...prev, { 
-        ...savedTransaction, 
-        numberOfBoxes: savedTransaction.numberOfBoxes != null ? Number(savedTransaction.numberOfBoxes) : null 
+      setTransactions(prev => [...prev, {
+        ...savedTransaction,
+        numberOfBoxes: savedTransaction.numberOfBoxes != null ? Number(savedTransaction.numberOfBoxes) : null,
+        invoiceNo: savedTransaction.invoiceNo || null
       }]);
-      setDeliveryForm(prev => ({ 
-        ...prev, 
-        [po.poNumber]: { 
-          date: "", 
-          kilosDelivered: "", 
-          amount: "", 
-          numberOfBoxes: "", 
+      setDeliveryForm(prev => ({
+        ...prev,
+        [po.poNumber]: {
+          date: "",
+          kilosDelivered: "",
+          amount: "",
+          numberOfBoxes: "",
           dateOfExpiration: "",
-          invoiceNo: "",
           productCode: "",
           batchCode: "",
-          truckNo: ""
-        } 
+          truckNo: "",
+          invoiceNo: ""
+        }
       }));
-      
+
       const statusMessage = await updatePOStatusBasedOnDeliveries(po.poNumber);
-      const message = statusMessage 
+      const message = statusMessage
         ? `${kilos}kg delivered for PO ${po.poNumber}. ${statusMessage}`
         : `${kilos}kg delivered for PO ${po.poNumber}`;
-        
+
       showToast({ title: "Delivery Added", description: message });
-    } catch (error: any) { 
+    } catch (error: any) {
       console.error("Delivery addition failed:", error.message);
-      showToast({ title: "Error", description: `Failed to add delivery: ${error.message}`, variant: "destructive" }); 
+      showToast({ title: "Error", description: `Failed to add delivery: ${error.message}`, variant: "destructive" });
     }
   };
 
   // -------------------- Edit Functions --------------------
   const handleEditPO = (po: PO) => {
-    setEditModal({ 
-      show: true, 
-      type: "po", 
+    setEditModal({
+      show: true,
+      type: "po",
       data: { ...po }
     });
   };
 
   const handleEditTransaction = (transaction: PrimaTransaction) => {
-    setEditModal({ 
-      show: true, 
-      type: "transaction", 
+    setEditModal({
+      show: true,
+      type: "transaction",
       data: { ...transaction }
     });
   };
 
   const handleEditProduction = (prod: Production) => {
-    setEditModal({ 
-      show: true, 
-      type: "production", 
+    setEditModal({
+      show: true,
+      type: "production",
       data: { ...prod }
     });
-  };
-
-  const calculateAmountForTransaction = (kilos: number, poNumber: string | null) => {
-    if (!poNumber) return 0;
-    const relatedPO = pos.find(po => po.poNumber === poNumber);
-    if (!relatedPO) return 0;
-    return (kilos / relatedPO.totalKilos) * relatedPO.amount;
   };
 
   const handleSaveEdit = async () => {
@@ -460,7 +497,7 @@ const PrimaPage = () => {
     try {
       let endpoint = "";
       let successMessage = "";
-      
+
       switch (type) {
         case "po":
           endpoint = `${API_URL}/pos/${data.poNumber}`;
@@ -482,6 +519,7 @@ const PrimaPage = () => {
         body: JSON.stringify({
           ...data,
           poId: data.poNumber ? pos.find(po => po.poNumber === data.poNumber)?.id : null,
+          invoiceNo: data.invoiceNo || null
         })
       });
 
@@ -518,19 +556,19 @@ const PrimaPage = () => {
     if (type === "po" && data) {
       const poTransactions = transactions.filter(t => t.poNumber === data.poNumber);
       if (poTransactions.length > 0) {
-        showToast({ 
-          title: "Cannot Delete PO", 
-          description: `PO ${data.poNumber} has ${poTransactions.length} transaction(s). Delete all transactions first.`, 
-          variant: "destructive" 
+        showToast({
+          title: "Cannot Delete PO",
+          description: `PO ${data.poNumber} has ${poTransactions.length} transaction(s). Delete all transactions first.`,
+          variant: "destructive"
         });
         return;
       }
     }
-    
-    setConfirmModal({ 
-      show: true, 
+
+    setConfirmModal({
+      show: true,
       type: "delete",
-      id, 
+      id,
       recordType: type,
       data
     });
@@ -543,7 +581,7 @@ const PrimaPage = () => {
     try {
       let endpoint = "";
       let successMessage = "";
-      
+
       switch (recordType) {
         case "po":
           endpoint = `${API_URL}/pos/${data.poNumber}`;
@@ -595,42 +633,43 @@ const PrimaPage = () => {
   const updateStatus = async () => {
     if (!confirmModal.id || !confirmModal.status) return;
     try {
-      const transactionRes = await fetch(`${API_URL}/primatransactions/${confirmModal.id}/status`, { 
-        method: "PUT", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ paymentStatus: confirmModal.status }) 
+      const transactionRes = await fetch(`${API_URL}/primatransactions/${confirmModal.id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentStatus: confirmModal.status })
       });
       if (!transactionRes.ok) {
         const errorData = await transactionRes.json().catch(() => ({}));
         throw new Error(errorData.error || `Failed to update transaction status: ${transactionRes.statusText}`);
       }
-      
+
       const updatedTransaction = await transactionRes.json();
-      
+
       const statusMessage = await updatePOStatusBasedOnDeliveries(updatedTransaction.poNumber);
-      
-      setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? { 
-        ...updatedTransaction, 
-        numberOfBoxes: updatedTransaction.numberOfBoxes != null ? Number(updatedTransaction.numberOfBoxes) : null 
+
+      setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? {
+        ...updatedTransaction,
+        numberOfBoxes: updatedTransaction.numberOfBoxes != null ? Number(updatedTransaction.numberOfBoxes) : null,
+        invoiceNo: updatedTransaction.invoiceNo || null
       } : t));
-      
-      const message = statusMessage 
+
+      const message = statusMessage
         ? `Transaction marked as ${confirmModal.status}. ${statusMessage}`
         : `Transaction marked as ${confirmModal.status}`;
-        
+
       showToast({ title: "Status Updated", description: message });
-    } catch (error: any) { 
-      showToast({ title: "Error", description: `Failed to update status: ${error.message}`, variant: "destructive" }); 
+    } catch (error: any) {
+      showToast({ title: "Error", description: `Failed to update status: ${error.message}`, variant: "destructive" });
     }
     setConfirmModal({ show: false, type: "status" });
   };
 
   // -------------------- Summary --------------------
-  const totalDelivered = filteredTransactions.reduce((sum, t) => sum + t.kilosDelivered, 0);
-  const totalRevenue = filteredTransactions.reduce((sum, t) => sum + t.amount, 0);
-  const paidAmount = filteredTransactions.filter(t => t.paymentStatus === "Paid").reduce((sum, t) => sum + t.amount, 0);
-  const pendingApproval = filteredTransactions.filter(t => t.paymentStatus === "Approved").reduce((sum, t) => sum + t.amount, 0);
-  const rejectedPowder = filteredTransactions.filter(t => t.paymentStatus === "Rejected").reduce((sum, t) => sum + t.kilosDelivered, 0);
+  const totalDelivered = filteredAndSortedTransactions('').reduce((sum, t) => sum + t.kilosDelivered, 0);
+  const totalRevenue = filteredAndSortedTransactions('').reduce((sum, t) => sum + t.amount, 0);
+  const paidAmount = filteredAndSortedTransactions('').filter(t => t.paymentStatus === "Paid").reduce((sum, t) => sum + t.amount, 0);
+  const pendingApproval = filteredAndSortedTransactions('').filter(t => t.paymentStatus === "Approved").reduce((sum, t) => sum + t.amount, 0);
+  const rejectedPowder = filteredAndSortedTransactions('').filter(t => t.paymentStatus === "Rejected").reduce((sum, t) => sum + t.kilosDelivered, 0);
   const availableStock = getAvailableStock();
 
   const SummaryCard = ({ title, value, icon: Icon, description }: { title: string; value: string; icon: any; description: string }) => (
@@ -648,18 +687,18 @@ const PrimaPage = () => {
 
   const exportTransactions = () => {
     const csvContent = [
-      ["PO Number", "Date", "Kilos Delivered", "Number of Boxes", "Expiration Date", "Product Code", "Batch Code", "Invoice Number", "Truck No", "Amount", "Payment Status"],
-      ...filteredTransactions.map(t => [
-        t.poNumber || "", 
-        t.date, 
-        t.kilosDelivered, 
-        t.numberOfBoxes != null ? t.numberOfBoxes : "", 
-        t.dateOfExpiration || "", 
-        t.productCode || "", 
-        t.batchCode || "", 
+      ["PO Number", "Date", "Kilos Delivered", "Number of Boxes", "Expiration Date", "Product Code", "Batch Code", "Invoice No", "Truck No", "Amount", "Payment Status"],
+      ...filteredAndSortedTransactions('').map(t => [
+        t.poNumber || "",
+        t.date,
+        t.kilosDelivered,
+        t.numberOfBoxes != null ? t.numberOfBoxes : "",
+        t.dateOfExpiration || "",
+        t.productCode || "",
+        t.batchCode || "",
         t.invoiceNo || "",
-        t.truckNo || "", 
-        t.amount, 
+        t.truckNo || "",
+        t.amount,
         t.paymentStatus
       ])
     ].map(e => e.join(",")).join("\n");
@@ -726,7 +765,7 @@ const PrimaPage = () => {
               <Label>Amount (Rs)</Label>
               <Input type="number" min={1} step="0.01" value={newPO.amount} onChange={e => setNewPO({ ...newPO, amount: e.target.value })} required max={undefined} />
               <Button type="submit" className="mt-2 flex items-center justify-center" onClick={handleCreatePO}>
-                <Plus className="w-4 h-4 mr-2" />Create PO
+                <Plus className="w-4 h-4 mr-2" /> Create PO
               </Button>
             </div>
           </div>
@@ -738,19 +777,19 @@ const PrimaPage = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full">
             <CardTitle>PO List</CardTitle>
             <div className="flex items-center gap-3">
-              <Input 
+              <Input
                 type="date"
                 value={dateFrom}
                 onChange={e => setDateFrom(e.target.value)}
                 placeholder="From"
                 className="w-40" min={undefined} max={undefined} step={undefined}              />
-              <Input 
+              <Input
                 type="date"
                 value={dateTo}
                 onChange={e => setDateTo(e.target.value)}
                 placeholder="To"
                 className="w-40" min={undefined} max={undefined} step={undefined}              />
-              {(dateFrom || dateTo) && 
+              {(dateFrom || dateTo) &&
                 <Button variant="outline" size="sm" onClick={resetDateFilter}>
                   Reset
                 </Button>
@@ -807,12 +846,25 @@ const PrimaPage = () => {
 
       {selectedPO && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-8 shadow-lg w-[95%] max-w-6xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-xl p-8 shadow-lg w-[95%] max-w-7xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-slate-800">Deliveries for PO {selectedPO.poNumber}</h2>
               <Button variant="outline" onClick={() => setSelectedPO(null)}>
                 <X className="w-5 h-5" />
               </Button>
+            </div>
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm font-medium text-blue-800">
+                Total Delivered for PO: {getTotalDeliveredForPO(selectedPO.poNumber)}kg | Remaining: {getRemainingKilos(selectedPO)}kg
+              </p>
+            </div>
+            <div className="mb-4">
+              <Input
+                type="text"
+                placeholder="Search by Invoice No, Product Code, Batch Code, Truck No, or Status"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full max-w-md" min={undefined} max={undefined} step={undefined}              />
             </div>
 
             {selectedPO.status === "Pending" && getRemainingKilos(selectedPO) > 0 && (
@@ -829,10 +881,10 @@ const PrimaPage = () => {
                 )}
 
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="flex flex-col space-y-1">
                       <Label>Date</Label>
-                      <Input 
+                      <Input
                         type="date"
                         value={deliveryForm[selectedPO.poNumber]?.date || ""}
                         onChange={e => {
@@ -851,7 +903,7 @@ const PrimaPage = () => {
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Expiration Date</Label>
-                      <Input 
+                      <Input
                         type="date"
                         value={deliveryForm[selectedPO.poNumber]?.dateOfExpiration || ""}
                         onChange={e => setDeliveryForm(prev => ({
@@ -860,41 +912,38 @@ const PrimaPage = () => {
                         }))}
                         required min={undefined} max={undefined} step={undefined}                      />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="flex flex-col space-y-1">
                       <Label>Kilos Delivered</Label>
-                      <Input 
-                        type="number" 
+                      <Input
+                        type="number"
                         min={0.01}
-                        max={getMaxDeliverable(selectedPO)} 
+                        max={getMaxDeliverable(selectedPO)}
                         step="0.01"
-                        placeholder={`Max ${getMaxDeliverable(selectedPO)}kg`} 
-                        value={deliveryForm[selectedPO.poNumber]?.kilosDelivered || ""} 
+                        placeholder={`Max ${getMaxDeliverable(selectedPO)}kg`}
+                        value={deliveryForm[selectedPO.poNumber]?.kilosDelivered || ""}
                         onChange={e => {
                           const kilos = parseFloat(e.target.value) || 0;
                           const maxAllowed = getMaxDeliverable(selectedPO);
                           if (kilos <= maxAllowed) {
                             const amount = calculateAmountForTransaction(kilos, selectedPO.poNumber);
                             const numberOfBoxes = calculateNumberOfBoxes(kilos);
-                            setDeliveryForm(prev => ({ 
-                              ...prev, 
-                              [selectedPO.poNumber]: { 
-                                ...prev[selectedPO.poNumber], 
-                                kilosDelivered: e.target.value, 
+                            setDeliveryForm(prev => ({
+                              ...prev,
+                              [selectedPO.poNumber]: {
+                                ...prev[selectedPO.poNumber],
+                                kilosDelivered: e.target.value,
                                 amount: amount.toFixed(2),
                                 numberOfBoxes: numberOfBoxes.toString()
-                              } 
+                              }
                             }));
                           }
-                        }} 
+                        }}
                         required
                       />
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Number of Boxes</Label>
-                      <Input 
+                      <Input
                         readOnly
                         placeholder="Number of Boxes"
                         value={deliveryForm[selectedPO.poNumber]?.numberOfBoxes || ""}
@@ -902,7 +951,7 @@ const PrimaPage = () => {
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Amount (Rs)</Label>
-                      <Input 
+                      <Input
                         readOnly
                         placeholder="Amount (Rs)"
                         value={deliveryForm[selectedPO.poNumber]?.amount || ""}
@@ -910,7 +959,7 @@ const PrimaPage = () => {
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Product Code</Label>
-                      <Input 
+                      <Input
                         value={deliveryForm[selectedPO.poNumber]?.productCode || ""}
                         onChange={e => setDeliveryForm(prev => ({
                           ...prev,
@@ -920,7 +969,7 @@ const PrimaPage = () => {
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Batch Code</Label>
-                      <Input 
+                      <Input
                         value={deliveryForm[selectedPO.poNumber]?.batchCode || ""}
                         onChange={e => setDeliveryForm(prev => ({
                           ...prev,
@@ -929,18 +978,8 @@ const PrimaPage = () => {
                         required min={undefined} max={undefined} step={undefined}                      />
                     </div>
                     <div className="flex flex-col space-y-1">
-                      <Label>Invoice Number</Label>
-                      <Input 
-                        value={deliveryForm[selectedPO.poNumber]?.invoiceNo || ""}
-                        onChange={e => setDeliveryForm(prev => ({
-                          ...prev,
-                          [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], invoiceNo: e.target.value }
-                        }))}
-                        required min={undefined} max={undefined} step={undefined}                      />
-                    </div>
-                    <div className="flex flex-col space-y-1">
                       <Label>Truck Number</Label>
-                      <Input 
+                      <Input
                         value={deliveryForm[selectedPO.poNumber]?.truckNo || ""}
                         onChange={e => setDeliveryForm(prev => ({
                           ...prev,
@@ -948,10 +987,20 @@ const PrimaPage = () => {
                         }))}
                         required min={undefined} max={undefined} step={undefined}                      />
                     </div>
+                    <div className="flex flex-col space-y-1">
+                      <Label>Invoice Number</Label>
+                      <Input
+                        value={deliveryForm[selectedPO.poNumber]?.invoiceNo || ""}
+                        onChange={e => setDeliveryForm(prev => ({
+                          ...prev,
+                          [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], invoiceNo: e.target.value }
+                        }))}
+                        required min={undefined} max={undefined} step={undefined}                      />
+                    </div>
                   </div>
 
                   <div className="flex justify-end">
-                    <Button 
+                    <Button
                       onClick={() => handleAddDelivery(selectedPO)}
                       disabled={getMaxDeliverable(selectedPO) <= 0}
                     >
@@ -964,38 +1013,50 @@ const PrimaPage = () => {
 
             <div className="w-full border border-slate-200 rounded-lg overflow-x-auto">
               <div className="bg-slate-200/60 sticky top-0 z-10">
-                <div className="grid grid-cols-10 gap-2 p-3 font-semibold text-sm">
-                  <div className="min-w-[100px] max-w-[120px] truncate">Date</div>
-                  <div className="min-w-[100px] max-w-[120px] truncate">Kilos Delivered</div>
-                  <div className="min-w-[100px] max-w-[120px] truncate">Number of Boxes</div>
-                  <div className="min-w-[100px] max-w-[120px] truncate">Expiration Date</div>
-                  <div className="min-w-[100px] max-w-[120px] truncate">Product Code</div>
-                  <div className="min-w-[100px] max-w-[120px] truncate">Batch Code</div>
-                  <div className="min-w-[100px] max-w-[120px] truncate">Invoice No</div>
-                  <div className="min-w-[100px] max-w-[120px] truncate">Truck No</div> 
-                  <div className="min-w-[100px] max-w-[120px] truncate">Amount</div>
-                  <div className="min-w-[100px] max-w-[120px] truncate">Status</div>
-                  <div className="min-w-[200px] max-w-[250px] text-right">Actions</div>
+                <div className="grid grid-cols-[150px_150px_120px_150px_150px_150px_150px_150px_150px_250px] gap-4 p-4 font-semibold text-sm">
+                  <div className="cursor-pointer" onClick={() => handleSort('date')}>
+                    Date {sortConfig?.key === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </div>
+                  <div className="cursor-pointer" onClick={() => handleSort('kilosDelivered')}>
+                    Kilos Delivered {sortConfig?.key === 'kilosDelivered' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </div>
+                  <div>Number of Boxes</div>
+                  <div className="cursor-pointer" onClick={() => handleSort('dateOfExpiration')}>
+                    Expiration Date {sortConfig?.key === 'dateOfExpiration' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </div>
+                  <div>Product Code</div>
+                  <div>Batch Code</div>
+                  <div>Truck No</div>
+                  <div className="cursor-pointer" onClick={() => handleSort('invoiceNo')}>
+                    Invoice No {sortConfig?.key === 'invoiceNo' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </div>
+                  <div className="cursor-pointer" onClick={() => handleSort('amount')}>
+                    Amount {sortConfig?.key === 'amount' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </div>
+                  <div className="cursor-pointer text-right" onClick={() => handleSort('paymentStatus')}>
+                    Status {sortConfig?.key === 'paymentStatus' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </div>
                 </div>
               </div>
               <div>
-                {transactions.filter(t => t.poNumber === selectedPO.poNumber).map(tx => (
-                  <div key={tx.id} className="grid grid-cols-10 gap-2 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0">
-                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.date}</div>
-                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.kilosDelivered}</div>
-                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.numberOfBoxes != null ? tx.numberOfBoxes : "N/A"}</div>
-                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.dateOfExpiration || "N/A"}</div>
-                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.productCode || "N/A"}</div>
-                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.batchCode || "N/A"}</div>
-                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.invoiceNo || "N/A"}</div>
-                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.truckNo || "N/A"}</div>
-                    <div className="min-w-[100px] max-w-[120px] truncate">Rs {tx.amount.toLocaleString()}</div>
-                    <div className="min-w-[100px] max-w-[120px] truncate">
+                {filteredAndSortedTransactions(selectedPO.poNumber).map((tx, index) => (
+                  <div
+                    key={tx.id}
+                    className={`grid grid-cols-[150px_150px_120px_150px_150px_150px_150px_150px_150px_250px] gap-4 p-4 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-slate-100 transition-colors border-b border-slate-100 last:border-b-0`}
+                  >
+                    <div className="truncate" title={tx.date}>{tx.date}</div>
+                    <div className="truncate" title={tx.kilosDelivered.toString()}>{tx.kilosDelivered}</div>
+                    <div className="truncate" title={tx.numberOfBoxes != null ? tx.numberOfBoxes.toString() : "N/A"}>{tx.numberOfBoxes != null ? tx.numberOfBoxes : "N/A"}</div>
+                    <div className="truncate" title={tx.dateOfExpiration || "N/A"}>{tx.dateOfExpiration || "N/A"}</div>
+                    <div className="truncate" title={tx.productCode || "N/A"}>{tx.productCode || "N/A"}</div>
+                    <div className="truncate" title={tx.batchCode || "N/A"}>{tx.batchCode || "N/A"}</div>
+                    <div className="truncate" title={tx.truckNo || "N/A"}>{tx.truckNo || "N/A"}</div>
+                    <div className="truncate" title={tx.invoiceNo || "N/A"}>{tx.invoiceNo || "N/A"}</div>
+                    <div className="truncate" title={`Rs ${tx.amount.toLocaleString()}`}>Rs {tx.amount.toLocaleString()}</div>
+                    <div className="text-right flex items-center justify-end gap-2">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${tx.paymentStatus === "Pending" ? "bg-yellow-100 text-yellow-700" : tx.paymentStatus === "Approved" ? "bg-blue-100 text-blue-700" : tx.paymentStatus === "Rejected" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
                         {tx.paymentStatus}
                       </span>
-                    </div>
-                    <div className="min-w-[200px] max-w-[250px] text-right space-x-2">
                       {tx.paymentStatus === "Pending" && (
                         <>
                           <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white" onClick={() => confirmStatusUpdate(tx.id, "Approved")}>Approve</Button>
@@ -1005,12 +1066,12 @@ const PrimaPage = () => {
                       {tx.paymentStatus === "Approved" && (
                         <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white" onClick={() => confirmStatusUpdate(tx.id, "Paid")}>Mark Paid</Button>
                       )}
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => generateInvoice(tx, () => showToast({ 
-                          title: "Success", 
-                          description: `Invoice for delivery ${tx.id} generated and downloaded.` 
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => generateInvoice(tx, () => showToast({
+                          title: "Success",
+                          description: `Invoice for delivery ${tx.id} generated and downloaded.`
                         }))}
                       >
                         <Download className="w-3 h-3" />
@@ -1036,12 +1097,12 @@ const PrimaPage = () => {
             <h2 className="text-lg font-bold mb-4">
               Edit {editModal.type === "po" ? "PO" : editModal.type === "transaction" ? "Transaction" : "Production"}
             </h2>
-            
+
             {editModal.type === "po" && (
               <div className="space-y-4">
                 <div>
                   <Label>PO Number</Label>
-                  <Input 
+                  <Input
                     value={editModal.data.poNumber}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
@@ -1051,7 +1112,7 @@ const PrimaPage = () => {
                 </div>
                 <div>
                   <Label>Date</Label>
-                  <Input 
+                  <Input
                     type="date"
                     value={editModal.data.date}
                     onChange={e => setEditModal(prev => ({
@@ -1062,7 +1123,7 @@ const PrimaPage = () => {
                 </div>
                 <div>
                   <Label>Total Kilos</Label>
-                  <Input 
+                  <Input
                     type="number"
                     step="0.01"
                     value={editModal.data.totalKilos}
@@ -1074,7 +1135,7 @@ const PrimaPage = () => {
                 </div>
                 <div>
                   <Label>Amount (Rs)</Label>
-                  <Input 
+                  <Input
                     type="number"
                     step="0.01"
                     value={editModal.data.amount}
@@ -1086,12 +1147,12 @@ const PrimaPage = () => {
                 </div>
                 <div>
                   <Label>Status</Label>
-                  <select 
+                  <select
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={editModal.data.status} 
-                    onChange={e => setEditModal(prev => ({ 
-                      ...prev, 
-                      data: { ...prev.data, status: e.target.value } 
+                    value={editModal.data.status}
+                    onChange={e => setEditModal(prev => ({
+                      ...prev,
+                      data: { ...prev.data, status: e.target.value }
                     }))}
                   >
                     <option value="Pending">Pending</option>
@@ -1105,7 +1166,7 @@ const PrimaPage = () => {
               <div className="space-y-4">
                 <div>
                   <Label>PO Number</Label>
-                  <Input 
+                  <Input
                     value={editModal.data.poNumber || ""}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
@@ -1114,7 +1175,7 @@ const PrimaPage = () => {
                 </div>
                 <div>
                   <Label>Date</Label>
-                  <Input 
+                  <Input
                     type="date"
                     value={editModal.data.date}
                     onChange={e => setEditModal(prev => ({
@@ -1125,7 +1186,7 @@ const PrimaPage = () => {
                 </div>
                 <div>
                   <Label>Kilos Delivered</Label>
-                  <Input 
+                  <Input
                     type="number"
                     step="0.01"
                     value={editModal.data.kilosDelivered}
@@ -1147,7 +1208,7 @@ const PrimaPage = () => {
                 </div>
                 <div>
                   <Label>Number of Boxes</Label>
-                  <Input 
+                  <Input
                     type="number"
                     value={editModal.data.numberOfBoxes != null ? editModal.data.numberOfBoxes : ""}
                     readOnly
@@ -1156,7 +1217,7 @@ const PrimaPage = () => {
                 </div>
                 <div>
                   <Label>Expiration Date</Label>
-                  <Input 
+                  <Input
                     type="date"
                     value={editModal.data.dateOfExpiration || ""}
                     onChange={e => setEditModal(prev => ({
@@ -1167,7 +1228,7 @@ const PrimaPage = () => {
                 </div>
                 <div>
                   <Label>Product Code</Label>
-                  <Input 
+                  <Input
                     value={editModal.data.productCode || ""}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
@@ -1177,7 +1238,7 @@ const PrimaPage = () => {
                 </div>
                 <div>
                   <Label>Batch Code</Label>
-                  <Input 
+                  <Input
                     value={editModal.data.batchCode || ""}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
@@ -1186,18 +1247,8 @@ const PrimaPage = () => {
                     required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
-                  <Label>Invoice No</Label>
-                  <Input 
-                    value={editModal.data.invoiceNo || ""}
-                    onChange={e => setEditModal(prev => ({
-                      ...prev,
-                      data: { ...prev.data, invoiceNo: e.target.value || null }
-                    }))}
-                    required min={undefined} max={undefined} step={undefined}                  />
-                </div>
-                <div>
                   <Label>Truck Number</Label>
-                  <Input 
+                  <Input
                     value={editModal.data.truckNo || ""}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
@@ -1206,8 +1257,18 @@ const PrimaPage = () => {
                     required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
+                  <Label>Invoice Number</Label>
+                  <Input
+                    value={editModal.data.invoiceNo || ""}
+                    onChange={e => setEditModal(prev => ({
+                      ...prev,
+                      data: { ...prev.data, invoiceNo: e.target.value || null }
+                    }))}
+                    required min={undefined} max={undefined} step={undefined}                  />
+                </div>
+                <div>
                   <Label>Amount (Rs)</Label>
-                  <Input 
+                  <Input
                     type="number"
                     step="0.01"
                     value={editModal.data.amount}
@@ -1218,7 +1279,7 @@ const PrimaPage = () => {
                 <div>
                   <Label>Payment Status</Label>
                   <p className="text-sm text-gray-500">Use status buttons to change payment status</p>
-                  <Input 
+                  <Input
                     value={editModal.data.paymentStatus}
                     readOnly
                     className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                  />
@@ -1230,7 +1291,7 @@ const PrimaPage = () => {
               <div className="space-y-4">
                 <div>
                   <Label>Date</Label>
-                  <Input 
+                  <Input
                     type="date"
                     value={editModal.data.date}
                     onChange={e => setEditModal(prev => ({
@@ -1241,7 +1302,7 @@ const PrimaPage = () => {
                 </div>
                 <div>
                   <Label>Kilos In</Label>
-                  <Input 
+                  <Input
                     type="number"
                     step="0.01"
                     value={editModal.data.kilosIn}
@@ -1253,7 +1314,7 @@ const PrimaPage = () => {
                 </div>
                 <div>
                   <Label>Kilos Out</Label>
-                  <Input 
+                  <Input
                     type="number"
                     step="0.01"
                     value={editModal.data.kilosOut}
@@ -1265,7 +1326,7 @@ const PrimaPage = () => {
                 </div>
                 <div>
                   <Label>Surplus</Label>
-                  <Input 
+                  <Input
                     type="number"
                     step="0.01"
                     value={editModal.data.surplus}
@@ -1277,12 +1338,12 @@ const PrimaPage = () => {
                 </div>
                 <div>
                   <Label>Color</Label>
-                  <select 
+                  <select
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={editModal.data.color} 
-                    onChange={e => setEditModal(prev => ({ 
-                      ...prev, 
-                      data: { ...prev.data, color: e.target.value } 
+                    value={editModal.data.color}
+                    onChange={e => setEditModal(prev => ({
+                      ...prev,
+                      data: { ...prev.data, color: e.target.value }
                     }))}
                   >
                     <option value="red">Red</option>
@@ -1311,16 +1372,15 @@ const PrimaPage = () => {
               {confirmModal.type === "delete" ? "Confirm Delete" : "Confirm Status Update"}
             </h2>
             <p className="mb-4">
-              {confirmModal.type === "delete" 
+              {confirmModal.type === "delete"
                 ? `Are you sure you want to delete this ${confirmModal.recordType}? This action cannot be undone.`
-                : `Are you sure you want to mark this transaction as ${confirmModal.status}?`
-              }
+                : `Are you sure you want to mark this transaction as ${confirmModal.status}?`}
             </p>
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setConfirmModal({ show: false, type: "status" })}>
                 Cancel
               </Button>
-              <Button 
+              <Button
                 variant={confirmModal.type === "delete" ? "destructive" : "default"}
                 onClick={confirmModal.type === "delete" ? handleDelete : updateStatus}
               >

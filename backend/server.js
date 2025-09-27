@@ -350,6 +350,15 @@ app.get("/primatransactions/range", async (req, res) => {
     res.json(result);
   }));
 
+  app.get(
+    '/audit-logs/:id',
+    asyncHandler(async (req, res) => {
+      const row = await getAuditLogById(req.params.id);
+      res.json(row);
+    })
+  );
+
+  
   // =================== Global Error Handler ===================
   app.use((error, req, res, next) => {
     console.error(`[ERROR ${new Date().toISOString()}] ${req.method} ${req.url}:`, error.stack);
