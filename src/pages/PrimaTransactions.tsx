@@ -19,6 +19,8 @@ interface PrimaTransaction {
   date: string;
   kilosDelivered: number;
   amount: number;
+  numBoxes: number;
+  expirationDate: string;
   paymentStatus: "Pending" | "Approved" | "Paid" | "Rejected";
 }
 
@@ -93,8 +95,8 @@ const PrimaPage = () => {
   const [transactions, setTransactions] = useState<PrimaTransaction[]>([]);
   const [production, setProduction] = useState<Production[]>([]);
   const [newPO, setNewPO] = useState({ poNumber: "", date: "", totalKilos: "", amount: "" });
-  const [expandedPO, setExpandedPO] = useState<string | null>(null);
-  const [deliveryForm, setDeliveryForm] = useState<{ [poNumber: string]: { date: string; kilosDelivered: string; amount: string } }>({});
+  const [selectedPO, setSelectedPO] = useState<PO | null>(null);
+  const [deliveryForm, setDeliveryForm] = useState<{ [poNumber: string]: { date: string; kilosDelivered: string; amount: string; numBoxes: string; expirationDate: string } }>({});
   const [confirmModal, setConfirmModal] = useState<{ 
     show: boolean; 
     type: "status" | "delete" | "edit";
@@ -253,10 +255,10 @@ const PrimaPage = () => {
       showToast({ title: "PO Completed", description: "Cannot add deliveries to a completed PO", variant: "destructive" }); 
       return; 
     }
-    const { date = "", kilosDelivered = "", amount = "" } = deliveryForm[po.poNumber] || {};
-    const kilos = parseFloat(kilosDelivered), amt = parseFloat(amount);
-    if (!date || !kilos || !amt) { 
-      showToast({ title: "Error", description: "Please fill delivery date, kilos, and amount", variant: "destructive" }); 
+    const { date = "", kilosDelivered = "", amount = "", numBoxes = "", expirationDate = "" } = deliveryForm[po.poNumber] || {};
+    const kilos = parseFloat(kilosDelivered), amt = parseFloat(amount), boxes = parseFloat(numBoxes);
+    if (!date || !kilos || !amt || !expirationDate) { 
+      showToast({ title: "Error", description: "Please fill delivery date, kilos, and expiration date", variant: "destructive" }); 
       return; 
     }
     if (kilos > getMaxDeliverable(po)) { 
@@ -267,11 +269,11 @@ const PrimaPage = () => {
       const res = await fetch(`${API_URL}/primatransactions`, { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ poNumber: po.poNumber, date, kilosDelivered: kilos, amount: amt, paymentStatus: "Pending" }) 
+        body: JSON.stringify({ poNumber: po.poNumber, date, kilosDelivered: kilos, amount: amt, numBoxes: boxes, expirationDate, paymentStatus: "Pending" }) 
       });
       const savedTransaction = await res.json();
       setTransactions(prev => [...prev, savedTransaction]);
-      setDeliveryForm(prev => ({ ...prev, [po.poNumber]: { date: "", kilosDelivered: "", amount: "" } }));
+      setDeliveryForm(prev => ({ ...prev, [po.poNumber]: { date: "", kilosDelivered: "", amount: "", numBoxes: "", expirationDate: "" } }));
       
       const statusMessage = await updatePOStatusBasedOnDeliveries(po.poNumber);
       const message = statusMessage 
@@ -313,6 +315,15 @@ const PrimaPage = () => {
     const relatedPO = pos.find(po => po.poNumber === poNumber);
     if (!relatedPO) return 0;
     return (kilos / relatedPO.totalKilos) * relatedPO.amount;
+  };
+
+  const calculateNumBoxes = (kilos: number) => kilos / 10;
+
+  const calculateExpirationDate = (date: string) => {
+    if (!date) return "";
+    const expDate = new Date(date);
+    expDate.setFullYear(expDate.getFullYear() + 1);
+    return expDate.toISOString().split("T")[0];
   };
 
   const handleSaveEdit = async () => {
@@ -492,8 +503,8 @@ const PrimaPage = () => {
 
   const exportTransactions = () => {
     const csvContent = [
-      ["PO Number", "Date", "Kilos Delivered", "Amount", "Payment Status"],
-      ...filteredTransactions.map(t => [t.poNumber, t.date, t.kilosDelivered, t.amount, t.paymentStatus])
+      ["PO Number", "Date", "Kilos Delivered", "Num Boxes", "Expiration Date", "Amount", "Payment Status"],
+      ...filteredTransactions.map(t => [t.poNumber, t.date, t.kilosDelivered, t.numBoxes, t.expirationDate, t.amount, t.paymentStatus])
     ].map(e => e.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
@@ -606,159 +617,218 @@ const PrimaPage = () => {
             </div>
             <div>
               {filteredPOs.map(po => (
-                <React.Fragment key={po.id}>
-                  <div className="grid grid-cols-8 gap-4 p-4 hover:bg-slate-50 transition-colors border-b border-slate-200">
-                    <div className="font-medium">{po.poNumber}</div>
-                    <div>{new Date(po.date).toLocaleDateString()}</div>
-                    <div>{po.totalKilos}</div>
-                    <div>{getRemainingKilos(po)}</div>
-                    <div>Rs {po.amount.toLocaleString()}</div>
-                    <div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${po.status === "Pending" ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>
-                        {po.status}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <Button size="sm" className="gap-1" onClick={() => setExpandedPO(expandedPO === po.poNumber ? null : po.poNumber)}>
-                        <Eye className="w-4 h-4" /> View
-                      </Button>
-                    </div>
-                    <div className="text-right space-x-1">
-                      <Button size="sm" variant="outline" onClick={() => handleEditPO(po)}>
-                        <Pencil className="w-3 h-3" />
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => confirmDelete(po.id, "po", po)}>
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
+                <div key={po.id} className="grid grid-cols-8 gap-4 p-4 hover:bg-slate-50 transition-colors border-b border-slate-200">
+                  <div className="font-medium">{po.poNumber}</div>
+                  <div>{new Date(po.date).toLocaleDateString()}</div>
+                  <div>{po.totalKilos}</div>
+                  <div>{getRemainingKilos(po)}</div>
+                  <div>Rs {po.amount.toLocaleString()}</div>
+                  <div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${po.status === "Pending" ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>
+                      {po.status}
+                    </span>
                   </div>
-
-                  {expandedPO === po.poNumber && (
-                    <div className="col-span-8 bg-slate-50 p-4 border-b border-slate-200">
-                      {po.status === "Pending" && getRemainingKilos(po) > 0 && (
-                        <div className="mb-4">
-                          {availableStock < getRemainingKilos(po) && (
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-                              <div className="flex items-center gap-2 text-yellow-800">
-                                <Package className="w-4 h-4" />
-                                <span className="text-sm font-medium">
-                                  Limited Stock: Only {availableStock}kg available (PO needs {getRemainingKilos(po)}kg)
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            <Input 
-                              type="date"
-                              value={deliveryForm[po.poNumber]?.date || ""}
-                              onChange={e => setDeliveryForm(prev => ({
-                                ...prev,
-                                [po.poNumber]: { ...prev[po.poNumber], date: e.target.value }
-                              }))} min={undefined} max={undefined} step={undefined}                            />
-                            <Input 
-                              type="number" 
-                              min={0.01}
-                              max={getMaxDeliverable(po)} 
-                              step="0.01"
-                              placeholder={`Max ${getMaxDeliverable(po)}kg`} 
-                              value={deliveryForm[po.poNumber]?.kilosDelivered || ""} 
-                              onChange={e => {
-                                const kilos = parseFloat(e.target.value) || 0;
-                                const maxAllowed = getMaxDeliverable(po);
-                                if (kilos <= maxAllowed) {
-                                  const amount = ((kilos / po.totalKilos) * po.amount).toFixed(2);
-                                  setDeliveryForm(prev => ({ 
-                                    ...prev, 
-                                    [po.poNumber]: { 
-                                      ...prev[po.poNumber], 
-                                      kilosDelivered: e.target.value, 
-                                      amount 
-                                    } 
-                                  }));
-                                }
-                              }} 
-                            />
-                            <Input 
-                              readOnly
-                              placeholder="Amount (Rs)"
-                              value={deliveryForm[po.poNumber]?.amount || ""} onChange={undefined} min={undefined} max={undefined} step={undefined}                            />
-                            <Button 
-                              onClick={() => handleAddDelivery(po)}
-                              disabled={getMaxDeliverable(po) <= 0}
-                            >
-                              {getMaxDeliverable(po) <= 0 ? "No Stock" : "Add Delivery"}
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="w-full border border-slate-200 rounded-lg overflow-hidden">
-                        <div className="bg-slate-200/60">
-                          <div className="grid grid-cols-7 gap-4 p-3 font-semibold text-sm">
-                            <div>Date</div>
-                            <div>Kilos Delivered</div>
-                            <div>Amount</div>
-                            <div>Status</div>
-                            <div className="text-right">Actions</div>
-                            <div className="text-right">Edit/Delete</div>
-                            <div className="text-right">Invoice</div>
-                          </div>
-                        </div>
-                        <div>
-                          {transactions.filter(t => t.poNumber === po.poNumber).map(tx => (
-                            <div key={tx.id} className="grid grid-cols-7 gap-4 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0">
-                              <div>{tx.date}</div>
-                              <div>{tx.kilosDelivered}</div>
-                              <div>Rs {tx.amount.toLocaleString()}</div>
-                              <div>
-                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${tx.paymentStatus === "Pending" ? "bg-yellow-100 text-yellow-700" : tx.paymentStatus === "Approved" ? "bg-blue-100 text-blue-700" : tx.paymentStatus === "Rejected" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
-                                  {tx.paymentStatus}
-                                </span>
-                              </div>
-                              <div className="text-right space-x-2">
-                                {tx.paymentStatus === "Pending" && (
-                                  <>
-                                    <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white" onClick={() => confirmStatusUpdate(tx.id, "Approved")}>Approve</Button>
-                                    <Button size="sm" variant="destructive" onClick={() => confirmStatusUpdate(tx.id, "Rejected")}>Reject</Button>
-                                  </>
-                                )}
-                                {tx.paymentStatus === "Approved" && (
-                                  <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white" onClick={() => confirmStatusUpdate(tx.id, "Paid")}>Mark Paid</Button>
-                                )}
-                              </div>
-                              <div className="text-right space-x-1">
-                                <Button size="sm" variant="outline" onClick={() => handleEditTransaction(tx)}>
-                                  <Pencil className="w-3 h-3" />
-                                </Button>
-                                <Button size="sm" variant="destructive" onClick={() => confirmDelete(tx.id, "transaction", tx)}>
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
-                              </div>
-                              <div className="text-right">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline" 
-                                  onClick={() => generateInvoice(tx, () => showToast({ 
-                                    title: "Success", 
-                                    description: `Invoice for delivery ${tx.id} generated and downloaded.` 
-                                  }))}
-                                >
-                                  <Download className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </React.Fragment>
+                  <div className="text-right">
+                    <Button size="sm" className="gap-1" onClick={() => setSelectedPO(po)}>
+                      <Eye className="w-4 h-4" /> View
+                    </Button>
+                  </div>
+                  <div className="text-right space-x-1">
+                    <Button size="sm" variant="outline" onClick={() => handleEditPO(po)}>
+                      <Pencil className="w-3 h-3" />
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => confirmDelete(po.id, "po", po)}>
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {selectedPO && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 shadow-lg w-[90%] max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">Deliveries for PO {selectedPO.poNumber}</h2>
+              <Button variant="outline" onClick={() => setSelectedPO(null)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {selectedPO.status === "Pending" && getRemainingKilos(selectedPO) > 0 && (
+              <div className="mb-6 space-y-4">
+                {availableStock < getRemainingKilos(selectedPO) && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                    <div className="flex items-center gap-2 text-yellow-800">
+                      <Package className="w-4 h-4" />
+                      <span className="text-sm font-medium">
+                        Limited Stock: Only {availableStock}kg available (PO needs {getRemainingKilos(selectedPO)}kg)
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Add Delivery Form with 3 rows */}
+                <div className="space-y-4">
+                  {/* Row 1: Dates */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex flex-col space-y-1">
+                      <Label>Date</Label>
+                      <Input 
+                        type="date"
+                        value={deliveryForm[selectedPO.poNumber]?.date || ""}
+                        onChange={e => {
+                          const newDate = e.target.value;
+                          const newExpiration = calculateExpirationDate(newDate);
+                          setDeliveryForm(prev => ({
+                            ...prev,
+                            [selectedPO.poNumber]: { 
+                              ...prev[selectedPO.poNumber], 
+                              date: newDate,
+                              expirationDate: newExpiration
+                            }
+                          }));
+                        }} min={undefined} max={undefined} step={undefined}                      />
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <Label>Expiration Date</Label>
+                      <Input 
+                        type="date"
+                        value={deliveryForm[selectedPO.poNumber]?.expirationDate || ""}
+                        onChange={e => setDeliveryForm(prev => ({
+                          ...prev,
+                          [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], expirationDate: e.target.value }
+                        }))} min={undefined} max={undefined} step={undefined}                      />
+                    </div>
+                  </div>
+
+                  {/* Row 2: Kilos, Boxes, Amount */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex flex-col space-y-1">
+                      <Label>Kilos Delivered</Label>
+                      <Input 
+                        type="number" 
+                        min={0.01}
+                        max={getMaxDeliverable(selectedPO)} 
+                        step="0.01"
+                        placeholder={`Max ${getMaxDeliverable(selectedPO)}kg`} 
+                        value={deliveryForm[selectedPO.poNumber]?.kilosDelivered || ""} 
+                        onChange={e => {
+                          const kilos = parseFloat(e.target.value) || 0;
+                          const maxAllowed = getMaxDeliverable(selectedPO);
+                          if (kilos <= maxAllowed) {
+                            const amount = ((kilos / selectedPO.totalKilos) * selectedPO.amount).toFixed(2);
+                            const numBoxes = calculateNumBoxes(kilos).toFixed(2);
+                            setDeliveryForm(prev => ({ 
+                              ...prev, 
+                              [selectedPO.poNumber]: { 
+                                ...prev[selectedPO.poNumber], 
+                                kilosDelivered: e.target.value, 
+                                amount,
+                                numBoxes 
+                              } 
+                            }));
+                          }
+                        }} 
+                      />
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <Label>Num Boxes</Label>
+                      <Input 
+                        readOnly
+                        placeholder="Num Boxes"
+                        value={deliveryForm[selectedPO.poNumber]?.numBoxes || ""} onChange={undefined} min={undefined} max={undefined} step={undefined}                      />
+                    </div>
+                    <div className="flex flex-col space-y-1">
+                      <Label>Amount (Rs)</Label>
+                      <Input 
+                        readOnly
+                        placeholder="Amount (Rs)"
+                        value={deliveryForm[selectedPO.poNumber]?.amount || ""} onChange={undefined} min={undefined} max={undefined} step={undefined}                      />
+                    </div>
+                  </div>
+
+                  {/* Row 3: Button */}
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={() => handleAddDelivery(selectedPO)}
+                      disabled={getMaxDeliverable(selectedPO) <= 0}
+                    >
+                      {getMaxDeliverable(selectedPO) <= 0 ? "No Stock" : "Add Delivery"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="w-full border border-slate-200 rounded-lg overflow-hidden">
+              <div className="bg-slate-200/60">
+                <div className="grid grid-cols-9 gap-4 p-3 font-semibold text-sm">
+                  <div>Date</div>
+                  <div>Kilos Delivered</div>
+                  <div>Num Boxes</div>
+                  <div>Expiration Date</div>
+                  <div>Amount</div>
+                  <div>Status</div>
+                  <div className="text-right">Actions</div>
+                  <div className="text-right">Edit/Delete</div>
+                  <div className="text-right">Invoice</div>
+                </div>
+              </div>
+              <div>
+                {transactions.filter(t => t.poNumber === selectedPO.poNumber).map(tx => (
+                  <div key={tx.id} className="grid grid-cols-9 gap-4 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0">
+                    <div>{tx.date}</div>
+                    <div>{tx.kilosDelivered}</div>
+                    <div>{tx.numBoxes}</div>
+                    <div>{tx.expirationDate}</div>
+                    <div>Rs {tx.amount.toLocaleString()}</div>
+                    <div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${tx.paymentStatus === "Pending" ? "bg-yellow-100 text-yellow-700" : tx.paymentStatus === "Approved" ? "bg-blue-100 text-blue-700" : tx.paymentStatus === "Rejected" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                        {tx.paymentStatus}
+                      </span>
+                    </div>
+                    <div className="text-right space-x-2">
+                      {tx.paymentStatus === "Pending" && (
+                        <>
+                          <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white" onClick={() => confirmStatusUpdate(tx.id, "Approved")}>Approve</Button>
+                          <Button size="sm" variant="destructive" onClick={() => confirmStatusUpdate(tx.id, "Rejected")}>Reject</Button>
+                        </>
+                      )}
+                      {tx.paymentStatus === "Approved" && (
+                        <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white" onClick={() => confirmStatusUpdate(tx.id, "Paid")}>Mark Paid</Button>
+                      )}
+                    </div>
+                    <div className="text-right space-x-1">
+                      <Button size="sm" variant="outline" onClick={() => handleEditTransaction(tx)}>
+                        <Pencil className="w-3 h-3" />
+                      </Button>
+                      <Button size="sm" variant="destructive" onClick={() => confirmDelete(tx.id, "transaction", tx)}>
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    <div className="text-right">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => generateInvoice(tx, () => showToast({ 
+                          title: "Success", 
+                          description: `Invoice for delivery ${tx.id} generated and downloaded.` 
+                        }))}
+                      >
+                        <Download className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {editModal.show && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -855,15 +925,36 @@ const PrimaPage = () => {
                     onChange={e => {
                       const kilos = parseFloat(e.target.value) || 0;
                       const calculatedAmount = calculateAmountForTransaction(kilos, editModal.data.poNumber);
+                      const calculatedNumBoxes = calculateNumBoxes(kilos);
                       setEditModal(prev => ({
                         ...prev,
                         data: {
                           ...prev.data,
                           kilosDelivered: kilos,
-                          amount: parseFloat(calculatedAmount.toFixed(2))
+                          amount: parseFloat(calculatedAmount.toFixed(2)),
+                          numBoxes: calculatedNumBoxes
                         }
                       }));
                     } } min={undefined} max={undefined}                  />
+                </div>
+                <div>
+                  <Label>Num Boxes - Auto-calculated</Label>
+                  <Input 
+                    type="number"
+                    value={editModal.data.numBoxes}
+                    readOnly
+                    className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                  />
+                  <p className="text-xs text-gray-500 mt-1">Num boxes is calculated as kilos / 10</p>
+                </div>
+                <div>
+                  <Label>Expiration Date</Label>
+                  <Input 
+                    type="date"
+                    value={editModal.data.expirationDate}
+                    onChange={e => setEditModal(prev => ({
+                      ...prev,
+                      data: { ...prev.data, expirationDate: e.target.value }
+                    }))} min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Amount (Rs) - Auto-calculated</Label>
