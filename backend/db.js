@@ -16,7 +16,7 @@ export const db = createClient({
 });
 
 // -------------------- TABLE CREATION --------------------
-async function initializeTables() {
+export async function initializeTables() {
   try {
     await db.execute(`
       CREATE TABLE IF NOT EXISTS purchases (
@@ -78,7 +78,7 @@ async function initializeTables() {
     `);
 
     await db.execute(`
-      CREATE TABLE IF NOT EXISTS primatransaction (
+      CREATE TABLE IF NOT EXISTS primatransactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT NOT NULL,
         kilosDelivered REAL NOT NULL,
@@ -89,11 +89,12 @@ async function initializeTables() {
         dateOfExpiration TEXT,
         productCode TEXT,
         batchNo TEXT,
-        numberOfBoxes TEXT,
+        numberOfBoxes INTEGER, -- Changed to INTEGER assuming it's a count
         truckNo TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (poId) REFERENCES pos(id) ON DELETE CASCADE
-)
+        FOREIGN KEY (poId) REFERENCES pos(id) ON DELETE CASCADE,
+        FOREIGN KEY (poNumber) REFERENCES pos(poNumber) ON DELETE SET NULL
+      )
     `);
 
     await db.execute(`
@@ -112,9 +113,12 @@ async function initializeTables() {
 
     console.log("✅ All tables initialized successfully on Turso!");
   } catch (err) {
-    console.error("❌ Table initialization failed:", err);
+    console.error("❌ Table initialization failed:", err.message);
+    throw err; // Rethrow to allow calling code to handle the error
   }
 }
 
-// Initialize tables on startup
-initializeTables();
+// Initialize tables on startup (optional, consider calling explicitly in app)
+initializeTables().catch((err) => {
+  console.error("❌ Failed to initialize tables on startup:", err.message);
+});
