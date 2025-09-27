@@ -22,7 +22,7 @@ interface PrimaTransaction {
   numBoxes: number;
   expirationDate: string;
   productCode: string;
-  batchCode: string;
+  batchNo: string;
   truckNo: string;
   paymentStatus: "Pending" | "Approved" | "Paid" | "Rejected";
 }
@@ -550,7 +550,7 @@ const PrimaPage = () => {
         t.numBoxes, 
         t.expirationDate, 
         t.productCode, 
-        t.batchCode, 
+        t.batchNo, 
         t.truckNo, 
         t.amount, 
         t.paymentStatus
@@ -869,7 +869,7 @@ const PrimaPage = () => {
                     <div>{tx.numBoxes}</div>
                     <div>{tx.expirationDate}</div>
                     <div>{tx.productCode}</div>
-                    <div>{tx.batchCode}</div>
+                    <div>{tx.batchNo}</div>
                     <div>{tx.truckNo}</div>
                     <div>Rs {tx.amount.toLocaleString()}</div>
                     <div>
