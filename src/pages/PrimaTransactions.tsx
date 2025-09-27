@@ -971,8 +971,8 @@ const PrimaPage = () => {
                   <div className="min-w-[100px] max-w-[120px] truncate">Expiration Date</div>
                   <div className="min-w-[100px] max-w-[120px] truncate">Product Code</div>
                   <div className="min-w-[100px] max-w-[120px] truncate">Batch Code</div>
-                  <div className="min-w-[100px] max-w-[120px] truncate">Truck No</div>
                   <div className="min-w-[100px] max-w-[120px] truncate">Invoice No</div>
+                  <div className="min-w-[100px] max-w-[120px] truncate">Truck No</div> 
                   <div className="min-w-[100px] max-w-[120px] truncate">Amount</div>
                   <div className="min-w-[100px] max-w-[120px] truncate">Status</div>
                   <div className="min-w-[200px] max-w-[250px] text-right">Actions</div>
