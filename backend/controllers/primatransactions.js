@@ -12,10 +12,23 @@ const client = createClient({
 export const addPrimaTransaction = async (transactionData) => {
   const { date, kilosDelivered, amount, paymentStatus, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo } = transactionData;
 
+  // Validate required fields
   if (!poNumber) throw new Error("poNumber is required");
   if (!date || !kilosDelivered || !amount || !paymentStatus || !productCode || !batchNo || !truckNo || !dateOfExpiration) {
     throw new Error("Missing required fields: date, kilosDelivered, amount, paymentStatus, productCode, batchNo, truckNo, or dateOfExpiration");
   }
+
+  // Validate data types
+  if (typeof date !== "string") throw new Error(`Invalid data type for date: expected string, got ${typeof date}`);
+  if (typeof kilosDelivered !== "number" || isNaN(kilosDelivered)) throw new Error(`Invalid data type for kilosDelivered: expected number, got ${typeof kilosDelivered}`);
+  if (typeof amount !== "number" || isNaN(amount)) throw new Error(`Invalid data type for amount: expected number, got ${typeof amount}`);
+  if (typeof paymentStatus !== "string") throw new Error(`Invalid data type for paymentStatus: expected string, got ${typeof paymentStatus}`);
+  if (typeof poNumber !== "string") throw new Error(`Invalid data type for poNumber: expected string, got ${typeof poNumber}`);
+  if (typeof dateOfExpiration !== "string") throw new Error(`Invalid data type for dateOfExpiration: expected string, got ${typeof dateOfExpiration}`);
+  if (typeof productCode !== "string") throw new Error(`Invalid data type for productCode: expected string, got ${typeof productCode}`);
+  if (typeof batchNo !== "string") throw new Error(`Invalid data type for batchNo: expected string, got ${typeof batchNo}`);
+  if (typeof numberOfBoxes !== "string") throw new Error(`Invalid data type for numberOfBoxes: expected string, got ${typeof numberOfBoxes}`);
+  if (typeof truckNo !== "string") throw new Error(`Invalid data type for truckNo: expected string, got ${typeof truckNo}`);
 
   try {
     const { rows: poRows } = await client.execute(
@@ -71,6 +84,18 @@ export const getPrimaTransactions = async () => {
 export const updatePrimaTransaction = async (id, transactionData) => {
   const { date, kilosDelivered, amount, paymentStatus, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo } = transactionData;
 
+  // Validate data types
+  if (typeof date !== "string") throw new Error(`Invalid data type for date: expected string, got ${typeof date}`);
+  if (typeof kilosDelivered !== "number" || isNaN(kilosDelivered)) throw new Error(`Invalid data type for kilosDelivered: expected number, got ${typeof kilosDelivered}`);
+  if (typeof amount !== "number" || isNaN(amount)) throw new Error(`Invalid data type for amount: expected number, got ${typeof amount}`);
+  if (typeof paymentStatus !== "string") throw new Error(`Invalid data type for paymentStatus: expected string, got ${typeof paymentStatus}`);
+  if (typeof poNumber !== "string") throw new Error(`Invalid data type for poNumber: expected string, got ${typeof poNumber}`);
+  if (typeof dateOfExpiration !== "string") throw new Error(`Invalid data type for dateOfExpiration: expected string, got ${typeof dateOfExpiration}`);
+  if (typeof productCode !== "string") throw new Error(`Invalid data type for productCode: expected string, got ${typeof productCode}`);
+  if (typeof batchNo !== "string") throw new Error(`Invalid data type for batchNo: expected string, got ${typeof batchNo}`);
+  if (typeof numberOfBoxes !== "string") throw new Error(`Invalid data type for numberOfBoxes: expected string, got ${typeof numberOfBoxes}`);
+  if (typeof truckNo !== "string") throw new Error(`Invalid data type for truckNo: expected string, got ${typeof truckNo}`);
+
   try {
     const { rows: poRows } = await client.execute(
       "SELECT id FROM pos WHERE poNumber = ?",
@@ -102,6 +127,8 @@ export const updatePrimaTransaction = async (id, transactionData) => {
 
 // Update transaction status
 export const updatePrimaTransactionStatus = async (id, newStatus) => {
+  if (typeof newStatus !== "string") throw new Error(`Invalid data type for newStatus: expected string, got ${typeof newStatus}`);
+
   const { rows } = await client.execute(
     "SELECT * FROM primatransactions WHERE id = ?",
     [id]
@@ -131,6 +158,8 @@ export const updatePrimaTransactionStatus = async (id, newStatus) => {
 
 // Delete a Prima Transaction
 export const deletePrimaTransaction = async (id) => {
+  if (typeof id !== "number" && !Number.isInteger(Number(id))) throw new Error(`Invalid data type for id: expected number, got ${typeof id}`);
+
   await client.execute("DELETE FROM primatransactions WHERE id = ?", [id]);
   return { message: "Prima transaction deleted successfully", id };
 };
