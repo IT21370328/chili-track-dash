@@ -33,7 +33,7 @@ const validatePoId = async (poId) => {
 
 // Add a prima transaction
 export const addPrimaTransaction = async (transactionData) => {
-  const { poId, poNumber, date, kilosDelivered, amount, paymentStatus = "Pending", numberOfBoxes, dateOfExpiration, productCode, batchNo, truckNo } = transactionData;
+  const { poId, poNumber, date, kilosDelivered, amount, paymentStatus = "Pending", numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo } = transactionData;
 
   // Validations
   if (!poId || !Number.isInteger(poId)) {
@@ -56,9 +56,9 @@ export const addPrimaTransaction = async (transactionData) => {
   validateNumberOfBoxes(numberOfBoxes);
 
   const { lastInsertRowid } = await client.execute(
-    `INSERT INTO primatransactions (poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchNo, truckNo)
+    `INSERT INTO primatransactions (poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [poId, poNumber || null, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration || null, productCode || null, batchNo || null, truckNo || null]
+    [poId, poNumber || null, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration || null, productCode || null, batchCode || null, truckNo || null]
   );
 
   const { rows } = await client.execute(
@@ -114,7 +114,7 @@ export const getPrimaTransactionsByDateRange = async (startDate, endDate) => {
 
 // Update prima transaction
 export const updatePrimaTransaction = async (id, transactionData) => {
-  const { poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchNo, truckNo } = transactionData;
+  const { poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo } = transactionData;
 
   // Validations
   if (!poId || !Number.isInteger(poId)) {
@@ -138,9 +138,9 @@ export const updatePrimaTransaction = async (id, transactionData) => {
 
   await client.execute(
     `UPDATE primatransactions
-     SET poId = ?, poNumber = ?, date = ?, kilosDelivered = ?, amount = ?, paymentStatus = ?, numberOfBoxes = ?, dateOfExpiration = ?, productCode = ?, batchNo = ?, truckNo = ?
+     SET poId = ?, poNumber = ?, date = ?, kilosDelivered = ?, amount = ?, paymentStatus = ?, numberOfBoxes = ?, dateOfExpiration = ?, productCode = ?, batchCode = ?, truckNo = ?
      WHERE id = ?`,
-    [poId, poNumber || null, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration || null, productCode || null, batchNo || null, truckNo || null, id]
+    [poId, poNumber || null, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration || null, productCode || null, batchCode || null, truckNo || null, id]
   );
 
   const { rows } = await client.execute(
