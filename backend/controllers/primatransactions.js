@@ -8,242 +8,196 @@ const client = createClient({
   authToken: process.env.TURSO_API_KEY,
 });
 
-// Add Prima Transaction
+// Validate payment status
+const validStatuses = ["Pending", "Approved", "Paid", "Rejected"];
+const validatePaymentStatus = (status) => {
+  if (!validStatuses.includes(status)) {
+    throw new Error(`Invalid payment status: ${status}. Must be one of ${validStatuses.join(", ")}`);
+  }
+};
+
+// Validate number of boxes
+const validateNumberOfBoxes = (numberOfBoxes) => {
+  if (numberOfBoxes != null && (!Number.isInteger(numberOfBoxes) || numberOfBoxes < 0)) {
+    throw new Error("Number of boxes must be a non-negative integer or null");
+  }
+};
+
+// Validate poId exists
+const validatePoId = async (poId) => {
+  const { rows } = await client.execute("SELECT id FROM pos WHERE id = ?", [poId]);
+  if (rows.length === 0) {
+    throw new Error(`PO with id ${poId} does not exist`);
+  }
+};
+
+// Add a prima transaction
 export const addPrimaTransaction = async (transactionData) => {
-  const { date, kilosDelivered, amount, paymentStatus, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo } = transactionData;
+  const { poId, poNumber, date, kilosDelivered, amount, paymentStatus = "Pending", numberOfBoxes, dateOfExpiration, productCode, batchNo, truckNo } = transactionData;
 
-  // Validate required fields
-  if (!date || !kilosDelivered || !amount || !paymentStatus || !productCode || !batchNo || !truckNo || !dateOfExpiration) {
-    throw new Error("Missing required fields: date, kilosDelivered, amount, paymentStatus, productCode, batchNo, truckNo, or dateOfExpiration");
+  // Validations
+  if (!poId || !Number.isInteger(poId)) {
+    throw new Error("Valid poId is required");
   }
-
-  // Validate data types
-  if (typeof date !== "string") throw new Error(`Invalid data type for date: expected string, got ${typeof date}`);
-  if (typeof kilosDelivered !== "number" || isNaN(kilosDelivered) || kilosDelivered <= 0) {
-    throw new Error(`Invalid data type for kilosDelivered: expected positive number, got ${typeof kilosDelivered} (${kilosDelivered})`);
-  }
-  if (typeof amount !== "number" || isNaN(amount) || amount <= 0) {
-    throw new Error(`Invalid data type for amount: expected positive number, got ${typeof amount} (${amount})`);
-  }
-  if (typeof paymentStatus !== "string") throw new Error(`Invalid data type for paymentStatus: expected string, got ${typeof paymentStatus}`);
-  if (poNumber != null && typeof poNumber !== "string") throw new Error(`Invalid data type for poNumber: expected string or null, got ${typeof poNumber}`);
-  if (typeof dateOfExpiration !== "string") throw new Error(`Invalid data type for dateOfExpiration: expected string, got ${typeof dateOfExpiration}`);
-  if (typeof productCode !== "string") throw new Error(`Invalid data type for productCode: expected string, got ${typeof productCode}`);
-  if (typeof batchNo !== "string") throw new Error(`Invalid data type for batchNo: expected string, got ${typeof batchNo}`);
-  if (numberOfBoxes != null && (typeof numberOfBoxes !== "number" || !Number.isInteger(numberOfBoxes) || numberOfBoxes < 0)) {
-    throw new Error(`Invalid data type for numberOfBoxes: expected non-negative integer or null, got ${typeof numberOfBoxes} (${numberOfBoxes})`);
-  }
-  if (typeof truckNo !== "string") throw new Error(`Invalid data type for truckNo: expected string, got ${typeof truckNo}`);
-
-  try {
-    // Validate poNumber if provided
-    let poId = null;
-    if (poNumber) {
-      const { rows: poRows } = await db.execute(
-        "SELECT id, totalKilos FROM pos WHERE poNumber = ?",
-        [poNumber]
-      );
-      if (!poRows[0]) throw new Error(`PO number ${poNumber} not found`);
-      poId = poRows[0].id;
-      const totalKilos = poRows[0].totalKilos;
-
-      // Validate kilosDelivered
-      const { rows: transactionRows } = await db.execute(
-        "SELECT SUM(kilosDelivered) as delivered FROM primatransactions WHERE poNumber = ? AND paymentStatus != 'Rejected'",
-        [poNumber]
-      );
-      const deliveredSoFar = transactionRows[0]?.delivered || 0;
-      if (kilosDelivered + deliveredSoFar > totalKilos) {
-        throw new Error(`Delivery exceeds PO total: ${kilosDelivered + deliveredSoFar}kg > ${totalKilos}kg`);
-      }
+  await validatePoId(poId);
+  if (poNumber) {
+    const { rows } = await client.execute("SELECT poNumber FROM pos WHERE poNumber = ?", [poNumber]);
+    if (rows.length === 0) {
+      throw new Error(`PO with poNumber ${poNumber} does not exist`);
     }
-
-    console.log("Inserting transaction:", {
-      date,
-      kilosDelivered,
-      amount,
-      paymentStatus,
-      poId,
-      poNumber,
-      dateOfExpiration,
-      productCode,
-      batchNo,
-      numberOfBoxes,
-      truckNo,
-    });
-
-    const { lastInsertRowid } = await db.execute(
-      `INSERT INTO primatransactions 
-        (date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo]
-    );
-
-    const { rows } = await db.execute(
-      "SELECT * FROM primatransactions WHERE id = ?",
-      [lastInsertRowid]
-    );
-
-    return rows[0];
-  } catch (error) {
-    console.error("Error in addPrimaTransaction:", error.message);
-    throw error;
   }
+  if (!date || !kilosDelivered || !amount) {
+    throw new Error("Date, kilosDelivered, and amount are required");
+  }
+  if (kilosDelivered <= 0 || amount <= 0) {
+    throw new Error("Kilos delivered and amount must be positive numbers");
+  }
+  validatePaymentStatus(paymentStatus);
+  validateNumberOfBoxes(numberOfBoxes);
+
+  const { lastInsertRowid } = await client.execute(
+    `INSERT INTO primatransactions (poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchNo, truckNo)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [poId, poNumber || null, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration || null, productCode || null, batchNo || null, truckNo || null]
+  );
+
+  const { rows } = await client.execute(
+    "SELECT * FROM primatransactions WHERE id = ?",
+    [lastInsertRowid]
+  );
+
+  return rows[0];
 };
 
-// Get all Prima Transactions
+// Get all prima transactions
 export const getPrimaTransactions = async () => {
-  try {
-    const { rows } = await db.execute(
-      "SELECT * FROM primatransactions ORDER BY date DESC"
-    );
-    return rows;
-  } catch (error) {
-    console.error("Error in getPrimaTransactions:", error.message);
-    throw error;
-  }
+  const { rows } = await client.execute(
+    "SELECT * FROM primatransactions ORDER BY date DESC"
+  );
+  return rows;
 };
 
-// Update Prima Transaction
+// Get prima transactions summary
+export const getPrimaTransactionsSummary = async () => {
+  const { rows } = await client.execute(
+    `SELECT 
+       COUNT(*) as totalRecords,
+       SUM(kilosDelivered) as totalKilosDelivered,
+       SUM(amount) as totalAmount,
+       SUM(CASE WHEN paymentStatus = 'Paid' THEN amount ELSE 0 END) as paidAmount,
+       SUM(CASE WHEN paymentStatus = 'Approved' THEN amount ELSE 0 END) as pendingApprovalAmount,
+       SUM(CASE WHEN paymentStatus = 'Rejected' THEN kilosDelivered ELSE 0 END) as rejectedKilos
+     FROM primatransactions`
+  );
+
+  const row = rows[0] || {};
+  return {
+    totalRecords: row.totalRecords || 0,
+    totalKilosDelivered: row.totalKilosDelivered ? parseFloat(row.totalKilosDelivered).toFixed(2) : "0.00",
+    totalAmount: row.totalAmount ? parseFloat(row.totalAmount).toFixed(2) : "0.00",
+    paidAmount: row.paidAmount ? parseFloat(row.paidAmount).toFixed(2) : "0.00",
+    pendingApprovalAmount: row.pendingApprovalAmount ? parseFloat(row.pendingApprovalAmount).toFixed(2) : "0.00",
+    rejectedKilos: row.rejectedKilos ? parseFloat(row.rejectedKilos).toFixed(2) : "0.00",
+  };
+};
+
+// Get prima transactions by date range
+export const getPrimaTransactionsByDateRange = async (startDate, endDate) => {
+  const { rows } = await client.execute(
+    `SELECT * FROM primatransactions 
+     WHERE date BETWEEN ? AND ?
+     ORDER BY date DESC`,
+    [startDate, endDate]
+  );
+  return rows;
+};
+
+// Update prima transaction
 export const updatePrimaTransaction = async (id, transactionData) => {
-  const { date, kilosDelivered, amount, paymentStatus, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo } = transactionData;
+  const { poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchNo, truckNo } = transactionData;
 
-  // Validate required fields
-  if (!date || !kilosDelivered || !amount || !paymentStatus || !productCode || !batchNo || !truckNo || !dateOfExpiration) {
-    throw new Error("Missing required fields: date, kilosDelivered, amount, paymentStatus, productCode, batchNo, truckNo, or dateOfExpiration");
+  // Validations
+  if (!poId || !Number.isInteger(poId)) {
+    throw new Error("Valid poId is required");
   }
-
-  // Validate data types
-  if (typeof date !== "string") throw new Error(`Invalid data type for date: expected string, got ${typeof date}`);
-  if (typeof kilosDelivered !== "number" || isNaN(kilosDelivered) || kilosDelivered <= 0) {
-    throw new Error(`Invalid data type for kilosDelivered: expected positive number, got ${typeof kilosDelivered} (${kilosDelivered})`);
-  }
-  if (typeof amount !== "number" || isNaN(amount) || amount <= 0) {
-    throw new Error(`Invalid data type for amount: expected positive number, got ${typeof amount} (${amount})`);
-  }
-  if (typeof paymentStatus !== "string") throw new Error(`Invalid data type for paymentStatus: expected string, got ${typeof paymentStatus}`);
-  if (poNumber != null && typeof poNumber !== "string") throw new Error(`Invalid data type for poNumber: expected string or null, got ${typeof poNumber}`);
-  if (typeof dateOfExpiration !== "string") throw new Error(`Invalid data type for dateOfExpiration: expected string, got ${typeof dateOfExpiration}`);
-  if (typeof productCode !== "string") throw new Error(`Invalid data type for productCode: expected string, got ${typeof productCode}`);
-  if (typeof batchNo !== "string") throw new Error(`Invalid data type for batchNo: expected string, got ${typeof batchNo}`);
-  if (numberOfBoxes != null && (typeof numberOfBoxes !== "number" || !Number.isInteger(numberOfBoxes) || numberOfBoxes < 0)) {
-    throw new Error(`Invalid data type for numberOfBoxes: expected non-negative integer or null, got ${typeof numberOfBoxes} (${numberOfBoxes})`);
-  }
-  if (typeof truckNo !== "string") throw new Error(`Invalid data type for truckNo: expected string, got ${typeof truckNo}`);
-
-  try {
-    // Validate poNumber if provided
-    let poId = null;
-    if (poNumber) {
-      const { rows: poRows } = await db.execute(
-        "SELECT id, totalKilos FROM pos WHERE poNumber = ?",
-        [poNumber]
-      );
-      if (!poRows[0]) throw new Error(`PO number ${poNumber} not found`);
-      poId = poRows[0].id;
-      const totalKilos = poRows[0].totalKilos;
-
-      // Validate kilosDelivered
-      const { rows: transactionRows } = await db.execute(
-        "SELECT SUM(kilosDelivered) as delivered FROM primatransactions WHERE poNumber = ? AND paymentStatus != 'Rejected' AND id != ?",
-        [poNumber, id]
-      );
-      const deliveredSoFar = transactionRows[0]?.delivered || 0;
-      if (kilosDelivered + deliveredSoFar > totalKilos) {
-        throw new Error(`Delivery exceeds PO total: ${kilosDelivered + deliveredSoFar}kg > ${totalKilos}kg`);
-      }
+  await validatePoId(poId);
+  if (poNumber) {
+    const { rows } = await client.execute("SELECT poNumber FROM pos WHERE poNumber = ?", [poNumber]);
+    if (rows.length === 0) {
+      throw new Error(`PO with poNumber ${poNumber} does not exist`);
     }
-
-    console.log("Updating transaction:", {
-      id,
-      date,
-      kilosDelivered,
-      amount,
-      paymentStatus,
-      poId,
-      poNumber,
-      dateOfExpiration,
-      productCode,
-      batchNo,
-      numberOfBoxes,
-      truckNo,
-    });
-
-    await db.execute(
-      `UPDATE primatransactions 
-       SET date = ?, kilosDelivered = ?, amount = ?, paymentStatus = ?, poId = ?, poNumber = ?, 
-           dateOfExpiration = ?, productCode = ?, batchNo = ?, numberOfBoxes = ?, truckNo = ?
-       WHERE id = ?`,
-      [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo, id]
-    );
-
-    const { rows } = await db.execute(
-      "SELECT * FROM primatransactions WHERE id = ?",
-      [id]
-    );
-
-    if (!rows[0]) throw new Error(`Transaction with id ${id} not found after update`);
-    return rows[0];
-  } catch (error) {
-    console.error("Error in updatePrimaTransaction:", error.message);
-    throw error;
   }
+  if (!date || !kilosDelivered || !amount) {
+    throw new Error("Date, kilosDelivered, and amount are required");
+  }
+  if (kilosDelivered <= 0 || amount <= 0) {
+    throw new Error("Kilos delivered and amount must be positive numbers");
+  }
+  validatePaymentStatus(paymentStatus);
+  validateNumberOfBoxes(numberOfBoxes);
+
+  await client.execute(
+    `UPDATE primatransactions
+     SET poId = ?, poNumber = ?, date = ?, kilosDelivered = ?, amount = ?, paymentStatus = ?, numberOfBoxes = ?, dateOfExpiration = ?, productCode = ?, batchNo = ?, truckNo = ?
+     WHERE id = ?`,
+    [poId, poNumber || null, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration || null, productCode || null, batchNo || null, truckNo || null, id]
+  );
+
+  const { rows } = await client.execute(
+    "SELECT * FROM primatransactions WHERE id = ?",
+    [id]
+  );
+
+  return rows[0];
 };
 
-// Update transaction status
-export const updatePrimaTransactionStatus = async (id, newStatus) => {
-  if (typeof newStatus !== "string") throw new Error(`Invalid data type for newStatus: expected string, got ${typeof newStatus}`);
+// Update prima transaction status
+export const updatePrimaTransactionStatus = async (id, paymentStatus) => {
+  validatePaymentStatus(paymentStatus);
 
-  try {
-    const { rows } = await db.execute(
-      "SELECT * FROM primatransactions WHERE id = ?",
-      [id]
-    );
-
-    if (!rows[0]) throw new Error(`Transaction with id ${id} not found`);
-
-    const currentStatus = rows[0].paymentStatus;
-    const allowedTransitions = {
-      Pending: ["Approved", "Rejected"],
-      Approved: ["Paid"],
-      Rejected: [], // No transitions allowed
-      Paid: [], // No transitions allowed
-    };
-
-    if (!allowedTransitions[currentStatus]?.includes(newStatus)) {
-      throw new Error(`Cannot change status from ${currentStatus} to ${newStatus}`);
-    }
-
-    await db.execute(
-      "UPDATE primatransactions SET paymentStatus = ? WHERE id = ?",
-      [newStatus, id]
-    );
-
-    const { rows: updatedRows } = await db.execute(
-      "SELECT * FROM primatransactions WHERE id = ?",
-      [id]
-    );
-
-    return updatedRows[0];
-  } catch (error) {
-    console.error("Error in updatePrimaTransactionStatus:", error.message);
-    throw error;
+  const { rows: currentRows } = await client.execute(
+    "SELECT paymentStatus FROM primatransactions WHERE id = ?",
+    [id]
+  );
+  if (currentRows.length === 0) {
+    throw new Error(`Transaction with id ${id} does not exist`);
   }
+
+  const currentStatus = currentRows[0].paymentStatus;
+  const validTransitions = {
+    Pending: ["Approved", "Rejected"],
+    Approved: ["Paid"],
+    Paid: [],
+    Rejected: [],
+  };
+
+  if (!validTransitions[currentStatus].includes(paymentStatus)) {
+    throw new Error(`Invalid status transition from ${currentStatus} to ${paymentStatus}`);
+  }
+
+  await client.execute(
+    "UPDATE primatransactions SET paymentStatus = ? WHERE id = ?",
+    [paymentStatus, id]
+  );
+
+  const { rows } = await client.execute(
+    "SELECT * FROM primatransactions WHERE id = ?",
+    [id]
+  );
+
+  return rows[0];
 };
 
-// Delete a Prima Transaction
+// Delete prima transaction
 export const deletePrimaTransaction = async (id) => {
-  if (typeof id !== "number" && !Number.isInteger(Number(id))) throw new Error(`Invalid data type for id: expected number, got ${typeof id}`);
-
-  try {
-    const { rowsAffected } = await db.execute(
-      "DELETE FROM primatransactions WHERE id = ?",
-      [id]
-    );
-    if (rowsAffected === 0) throw new Error(`Transaction with id ${id} not found`);
-    return { message: "Prima transaction deleted successfully", id };
-  } catch (error) {
-    console.error("Error in deletePrimaTransaction:", error.message);
-    throw error;
+  const { rows } = await client.execute(
+    "SELECT id FROM primatransactions WHERE id = ?",
+    [id]
+  );
+  if (rows.length === 0) {
+    throw new Error(`Transaction with id ${id} does not exist`);
   }
+
+  await client.execute("DELETE FROM primatransactions WHERE id = ?", [id]);
+  return { message: "Prima transaction deleted successfully", id };
 };
