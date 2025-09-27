@@ -23,10 +23,8 @@ import {
 
 import { addPO, getPOs, updatePO, getPOByNumber, deletePO } from "./controllers/po.js";
 
-import { 
-  addPrimaTransaction, getPrimaTransactions, updatePrimaTransactionStatus, 
-  updatePrimaTransaction, deletePrimaTransaction 
-} from "./controllers/primatransactions.js";
+import { addPrimaTransaction, getPrimaTransactions, updatePrimaTransaction, updatePrimaTransactionStatus, deletePrimaTransaction, getPrimaTransactionsSummary, getPrimaTransactionsByDateRange } from "./controllers/primatransactions.js";
+
 
 import { 
   getEmployees, addEmployee, markSalaryPaid, resetSalaryStatus, 
@@ -189,83 +187,82 @@ const startServer = async () => {
     res.json(result);
   }));
 
-  // =================== Prima Transactions Routes ===================
-  app.get("/primatransactions", asyncHandler(async (req, res) => {
-    const rows = await getPrimaTransactions();
-    res.json(rows);
-  }));
+  // Prima Transaction Routes
+app.get("/primatransactions", async (req, res) => {
+  try {
+    const transactions = await getPrimaTransactions();
+    res.json(transactions);
+  } catch (error) {
+    res.status(500).json({ error: error.message, path: req.path, method: req.method, timestamp: new Date().toISOString() });
+  }
+});
 
-  app.post("/primatransactions", asyncHandler(async (req, res) => {
-    if (!req.body || typeof req.body !== "object") {
-      return res.status(400).json({
-        error: "Request body must be a valid JSON object",
-        path: req.url,
-        method: req.method,
-        timestamp: new Date().toISOString(),
-      });
-    }
-    const result = await addPrimaTransaction(req.body);
-    res.status(201).json(result);
-  }));
+app.post("/primatransactions", async (req, res) => {
+  try {
+    const transaction = await addPrimaTransaction(req.body);
+    res.status(201).json(transaction);
+  } catch (error) {
+    res.status(400).json({ error: error.message, path: req.path, method: req.method, timestamp: new Date().toISOString() });
+  }
+});
 
-  app.put("/primatransactions/:id", asyncHandler(async (req, res) => {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id) || id <= 0) {
-      return res.status(400).json({
-        error: "Invalid transaction ID: must be a positive integer",
-        path: req.url,
-        method: req.method,
-        timestamp: new Date().toISOString(),
-      });
-    }
-    if (!req.body || typeof req.body !== "object") {
-      return res.status(400).json({
-        error: "Request body must be a valid JSON object",
-        path: req.url,
-        method: req.method,
-        timestamp: new Date().toISOString(),
-      });
-    }
-    const result = await updatePrimaTransaction(id, req.body);
-    res.json(result);
-  }));
+app.put("/primatransactions/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) throw new Error("Invalid transaction ID");
+    const transaction = await updatePrimaTransaction(id, req.body);
+    res.json(transaction);
+  } catch (error) {
+    res.status(400).json({ error: error.message, path: req.path, method: req.method, timestamp: new Date().toISOString() });
+  }
+});
 
-  app.put("/primatransactions/:id/status", asyncHandler(async (req, res) => {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id) || id <= 0) {
-      return res.status(400).json({
-        error: "Invalid transaction ID: must be a positive integer",
-        path: req.url,
-        method: req.method,
-        timestamp: new Date().toISOString(),
-      });
-    }
+app.put("/primatransactions/:id/status", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) throw new Error("Invalid transaction ID");
     const { paymentStatus } = req.body;
-    if (!paymentStatus) {
-      return res.status(400).json({
-        error: "paymentStatus is required",
-        path: req.url,
-        method: req.method,
-        timestamp: new Date().toISOString(),
-      });
-    }
-    const result = await updatePrimaTransactionStatus(id, paymentStatus);
-    res.json(result);
-  }));
+    const transaction = await updatePrimaTransactionStatus(id, paymentStatus);
+    res.json(transaction);
+  } catch (error) {
+    res.status(400).json({ error: error.message, path: req.path, method: req.method, timestamp: new Date().toISOString() });
+  }
+});
 
-  app.delete("/primatransactions/:id", asyncHandler(async (req, res) => {
-    const id = parseInt(req.params.id, 10);
-    if (isNaN(id) || id <= 0) {
-      return res.status(400).json({
-        error: "Invalid transaction ID: must be a positive integer",
-        path: req.url,
-        method: req.method,
-        timestamp: new Date().toISOString(),
-      });
-    }
+app.delete("/primatransactions/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) throw new Error("Invalid transaction ID");
     const result = await deletePrimaTransaction(id);
     res.json(result);
-  }));
+  } catch (error) {
+    res.status(400).json({ error: error.message, path: req.path, method: req.method, timestamp: new Date().toISOString() });
+  }
+});
+
+// Add routes for getPrimaTransactionsSummary and getPrimaTransactionsByDateRange if needed
+app.get("/primatransactions/summary", async (req, res) => {
+  try {
+    const summary = await getPrimaTransactionsSummary();
+    res.json(summary);
+  } catch (error) {
+    res.status(500).json({ error: error.message, path: req.path, method: req.method, timestamp: new Date().toISOString() });
+  }
+});
+
+app.get("/primatransactions/range", async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) {
+      throw new Error("startDate and endDate are required");
+    }
+    const transactions = await getPrimaTransactionsByDateRange(startDate, endDate);
+    res.json(transactions);
+  } catch (error) {
+    res.status(400).json({ error: error.message, path: req.path, method: req.method, timestamp: new Date().toISOString() });
+  }
+});
+
 
   // =================== Employees Routes ===================
   app.get("/employees", asyncHandler(async (req, res) => {
