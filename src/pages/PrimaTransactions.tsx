@@ -25,7 +25,7 @@ interface PrimaTransaction {
   numberOfBoxes: number | null; // Changed to number|null to match INTEGER schema
   dateOfExpiration: string | null;
   productCode: string | null;
-  batchNo: string | null;
+  batchCode: string | null;
   truckNo: string | null;
   paymentStatus: "Pending" | "Approved" | "Paid" | "Rejected";
 }
@@ -111,7 +111,7 @@ const PrimaPage = () => {
       numberOfBoxes: string; // Changed to numberOfBoxes
       dateOfExpiration: string;
       productCode: string;
-      batchNo: string;
+      batchCode: string;
       truckNo: string;
     } 
   }>({});
@@ -330,10 +330,10 @@ const PrimaPage = () => {
       showToast({ title: "PO Completed", description: "Cannot add deliveries to a completed PO", variant: "destructive" }); 
       return; 
     }
-    const { date = "", kilosDelivered = "", amount = "", productCode = "", batchNo = "", truckNo = "", dateOfExpiration = "" } = deliveryForm[po.poNumber] || {};
+    const { date = "", kilosDelivered = "", amount = "", productCode = "", batchCode = "", truckNo = "", dateOfExpiration = "" } = deliveryForm[po.poNumber] || {};
     const kilos = parseFloat(kilosDelivered);
     const amt = parseFloat(amount);
-    if (!date || !kilos || !amt || !productCode || !batchNo || !truckNo || !dateOfExpiration) { 
+    if (!date || !kilos || !amt || !productCode || !batchCode || !truckNo || !dateOfExpiration) { 
       showToast({ title: "Error", description: "Please fill all required fields (date, kilos, product code, batch number, truck number, expiration date)", variant: "destructive" }); 
       return; 
     }
@@ -357,7 +357,7 @@ const PrimaPage = () => {
         numberOfBoxes, // Use number, not string
         dateOfExpiration,
         productCode,
-        batchNo,
+        batchCode,
         truckNo
       };
       const res = await fetch(`${API_URL}/primatransactions`, { 
@@ -383,7 +383,7 @@ const PrimaPage = () => {
           numberOfBoxes: "", 
           dateOfExpiration: "",
           productCode: "",
-          batchNo: "",
+          batchCode: "",
           truckNo: ""
         } 
       }));
@@ -438,7 +438,7 @@ const PrimaPage = () => {
 
     // Validate required fields for transactions
     if (type === "transaction") {
-      if (!data.date || !data.kilosDelivered || !data.amount || !data.productCode || !data.batchNo || !data.truckNo || !data.dateOfExpiration) {
+      if (!data.date || !data.kilosDelivered || !data.amount || !data.productCode || !data.batchCode || !data.truckNo || !data.dateOfExpiration) {
         showToast({ title: "Error", description: "All fields (date, kilos delivered, amount, product code, batch number, truck number, expiration date) are required", variant: "destructive" });
         return;
       }
@@ -655,7 +655,7 @@ const PrimaPage = () => {
         t.numberOfBoxes != null ? t.numberOfBoxes : "", 
         t.dateOfExpiration || "", 
         t.productCode || "", 
-        t.batchNo || "", 
+        t.batchCode || "", 
         t.truckNo || "", 
         t.amount, 
         t.paymentStatus
@@ -919,10 +919,10 @@ const PrimaPage = () => {
                     <div className="flex flex-col space-y-1">
                       <Label>Batch Code</Label>
                       <Input 
-                        value={deliveryForm[selectedPO.poNumber]?.batchNo || ""}
+                        value={deliveryForm[selectedPO.poNumber]?.batchCode || ""}
                         onChange={e => setDeliveryForm(prev => ({
                           ...prev,
-                          [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], batchNo: e.target.value }
+                          [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], batchCode: e.target.value }
                         }))}
                         required min={undefined} max={undefined} step={undefined}                      />
                     </div>
@@ -973,7 +973,7 @@ const PrimaPage = () => {
                     <div>{tx.numberOfBoxes != null ? tx.numberOfBoxes : "N/A"}</div>
                     <div>{tx.dateOfExpiration || "N/A"}</div>
                     <div>{tx.productCode || "N/A"}</div>
-                    <div>{tx.batchNo || "N/A"}</div>
+                    <div>{tx.batchCode || "N/A"}</div>
                     <div>{tx.truckNo || "N/A"}</div>
                     <div>Rs {tx.amount.toLocaleString()}</div>
                     <div>
@@ -1164,10 +1164,10 @@ const PrimaPage = () => {
                 <div>
                   <Label>Batch Code</Label>
                   <Input 
-                    value={editModal.data.batchNo || ""}
+                    value={editModal.data.batchCode || ""}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
-                      data: { ...prev.data, batchNo: e.target.value || null }
+                      data: { ...prev.data, batchCode: e.target.value || null }
                     }))}
                     required min={undefined} max={undefined} step={undefined}                  />
                 </div>
