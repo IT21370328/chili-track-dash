@@ -23,6 +23,18 @@ const validateNumberOfBoxes = (numberOfBoxes) => {
   }
 };
 
+// Validate invoiceNo (optional, customize as needed)
+const validateInvoiceNo = (invoiceNo) => {
+  if (invoiceNo != null && typeof invoiceNo !== "string") {
+    throw new Error("Invoice number must be a string or null");
+  }
+  // Add additional validation (e.g., format, uniqueness) if needed
+  // Example: Ensure invoiceNo follows a pattern like "INV-12345"
+  // if (invoiceNo && !/^INV-\d+$/.test(invoiceNo)) {
+  //   throw new Error("Invoice number must follow the format INV-<numbers>");
+  // }
+};
+
 // Validate poId exists
 const validatePoId = async (poId) => {
   const { rows } = await client.execute("SELECT id FROM pos WHERE id = ?", [poId]);
@@ -33,7 +45,7 @@ const validatePoId = async (poId) => {
 
 // Add a prima transaction
 export const addPrimaTransaction = async (transactionData) => {
-  const { poId, poNumber, date, kilosDelivered, amount, paymentStatus = "Pending", numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo } = transactionData;
+  const { poId, poNumber, date, kilosDelivered, amount, paymentStatus = "Pending", numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo, invoiceNo } = transactionData;
 
   // Validations
   if (!poId || !Number.isInteger(poId)) {
@@ -54,11 +66,12 @@ export const addPrimaTransaction = async (transactionData) => {
   }
   validatePaymentStatus(paymentStatus);
   validateNumberOfBoxes(numberOfBoxes);
+  validateInvoiceNo(invoiceNo);
 
   const { lastInsertRowid } = await client.execute(
-    `INSERT INTO primatransactions (poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [poId, poNumber || null, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration || null, productCode || null, batchCode || null, truckNo || null]
+    `INSERT INTO primatransactions (poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo, invoiceNo)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [poId, poNumber || null, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration || null, productCode || null, batchCode || null, truckNo || null, invoiceNo || null]
   );
 
   const { rows } = await client.execute(
@@ -72,7 +85,7 @@ export const addPrimaTransaction = async (transactionData) => {
 // Get all prima transactions
 export const getPrimaTransactions = async () => {
   const { rows } = await client.execute(
-    "SELECT * FROM primatransactions ORDER BY date DESC"
+    "SELECT id, poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo, invoiceNo FROM primatransactions ORDER BY date DESC"
   );
   return rows;
 };
@@ -104,7 +117,8 @@ export const getPrimaTransactionsSummary = async () => {
 // Get prima transactions by date range
 export const getPrimaTransactionsByDateRange = async (startDate, endDate) => {
   const { rows } = await client.execute(
-    `SELECT * FROM primatransactions 
+    `SELECT id, poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo, invoiceNo 
+     FROM primatransactions 
      WHERE date BETWEEN ? AND ?
      ORDER BY date DESC`,
     [startDate, endDate]
@@ -114,7 +128,7 @@ export const getPrimaTransactionsByDateRange = async (startDate, endDate) => {
 
 // Update prima transaction
 export const updatePrimaTransaction = async (id, transactionData) => {
-  const { poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo } = transactionData;
+  const { poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo, invoiceNo } = transactionData;
 
   // Validations
   if (!poId || !Number.isInteger(poId)) {
@@ -135,12 +149,13 @@ export const updatePrimaTransaction = async (id, transactionData) => {
   }
   validatePaymentStatus(paymentStatus);
   validateNumberOfBoxes(numberOfBoxes);
+  validateInvoiceNo(invoiceNo);
 
   await client.execute(
     `UPDATE primatransactions
-     SET poId = ?, poNumber = ?, date = ?, kilosDelivered = ?, amount = ?, paymentStatus = ?, numberOfBoxes = ?, dateOfExpiration = ?, productCode = ?, batchCode = ?, truckNo = ?
+     SET poId = ?, poNumber = ?, date = ?, kilosDelivered = ?, amount = ?, paymentStatus = ?, numberOfBoxes = ?, dateOfExpiration = ?, productCode = ?, batchCode = ?, truckNo = ?, invoiceNo = ?
      WHERE id = ?`,
-    [poId, poNumber || null, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration || null, productCode || null, batchCode || null, truckNo || null, id]
+    [poId, poNumber || null, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration || null, productCode || null, batchCode || null, truckNo || null, invoiceNo || null, id]
   );
 
   const { rows } = await client.execute(
