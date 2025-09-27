@@ -10,21 +10,22 @@ interface PO {
   poNumber: string;
   date: string;
   totalKilos: number;
-  remainingKilos: number; // Added to match pos table schema
+  remainingKilos: number;
   amount: number;
   status: "Pending" | "Completed";
 }
 
 interface PrimaTransaction {
   id: number;
-  poId: number; // Added to match schema
-  poNumber: string | null; // Nullable to match schema
+  poId: number;
+  poNumber: string | null;
   date: string;
   kilosDelivered: number;
   amount: number;
-  numberOfBoxes: number | null; // Changed to number|null to match INTEGER schema
+  numberOfBoxes: number | null;
   dateOfExpiration: string | null;
   productCode: string | null;
+  invoiceNo: string | null;
   batchCode: string | null;
   truckNo: string | null;
   paymentStatus: "Pending" | "Approved" | "Paid" | "Rejected";
@@ -108,7 +109,8 @@ const PrimaPage = () => {
       date: string; 
       kilosDelivered: string; 
       amount: string; 
-      numberOfBoxes: string; // Changed to numberOfBoxes
+      numberOfBoxes: string;
+      invoiceNo: string;
       dateOfExpiration: string;
       productCode: string;
       batchCode: string;
@@ -187,11 +189,10 @@ const PrimaPage = () => {
         throw new Error(errorData.error || `Failed to fetch transactions: ${res.statusText}`);
       }
       const data = await res.json() || [];
-      // Map numberOfBoxes to number|null
       setTransactions(data.map(tx => ({
         ...tx,
-        numberOfBoxes: tx.numberOfBoxes != null ? Number(tx.numberOfBoxes) : null, // Convert to number or null
-        poNumber: tx.poNumber, // Ensure nullable
+        numberOfBoxes: tx.numberOfBoxes != null ? Number(tx.numberOfBoxes) : null,
+        poNumber: tx.poNumber,
       }))); 
     } catch (error: any) { 
       showToast({ title: "Error", description: error.message, variant: "destructive" }); 
@@ -315,7 +316,7 @@ const PrimaPage = () => {
 
   const calculateNumberOfBoxes = (kilos: number) => {
     if (isNaN(kilos) || kilos <= 0) return 0;
-    return Math.ceil(kilos / 10); // Return as number to match schema
+    return Math.ceil(kilos / 10);
   };
 
   const calculateExpirationDate = (date: string) => {
@@ -348,13 +349,13 @@ const PrimaPage = () => {
     try {
       const numberOfBoxes = calculateNumberOfBoxes(kilos);
       const transactionData = { 
-        poId: po.id, // Include poId
+        poId: po.id,
         poNumber: po.poNumber, 
         date, 
         kilosDelivered: kilos, 
         amount: amt, 
         paymentStatus: "Pending",
-        numberOfBoxes, // Use number, not string
+        numberOfBoxes,
         dateOfExpiration,
         productCode,
         batchCode,
@@ -382,6 +383,7 @@ const PrimaPage = () => {
           amount: "", 
           numberOfBoxes: "", 
           dateOfExpiration: "",
+          invoiceNo: "",
           productCode: "",
           batchCode: "",
           truckNo: ""
@@ -413,7 +415,7 @@ const PrimaPage = () => {
     setEditModal({ 
       show: true, 
       type: "transaction", 
-      data: { ...transaction } // numberOfBoxes is already number|null
+      data: { ...transaction }
     });
   };
 
@@ -436,10 +438,9 @@ const PrimaPage = () => {
     const { type, data } = editModal;
     if (!data) return;
 
-    // Validate required fields for transactions
     if (type === "transaction") {
-      if (!data.date || !data.kilosDelivered || !data.amount || !data.productCode || !data.batchCode || !data.truckNo || !data.dateOfExpiration) {
-        showToast({ title: "Error", description: "All fields (date, kilos delivered, amount, product code, batch number, truck number, expiration date) are required", variant: "destructive" });
+      if (!data.date || !data.kilosDelivered || !data.amount || !data.productCode || !data.batchCode || !data.truckNo || !data.dateOfExpiration || !data.invoiceNo) {
+        showToast({ title: "Error", description: "All fields (date, kilos delivered, amount, product code, batch number, truck number, expiration date, invoice number) are required", variant: "destructive" });
         return;
       }
       if (typeof data.kilosDelivered !== "number" || isNaN(data.kilosDelivered) || data.kilosDelivered <= 0) {
@@ -480,7 +481,7 @@ const PrimaPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
-          poId: data.poNumber ? pos.find(po => po.poNumber === data.poNumber)?.id : null, // Include poId
+          poId: data.poNumber ? pos.find(po => po.poNumber === data.poNumber)?.id : null,
         })
       });
 
@@ -647,7 +648,7 @@ const PrimaPage = () => {
 
   const exportTransactions = () => {
     const csvContent = [
-      ["PO Number", "Date", "Kilos Delivered", "Number of Boxes", "Expiration Date", "Product Code", "Batch Code", "Truck No", "Amount", "Payment Status"],
+      ["PO Number", "Date", "Kilos Delivered", "Number of Boxes", "Expiration Date", "Product Code", "Batch Code", "Invoice Number", "Truck No", "Amount", "Payment Status"],
       ...filteredTransactions.map(t => [
         t.poNumber || "", 
         t.date, 
@@ -656,6 +657,7 @@ const PrimaPage = () => {
         t.dateOfExpiration || "", 
         t.productCode || "", 
         t.batchCode || "", 
+        t.invoiceNo || "",
         t.truckNo || "", 
         t.amount, 
         t.paymentStatus
@@ -805,11 +807,11 @@ const PrimaPage = () => {
 
       {selectedPO && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 shadow-lg w-[90%] max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Deliveries for PO {selectedPO.poNumber}</h2>
+          <div className="bg-white rounded-xl p-8 shadow-lg w-[95%] max-w-6xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-slate-800">Deliveries for PO {selectedPO.poNumber}</h2>
               <Button variant="outline" onClick={() => setSelectedPO(null)}>
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </Button>
             </div>
 
@@ -882,7 +884,7 @@ const PrimaPage = () => {
                                 ...prev[selectedPO.poNumber], 
                                 kilosDelivered: e.target.value, 
                                 amount: amount.toFixed(2),
-                                numberOfBoxes: numberOfBoxes.toString() // Store as string for input, convert to number in transactionData
+                                numberOfBoxes: numberOfBoxes.toString()
                               } 
                             }));
                           }
@@ -927,6 +929,16 @@ const PrimaPage = () => {
                         required min={undefined} max={undefined} step={undefined}                      />
                     </div>
                     <div className="flex flex-col space-y-1">
+                      <Label>Invoice Number</Label>
+                      <Input 
+                        value={deliveryForm[selectedPO.poNumber]?.invoiceNo || ""}
+                        onChange={e => setDeliveryForm(prev => ({
+                          ...prev,
+                          [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], invoiceNo: e.target.value }
+                        }))}
+                        required min={undefined} max={undefined} step={undefined}                      />
+                    </div>
+                    <div className="flex flex-col space-y-1">
                       <Label>Truck Number</Label>
                       <Input 
                         value={deliveryForm[selectedPO.poNumber]?.truckNo || ""}
@@ -950,38 +962,40 @@ const PrimaPage = () => {
               </div>
             )}
 
-            <div className="w-full border border-slate-200 rounded-lg overflow-hidden">
-              <div className="bg-slate-200/60">
-                <div className="grid grid-cols-10 gap-4 p-3 font-semibold text-sm">
-                  <div>Date</div>
-                  <div>Kilos Delivered</div>
-                  <div>Number of Boxes</div>
-                  <div>Expiration Date</div>
-                  <div>Product Code</div>
-                  <div>Batch Code</div>
-                  <div>Truck No</div>
-                  <div>Amount</div>
-                  <div>Status</div>
-                  <div className="text-right">Actions</div>
+            <div className="w-full border border-slate-200 rounded-lg overflow-x-auto">
+              <div className="bg-slate-200/60 sticky top-0 z-10">
+                <div className="grid grid-cols-10 gap-2 p-3 font-semibold text-sm">
+                  <div className="min-w-[100px] max-w-[120px] truncate">Date</div>
+                  <div className="min-w-[100px] max-w-[120px] truncate">Kilos Delivered</div>
+                  <div className="min-w-[100px] max-w-[120px] truncate">Number of Boxes</div>
+                  <div className="min-w-[100px] max-w-[120px] truncate">Expiration Date</div>
+                  <div className="min-w-[100px] max-w-[120px] truncate">Product Code</div>
+                  <div className="min-w-[100px] max-w-[120px] truncate">Batch Code</div>
+                  <div className="min-w-[100px] max-w-[120px] truncate">Truck No</div>
+                  <div className="min-w-[100px] max-w-[120px] truncate">Invoice No</div>
+                  <div className="min-w-[100px] max-w-[120px] truncate">Amount</div>
+                  <div className="min-w-[100px] max-w-[120px] truncate">Status</div>
+                  <div className="min-w-[200px] max-w-[250px] text-right">Actions</div>
                 </div>
               </div>
               <div>
                 {transactions.filter(t => t.poNumber === selectedPO.poNumber).map(tx => (
-                  <div key={tx.id} className="grid grid-cols-10 gap-4 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0">
-                    <div>{tx.date}</div>
-                    <div>{tx.kilosDelivered}</div>
-                    <div>{tx.numberOfBoxes != null ? tx.numberOfBoxes : "N/A"}</div>
-                    <div>{tx.dateOfExpiration || "N/A"}</div>
-                    <div>{tx.productCode || "N/A"}</div>
-                    <div>{tx.batchCode || "N/A"}</div>
-                    <div>{tx.truckNo || "N/A"}</div>
-                    <div>Rs {tx.amount.toLocaleString()}</div>
-                    <div>
+                  <div key={tx.id} className="grid grid-cols-10 gap-2 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0">
+                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.date}</div>
+                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.kilosDelivered}</div>
+                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.numberOfBoxes != null ? tx.numberOfBoxes : "N/A"}</div>
+                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.dateOfExpiration || "N/A"}</div>
+                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.productCode || "N/A"}</div>
+                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.batchCode || "N/A"}</div>
+                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.invoiceNo || "N/A"}</div>
+                    <div className="min-w-[100px] max-w-[120px] truncate">{tx.truckNo || "N/A"}</div>
+                    <div className="min-w-[100px] max-w-[120px] truncate">Rs {tx.amount.toLocaleString()}</div>
+                    <div className="min-w-[100px] max-w-[120px] truncate">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${tx.paymentStatus === "Pending" ? "bg-yellow-100 text-yellow-700" : tx.paymentStatus === "Approved" ? "bg-blue-100 text-blue-700" : tx.paymentStatus === "Rejected" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
                         {tx.paymentStatus}
                       </span>
                     </div>
-                    <div className="text-right space-x-2">
+                    <div className="min-w-[200px] max-w-[250px] text-right space-x-2">
                       {tx.paymentStatus === "Pending" && (
                         <>
                           <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white" onClick={() => confirmStatusUpdate(tx.id, "Approved")}>Approve</Button>
@@ -1168,6 +1182,16 @@ const PrimaPage = () => {
                     onChange={e => setEditModal(prev => ({
                       ...prev,
                       data: { ...prev.data, batchCode: e.target.value || null }
+                    }))}
+                    required min={undefined} max={undefined} step={undefined}                  />
+                </div>
+                <div>
+                  <Label>Invoice No</Label>
+                  <Input 
+                    value={editModal.data.invoiceNo || ""}
+                    onChange={e => setEditModal(prev => ({
+                      ...prev,
+                      data: { ...prev.data, invoiceNo: e.target.value || null }
                     }))}
                     required min={undefined} max={undefined} step={undefined}                  />
                 </div>
