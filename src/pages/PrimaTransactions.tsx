@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Eye, X, Truck, DollarSign, Clock, Package, Download, Pencil, Trash2 } from "lucide-react";
-import Invoice from './Invoice';
+import { generateInvoice } from './Invoice'; // Updated import
 
 const API_URL = "https://chili-track-dash.onrender.com";
 
@@ -31,20 +31,31 @@ interface Production {
   color: "red" | "green";
 }
 
+interface ButtonProps {
+  children: React.ReactNode;
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  size?: "sm" | "default" | "lg";
+  variant?: "default" | "outline" | "destructive";
+  className?: string;
+  disabled?: boolean;
+  type?: "button" | "reset" | "submit"; // Restrict to valid HTML button types
+}
+
 // -------------------- UI Components --------------------
-const Button = ({ children, onClick, size = "default", variant = "default", className = "", disabled = false, type = "button" }) => {
+const Button = ({ children, onClick, size = "default", variant = "default", className = "", disabled = false, type = "button" }: ButtonProps) => {
   const sizeClasses = { sm: "px-3 py-1.5 text-sm", default: "px-4 py-2", lg: "px-6 py-3 text-lg" };
   const variantClasses: { [key: string]: string } = {
     default: "bg-blue-500 text-white hover:bg-blue-600",
     outline: "border border-blue-500 text-blue-500 hover:bg-blue-50",
     destructive: "bg-red-500 text-white hover:bg-red-600",
   };
+
   return (
     <button
       onClick={onClick}
       disabled={disabled}
       className={`inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
-
+      type={type}
     >
       {children}
     </button>
@@ -728,15 +739,10 @@ const PrimaPage = () => {
                                 <Button 
                                   size="sm" 
                                   variant="outline" 
-                                  onClick={() => {
-                                    <Invoice 
-                                      transaction={tx} 
-                                      onGenerate={() => showToast({ 
-                                        title: "Success", 
-                                        description: `Invoice for delivery ${tx.id} generated and downloaded.` 
-                                      })}
-                                    />;
-                                  }}
+                                  onClick={() => generateInvoice(tx, () => showToast({ 
+                                    title: "Success", 
+                                    description: `Invoice for delivery ${tx.id} generated and downloaded.` 
+                                  }))}
                                 >
                                   <Download className="w-3 h-3" />
                                 </Button>
