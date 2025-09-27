@@ -78,7 +78,7 @@ async function initializeTables() {
     `);
 
     await db.execute(`
-      CREATE TABLE IF NOT EXISTS primatransactions (
+      CREATE TABLE IF NOT EXISTS primatransaction (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT NOT NULL,
         kilosDelivered REAL NOT NULL,
