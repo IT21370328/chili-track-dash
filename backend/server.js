@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-
 import path from "path";
 
 // =================== Controllers ===================
@@ -175,7 +174,7 @@ app.get("/primatransactions", asyncHandler(async (req, res) => {
 
 app.post("/primatransactions", asyncHandler(async (req, res) => {
   const result = await addPrimaTransaction(req.body);
-  res.json(result);
+  res.status(201).json(result);
 }));
 
 app.put("/primatransactions/:id", asyncHandler(async (req, res) => {

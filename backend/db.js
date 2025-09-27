@@ -86,6 +86,11 @@ async function initializeTables() {
         paymentStatus TEXT NOT NULL,
         poId INTEGER NOT NULL,
         poNumber TEXT,
+        dateOfExpiration TEXT,
+        productCode TEXT,
+        batchNo TEXT,
+        numberOfBoxes TEXT,
+        truckNo TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (poId) REFERENCES pos(id) ON DELETE CASCADE
       )
