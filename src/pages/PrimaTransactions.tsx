@@ -106,7 +106,7 @@ const PrimaPage = () => {
       kilosDelivered: string; 
       amount: string; 
       numBoxes: string; 
-      expirationDate: string;
+      dateOfExpiration: string;
       productCode: string;
       batchNo: string;
       truckNo: string;
@@ -279,9 +279,9 @@ const PrimaPage = () => {
       showToast({ title: "PO Completed", description: "Cannot add deliveries to a completed PO", variant: "destructive" }); 
       return; 
     }
-    const { date = "", kilosDelivered = "", amount = "", productCode = "", batchNo = "", truckNo = "", expirationDate = "" } = deliveryForm[po.poNumber] || {};
+    const { date = "", kilosDelivered = "", amount = "", productCode = "", batchNo = "", truckNo = "", dateOfExpiration = "" } = deliveryForm[po.poNumber] || {};
     const kilos = parseFloat(kilosDelivered), amt = parseFloat(amount);
-    if (!date || !kilos || !productCode || !batchNo || !truckNo || !expirationDate) { 
+    if (!date || !kilos || !productCode || !batchNo || !truckNo || !dateOfExpiration) { 
       showToast({ title: "Error", description: "Please fill all required fields", variant: "destructive" }); 
       return; 
     }
@@ -301,7 +301,7 @@ const PrimaPage = () => {
           amount: amt, 
           paymentStatus: "Pending",
           numBoxes,
-          expirationDate,
+          dateOfExpiration,
           productCode,
           batchNo,
           truckNo
@@ -316,7 +316,7 @@ const PrimaPage = () => {
           kilosDelivered: "", 
           amount: "", 
           numBoxes: "", 
-          expirationDate: "",
+          dateOfExpiration: "",
           productCode: "",
           batchNo: "",
           truckNo: ""
@@ -738,7 +738,7 @@ const PrimaPage = () => {
                             [selectedPO.poNumber]: {
                               ...prev[selectedPO.poNumber],
                               date: newDate,
-                              expirationDate: newExpiration
+                              dateOfExpiration: newExpiration
                             }
                           }));
                         } } min={undefined} max={undefined} step={undefined}                      />
@@ -747,10 +747,10 @@ const PrimaPage = () => {
                       <Label>Expiration Date</Label>
                       <Input 
                         type="date"
-                        value={deliveryForm[selectedPO.poNumber]?.expirationDate || ""}
+                        value={deliveryForm[selectedPO.poNumber]?.dateOfExpiration || ""}
                         onChange={e => setDeliveryForm(prev => ({
                           ...prev,
-                          [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], expirationDate: e.target.value }
+                          [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], dateOfExpiration: e.target.value }
                         }))} min={undefined} max={undefined} step={undefined}                      />
                     </div>
                   </div>
@@ -1032,10 +1032,10 @@ const PrimaPage = () => {
                   <Label>Expiration Date</Label>
                   <Input 
                     type="date"
-                    value={editModal.data.expirationDate}
+                    value={editModal.data.dateOfExpiration}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
-                      data: { ...prev.data, expirationDate: e.target.value }
+                      data: { ...prev.data, dateOfExpiration: e.target.value }
                     }))} min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
