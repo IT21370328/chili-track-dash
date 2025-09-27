@@ -98,10 +98,6 @@ export async function initializeTables() {
     `);
 
     await db.execute(`
-     ALTER TABLE primatransactions ADD COLUMN invoiceNo TEXT
-    `);
-
-    await db.execute(`
       CREATE TABLE IF NOT EXISTS employees (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
