@@ -2,28 +2,31 @@ import React, { useState, useEffect } from "react";
 import { Plus, Eye, X, Truck, DollarSign, Clock, Package, Download, Pencil, Trash2 } from "lucide-react";
 import { generateInvoice } from './Invoice';
 
-const API_URL = "https://chili-track-dash.onrender.com";
+// Use environment variable for API URL
+const API_URL = process.env.REACT_APP_API_URL || "https://chili-track-dash.onrender.com";
 
 interface PO {
   id: number;
   poNumber: string;
   date: string;
   totalKilos: number;
+  remainingKilos: number; // Added to match pos table schema
   amount: number;
   status: "Pending" | "Completed";
 }
 
 interface PrimaTransaction {
   id: number;
-  poNumber: string;
+  poId: number; // Added to match schema
+  poNumber: string | null; // Nullable to match schema
   date: string;
   kilosDelivered: number;
   amount: number;
-  numBoxes: string;
-  dateOfExpiration: string;
-  productCode: string;
-  batchNo: string;
-  truckNo: string;
+  numberOfBoxes: number | null; // Changed to number|null to match INTEGER schema
+  dateOfExpiration: string | null;
+  productCode: string | null;
+  batchNo: string | null;
+  truckNo: string | null;
   paymentStatus: "Pending" | "Approved" | "Paid" | "Rejected";
 }
 
@@ -105,7 +108,7 @@ const PrimaPage = () => {
       date: string; 
       kilosDelivered: string; 
       amount: string; 
-      numBoxes: string; 
+      numberOfBoxes: string; // Changed to numberOfBoxes
       dateOfExpiration: string;
       productCode: string;
       batchNo: string;
@@ -156,7 +159,9 @@ const PrimaPage = () => {
   // -------------------- Stock --------------------
   const getAvailableStock = () => {
     const totalProduced = production.reduce((sum, p) => sum + p.kilosOut, 0);
-    const totalDelivered = transactions.filter(t => t.paymentStatus === "Pending" || t.paymentStatus === "Approved" || t.paymentStatus === "Paid").reduce((sum, t) => sum + t.kilosDelivered, 0);
+    const totalDelivered = transactions
+      .filter(t => t.paymentStatus === "Pending" || t.paymentStatus === "Approved" || t.paymentStatus === "Paid")
+      .reduce((sum, t) => sum + t.kilosDelivered, 0);
     return Math.max(totalProduced - totalDelivered, 0);
   };
 
@@ -164,7 +169,10 @@ const PrimaPage = () => {
   const fetchPOs = async () => { 
     try { 
       const res = await fetch(`${API_URL}/pos`); 
-      if (!res.ok) throw new Error(`Failed to fetch POs: ${res.statusText}`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to fetch POs: ${res.statusText}`);
+      }
       setPOs(await res.json() || []); 
     } catch (error: any) { 
       showToast({ title: "Error", description: error.message, variant: "destructive" }); 
@@ -174,10 +182,17 @@ const PrimaPage = () => {
   const fetchTransactions = async () => { 
     try { 
       const res = await fetch(`${API_URL}/primatransactions`); 
-      if (!res.ok) throw new Error(`Failed to fetch transactions: ${res.statusText}`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to fetch transactions: ${res.statusText}`);
+      }
       const data = await res.json() || [];
-      // Ensure numBoxes is a string for all transactions
-      setTransactions(data.map(tx => ({ ...tx, numBoxes: String(tx.numBoxes) }))); 
+      // Map numberOfBoxes to number|null
+      setTransactions(data.map(tx => ({
+        ...tx,
+        numberOfBoxes: tx.numberOfBoxes != null ? Number(tx.numberOfBoxes) : null, // Convert to number or null
+        poNumber: tx.poNumber, // Ensure nullable
+      }))); 
     } catch (error: any) { 
       showToast({ title: "Error", description: error.message, variant: "destructive" }); 
     } 
@@ -186,14 +201,21 @@ const PrimaPage = () => {
   const fetchProduction = async () => { 
     try { 
       const res = await fetch(`${API_URL}/production`); 
-      if (!res.ok) throw new Error(`Failed to fetch production data: ${res.statusText}`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to fetch production data: ${res.statusText}`);
+      }
       setProduction(await res.json() || []); 
     } catch (error: any) { 
       showToast({ title: "Error", description: error.message, variant: "destructive" }); 
     } 
   };
 
-  useEffect(() => { fetchPOs(); fetchTransactions(); fetchProduction(); }, []);
+  useEffect(() => { 
+    fetchPOs(); 
+    fetchTransactions(); 
+    fetchProduction(); 
+  }, []);
 
   // -------------------- Auto Update PO Status Function --------------------
   const updatePOStatusBasedOnDeliveries = async (poNumber: string) => {
@@ -202,7 +224,13 @@ const PrimaPage = () => {
         fetch(`${API_URL}/primatransactions`), 
         fetch(`${API_URL}/pos`)
       ]);
-      if (!freshTransactionsRes.ok || !freshPOsRes.ok) throw new Error("Failed to fetch data for PO status update");
+      if (!freshTransactionsRes.ok || !freshPOsRes.ok) {
+        const errorData = await Promise.all([
+          freshTransactionsRes.json().catch(() => ({})),
+          freshPOsRes.json().catch(() => ({}))
+        ]);
+        throw new Error(errorData[0].error || errorData[1].error || "Failed to fetch data for PO status update");
+      }
       const [freshTransactions, freshPOs] = await Promise.all([
         freshTransactionsRes.json(), 
         freshPOsRes.json()
@@ -218,7 +246,7 @@ const PrimaPage = () => {
       const newPOStatus = totalDelivered >= relatedPO.totalKilos ? "Completed" : "Pending";
       
       if (newPOStatus !== relatedPO.status) {
-        await fetch(`${API_URL}/pos/${relatedPO.poNumber}`, { 
+        const res = await fetch(`${API_URL}/pos/${relatedPO.poNumber}`, { 
           method: "PUT", 
           headers: { "Content-Type": "application/json" }, 
           body: JSON.stringify({ 
@@ -226,6 +254,10 @@ const PrimaPage = () => {
             remainingKilos: Math.max(relatedPO.totalKilos - totalDelivered, 0) 
           }) 
         });
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.error || `Failed to update PO status: ${res.statusText}`);
+        }
         
         await fetchPOs();
         
@@ -247,18 +279,22 @@ const PrimaPage = () => {
       showToast({ title: "Error", description: "Please fill all fields", variant: "destructive" }); 
       return; 
     }
+    const totalKilosNum = parseFloat(totalKilos);
+    const amountNum = parseFloat(amount);
+    if (isNaN(totalKilosNum) || isNaN(amountNum) || totalKilosNum <= 0 || amountNum <= 0) {
+      showToast({ title: "Error", description: "Total Kilos and Amount must be positive numbers", variant: "destructive" });
+      return;
+    }
     try {
       const res = await fetch(`${API_URL}/po`, { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ poNumber, date, totalKilos: Number(totalKilos), amount: Number(amount), status: "Pending" }) 
+        body: JSON.stringify({ poNumber, date, totalKilos: totalKilosNum, amount: amountNum, status: "Pending" }) 
       });
       if (!res.ok) {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || `Failed to create PO: ${res.statusText}`);
       }
-      const savedPO = await res.json();
-      
       await Promise.all([fetchPOs(), fetchTransactions(), fetchProduction()]);
       
       showToast({ title: "PO Created", description: `PO ${poNumber} created successfully` });
@@ -269,15 +305,17 @@ const PrimaPage = () => {
   };
 
   const getRemainingKilos = (po: PO) => {
-    const deliveredForPO = transactions.filter(t => t.poNumber === po.poNumber && t.paymentStatus !== "Rejected").reduce((sum, t) => sum + t.kilosDelivered, 0);
+    const deliveredForPO = transactions
+      .filter(t => t.poNumber === po.poNumber && t.paymentStatus !== "Rejected")
+      .reduce((sum, t) => sum + t.kilosDelivered, 0);
     return Math.max(po.totalKilos - deliveredForPO, 0);
   };
 
   const getMaxDeliverable = (po: PO) => Math.min(getRemainingKilos(po), getAvailableStock());
 
-  const calculateNumBoxes = (kilos: number) => {
-    if (isNaN(kilos) || kilos <= 0) return "0";
-    return Math.ceil(kilos / 10).toString();
+  const calculateNumberOfBoxes = (kilos: number) => {
+    if (isNaN(kilos) || kilos <= 0) return 0;
+    return Math.ceil(kilos / 10); // Return as number to match schema
   };
 
   const calculateExpirationDate = (date: string) => {
@@ -299,8 +337,8 @@ const PrimaPage = () => {
       showToast({ title: "Error", description: "Please fill all required fields (date, kilos, product code, batch number, truck number, expiration date)", variant: "destructive" }); 
       return; 
     }
-    if (isNaN(kilos) || isNaN(amt)) {
-      showToast({ title: "Error", description: "Kilos Delivered and Amount must be valid numbers", variant: "destructive" });
+    if (isNaN(kilos) || isNaN(amt) || kilos <= 0 || amt <= 0) {
+      showToast({ title: "Error", description: "Kilos Delivered and Amount must be positive numbers", variant: "destructive" });
       return;
     }
     if (kilos > getMaxDeliverable(po)) { 
@@ -308,20 +346,20 @@ const PrimaPage = () => {
       return; 
     }
     try {
-      const numBoxes = calculateNumBoxes(kilos);
+      const numberOfBoxes = calculateNumberOfBoxes(kilos);
       const transactionData = { 
+        poId: po.id, // Include poId
         poNumber: po.poNumber, 
         date, 
         kilosDelivered: kilos, 
         amount: amt, 
         paymentStatus: "Pending",
-        numBoxes: String(numBoxes), // Explicitly convert to string
+        numberOfBoxes, // Use number, not string
         dateOfExpiration,
         productCode,
         batchNo,
         truckNo
       };
-      console.log("Sending delivery data:", JSON.stringify(transactionData, null, 2));
       const res = await fetch(`${API_URL}/primatransactions`, { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
@@ -332,14 +370,17 @@ const PrimaPage = () => {
         throw new Error(errorData.error || `Failed to add delivery: ${res.statusText} (${res.status})`);
       }
       const savedTransaction = await res.json();
-      setTransactions(prev => [...prev, { ...savedTransaction, numBoxes: String(savedTransaction.numBoxes) }]);
+      setTransactions(prev => [...prev, { 
+        ...savedTransaction, 
+        numberOfBoxes: savedTransaction.numberOfBoxes != null ? Number(savedTransaction.numberOfBoxes) : null 
+      }]);
       setDeliveryForm(prev => ({ 
         ...prev, 
         [po.poNumber]: { 
           date: "", 
           kilosDelivered: "", 
           amount: "", 
-          numBoxes: "", 
+          numberOfBoxes: "", 
           dateOfExpiration: "",
           productCode: "",
           batchNo: "",
@@ -372,7 +413,7 @@ const PrimaPage = () => {
     setEditModal({ 
       show: true, 
       type: "transaction", 
-      data: { ...transaction, numBoxes: String(transaction.numBoxes) } // Ensure string
+      data: { ...transaction } // numberOfBoxes is already number|null
     });
   };
 
@@ -384,7 +425,8 @@ const PrimaPage = () => {
     });
   };
 
-  const calculateAmountForTransaction = (kilos: number, poNumber: string) => {
+  const calculateAmountForTransaction = (kilos: number, poNumber: string | null) => {
+    if (!poNumber) return 0;
     const relatedPO = pos.find(po => po.poNumber === poNumber);
     if (!relatedPO) return 0;
     return (kilos / relatedPO.totalKilos) * relatedPO.amount;
@@ -392,23 +434,32 @@ const PrimaPage = () => {
 
   const handleSaveEdit = async () => {
     const { type, data } = editModal;
+    if (!data) return;
+
+    // Validate required fields for transactions
+    if (type === "transaction") {
+      if (!data.date || !data.kilosDelivered || !data.amount || !data.productCode || !data.batchNo || !data.truckNo || !data.dateOfExpiration) {
+        showToast({ title: "Error", description: "All fields (date, kilos delivered, amount, product code, batch number, truck number, expiration date) are required", variant: "destructive" });
+        return;
+      }
+      if (typeof data.kilosDelivered !== "number" || isNaN(data.kilosDelivered) || data.kilosDelivered <= 0) {
+        showToast({ title: "Error", description: "Kilos Delivered must be a positive number", variant: "destructive" });
+        return;
+      }
+      if (typeof data.amount !== "number" || isNaN(data.amount) || data.amount <= 0) {
+        showToast({ title: "Error", description: "Amount must be a positive number", variant: "destructive" });
+        return;
+      }
+      if (data.numberOfBoxes != null && (typeof data.numberOfBoxes !== "number" || !Number.isInteger(data.numberOfBoxes) || data.numberOfBoxes < 0)) {
+        showToast({ title: "Error", description: "Number of Boxes must be a non-negative integer or null", variant: "destructive" });
+        return;
+      }
+    }
+
     try {
       let endpoint = "";
       let successMessage = "";
       
-      if (type === "transaction") {
-        // Validate data types for transaction
-        if (typeof data.kilosDelivered !== "number" || isNaN(data.kilosDelivered)) {
-          throw new Error("Kilos Delivered must be a valid number");
-        }
-        if (typeof data.amount !== "number" || isNaN(data.amount)) {
-          throw new Error("Amount must be a valid number");
-        }
-        if (typeof data.numBoxes !== "string" || data.numBoxes === "") {
-          throw new Error(`Invalid data type for numBoxes: expected non-empty string, got ${typeof data.numBoxes} (${data.numBoxes})`);
-        }
-      }
-
       switch (type) {
         case "po":
           endpoint = `${API_URL}/pos/${data.poNumber}`;
@@ -424,12 +475,13 @@ const PrimaPage = () => {
           break;
       }
 
-      console.log("Sending edit data:", JSON.stringify(data, null, 2));
-
       const res = await fetch(endpoint, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
+        body: JSON.stringify({
+          ...data,
+          poId: data.poNumber ? pos.find(po => po.poNumber === data.poNumber)?.id : null, // Include poId
+        })
       });
 
       if (!res.ok) {
@@ -445,11 +497,11 @@ const PrimaPage = () => {
       }
 
       if (type === "po") {
-        fetchPOs();
+        await fetchPOs();
       } else if (type === "transaction") {
-        fetchTransactions();
+        await fetchTransactions();
       } else if (type === "production") {
-        fetchProduction();
+        await fetchProduction();
       }
 
       showToast({ title: "Success", description: successMessage });
@@ -520,11 +572,11 @@ const PrimaPage = () => {
       }
 
       if (recordType === "po") {
-        fetchPOs();
+        await fetchPOs();
       } else if (recordType === "transaction") {
-        fetchTransactions();
+        await fetchTransactions();
       } else if (recordType === "production") {
-        fetchProduction();
+        await fetchProduction();
       }
 
       showToast({ title: "Success", description: successMessage });
@@ -556,7 +608,10 @@ const PrimaPage = () => {
       
       const statusMessage = await updatePOStatusBasedOnDeliveries(updatedTransaction.poNumber);
       
-      setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? { ...updatedTransaction, numBoxes: String(updatedTransaction.numBoxes) } : t));
+      setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? { 
+        ...updatedTransaction, 
+        numberOfBoxes: updatedTransaction.numberOfBoxes != null ? Number(updatedTransaction.numberOfBoxes) : null 
+      } : t));
       
       const message = statusMessage 
         ? `Transaction marked as ${confirmModal.status}. ${statusMessage}`
@@ -592,16 +647,16 @@ const PrimaPage = () => {
 
   const exportTransactions = () => {
     const csvContent = [
-      ["PO Number", "Date", "Kilos Delivered", "Num Boxes", "Expiration Date", "Product Code", "Batch Code", "Truck No", "Amount", "Payment Status"],
+      ["PO Number", "Date", "Kilos Delivered", "Number of Boxes", "Expiration Date", "Product Code", "Batch Code", "Truck No", "Amount", "Payment Status"],
       ...filteredTransactions.map(t => [
-        t.poNumber, 
+        t.poNumber || "", 
         t.date, 
         t.kilosDelivered, 
-        t.numBoxes, 
-        t.dateOfExpiration, 
-        t.productCode, 
-        t.batchNo, 
-        t.truckNo, 
+        t.numberOfBoxes != null ? t.numberOfBoxes : "", 
+        t.dateOfExpiration || "", 
+        t.productCode || "", 
+        t.batchNo || "", 
+        t.truckNo || "", 
         t.amount, 
         t.paymentStatus
       ])
@@ -663,11 +718,11 @@ const PrimaPage = () => {
             </div>
             <div className="flex flex-col space-y-1">
               <Label>Total Kilos</Label>
-              <Input type="number" min={1} value={newPO.totalKilos} onChange={e => setNewPO({ ...newPO, totalKilos: e.target.value })} required max={undefined} step={undefined} />
+              <Input type="number" min={1} step="0.01" value={newPO.totalKilos} onChange={e => setNewPO({ ...newPO, totalKilos: e.target.value })} required max={undefined} />
             </div>
             <div className="flex flex-col space-y-1">
               <Label>Amount (Rs)</Label>
-              <Input type="number" min={1} value={newPO.amount} onChange={e => setNewPO({ ...newPO, amount: e.target.value })} required max={undefined} step={undefined} />
+              <Input type="number" min={1} step="0.01" value={newPO.amount} onChange={e => setNewPO({ ...newPO, amount: e.target.value })} required max={undefined} />
               <Button type="submit" className="mt-2 flex items-center justify-center" onClick={handleCreatePO}>
                 <Plus className="w-4 h-4 mr-2" />Create PO
               </Button>
@@ -721,7 +776,7 @@ const PrimaPage = () => {
                   <div className="font-medium">{po.poNumber}</div>
                   <div>{new Date(po.date).toLocaleDateString()}</div>
                   <div>{po.totalKilos}</div>
-                  <div>{getRemainingKilos(po)}</div>
+                  <div>{po.remainingKilos}</div>
                   <div>Rs {po.amount.toLocaleString()}</div>
                   <div>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${po.status === "Pending" ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>
@@ -789,7 +844,8 @@ const PrimaPage = () => {
                               dateOfExpiration: newExpiration
                             }
                           }));
-                        } } min={undefined} max={undefined} step={undefined}                      />
+                        } }
+                        required min={undefined} max={undefined} step={undefined}                      />
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Expiration Date</Label>
@@ -799,7 +855,8 @@ const PrimaPage = () => {
                         onChange={e => setDeliveryForm(prev => ({
                           ...prev,
                           [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], dateOfExpiration: e.target.value }
-                        }))} min={undefined} max={undefined} step={undefined}                      />
+                        }))}
+                        required min={undefined} max={undefined} step={undefined}                      />
                     </div>
                   </div>
 
@@ -817,19 +874,20 @@ const PrimaPage = () => {
                           const kilos = parseFloat(e.target.value) || 0;
                           const maxAllowed = getMaxDeliverable(selectedPO);
                           if (kilos <= maxAllowed) {
-                            const amount = ((kilos / selectedPO.totalKilos) * selectedPO.amount).toFixed(2);
-                            const numBoxes = calculateNumBoxes(kilos);
+                            const amount = calculateAmountForTransaction(kilos, selectedPO.poNumber);
+                            const numberOfBoxes = calculateNumberOfBoxes(kilos);
                             setDeliveryForm(prev => ({ 
                               ...prev, 
                               [selectedPO.poNumber]: { 
                                 ...prev[selectedPO.poNumber], 
                                 kilosDelivered: e.target.value, 
-                                amount,
-                                numBoxes 
+                                amount: amount.toFixed(2),
+                                numberOfBoxes: numberOfBoxes.toString() // Store as string for input, convert to number in transactionData
                               } 
                             }));
                           }
                         }} 
+                        required
                       />
                     </div>
                     <div className="flex flex-col space-y-1">
@@ -837,7 +895,7 @@ const PrimaPage = () => {
                       <Input 
                         readOnly
                         placeholder="Number of Boxes"
-                        value={deliveryForm[selectedPO.poNumber]?.numBoxes || ""}
+                        value={deliveryForm[selectedPO.poNumber]?.numberOfBoxes || ""}
                         className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                      />
                     </div>
                     <div className="flex flex-col space-y-1">
@@ -897,7 +955,7 @@ const PrimaPage = () => {
                 <div className="grid grid-cols-10 gap-4 p-3 font-semibold text-sm">
                   <div>Date</div>
                   <div>Kilos Delivered</div>
-                  <div>Num Boxes</div>
+                  <div>Number of Boxes</div>
                   <div>Expiration Date</div>
                   <div>Product Code</div>
                   <div>Batch Code</div>
@@ -912,11 +970,11 @@ const PrimaPage = () => {
                   <div key={tx.id} className="grid grid-cols-10 gap-4 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0">
                     <div>{tx.date}</div>
                     <div>{tx.kilosDelivered}</div>
-                    <div>{tx.numBoxes}</div>
-                    <div>{tx.dateOfExpiration}</div>
-                    <div>{tx.productCode}</div>
-                    <div>{tx.batchNo}</div>
-                    <div>{tx.truckNo}</div>
+                    <div>{tx.numberOfBoxes != null ? tx.numberOfBoxes : "N/A"}</div>
+                    <div>{tx.dateOfExpiration || "N/A"}</div>
+                    <div>{tx.productCode || "N/A"}</div>
+                    <div>{tx.batchNo || "N/A"}</div>
+                    <div>{tx.truckNo || "N/A"}</div>
                     <div>Rs {tx.amount.toLocaleString()}</div>
                     <div>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${tx.paymentStatus === "Pending" ? "bg-yellow-100 text-yellow-700" : tx.paymentStatus === "Approved" ? "bg-blue-100 text-blue-700" : tx.paymentStatus === "Rejected" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
@@ -974,7 +1032,8 @@ const PrimaPage = () => {
                     onChange={e => setEditModal(prev => ({
                       ...prev,
                       data: { ...prev.data, poNumber: e.target.value }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
+                    }))}
+                    required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Date</Label>
@@ -984,27 +1043,32 @@ const PrimaPage = () => {
                     onChange={e => setEditModal(prev => ({
                       ...prev,
                       data: { ...prev.data, date: e.target.value }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
+                    }))}
+                    required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Total Kilos</Label>
                   <Input 
                     type="number"
+                    step="0.01"
                     value={editModal.data.totalKilos}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
                       data: { ...prev.data, totalKilos: parseFloat(e.target.value) || 0 }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
+                    }))}
+                    required min={undefined} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Amount (Rs)</Label>
                   <Input 
                     type="number"
+                    step="0.01"
                     value={editModal.data.amount}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
                       data: { ...prev.data, amount: parseFloat(e.target.value) || 0 }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
+                    }))}
+                    required min={undefined} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Status</Label>
@@ -1028,10 +1092,10 @@ const PrimaPage = () => {
                 <div>
                   <Label>PO Number</Label>
                   <Input 
-                    value={editModal.data.poNumber}
+                    value={editModal.data.poNumber || ""}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
-                      data: { ...prev.data, poNumber: e.target.value }
+                      data: { ...prev.data, poNumber: e.target.value || null }
                     }))} min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
@@ -1042,7 +1106,8 @@ const PrimaPage = () => {
                     onChange={e => setEditModal(prev => ({
                       ...prev,
                       data: { ...prev.data, date: e.target.value }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
+                    }))}
+                    required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Kilos Delivered</Label>
@@ -1053,88 +1118,86 @@ const PrimaPage = () => {
                     onChange={e => {
                       const kilos = parseFloat(e.target.value) || 0;
                       const calculatedAmount = calculateAmountForTransaction(kilos, editModal.data.poNumber);
-                      const calculatedNumBoxes = calculateNumBoxes(kilos);
+                      const calculatedNumberOfBoxes = calculateNumberOfBoxes(kilos);
                       setEditModal(prev => ({
                         ...prev,
                         data: {
                           ...prev.data,
                           kilosDelivered: kilos,
                           amount: parseFloat(calculatedAmount.toFixed(2)),
-                          numBoxes: calculatedNumBoxes
+                          numberOfBoxes: calculatedNumberOfBoxes
                         }
                       }));
-                    } } min={undefined} max={undefined}                  />
+                    } }
+                    required min={undefined} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Number of Boxes</Label>
                   <Input 
-                    type="text"
-                    value={editModal.data.numBoxes}
+                    type="number"
+                    value={editModal.data.numberOfBoxes != null ? editModal.data.numberOfBoxes : ""}
                     readOnly
-                    className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                  />
-                  <p className="text-xs text-gray-500 mt-1">Number of boxes is calculated as kilos / 10</p>
+                    className="bg-gray-100"
+                    placeholder="Calculated as kilos / 10" onChange={undefined} min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Expiration Date</Label>
                   <Input 
                     type="date"
-                    value={editModal.data.dateOfExpiration}
+                    value={editModal.data.dateOfExpiration || ""}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
-                      data: { ...prev.data, dateOfExpiration: e.target.value }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
+                      data: { ...prev.data, dateOfExpiration: e.target.value || null }
+                    }))}
+                    required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Product Code</Label>
                   <Input 
-                    value={editModal.data.productCode}
+                    value={editModal.data.productCode || ""}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
-                      data: { ...prev.data, productCode: e.target.value }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
+                      data: { ...prev.data, productCode: e.target.value || null }
+                    }))}
+                    required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Batch Code</Label>
                   <Input 
-                    value={editModal.data.batchNo}
+                    value={editModal.data.batchNo || ""}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
-                      data: { ...prev.data, batchNo: e.target.value }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
+                      data: { ...prev.data, batchNo: e.target.value || null }
+                    }))}
+                    required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Truck Number</Label>
                   <Input 
-                    value={editModal.data.truckNo}
+                    value={editModal.data.truckNo || ""}
                     onChange={e => setEditModal(prev => ({
                       ...prev,
-                      data: { ...prev.data, truckNo: e.target.value }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
+                      data: { ...prev.data, truckNo: e.target.value || null }
+                    }))}
+                    required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Amount (Rs)</Label>
                   <Input 
                     type="number"
+                    step="0.01"
                     value={editModal.data.amount}
                     readOnly
-                    className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                  />
-                  <p className="text-xs text-gray-500 mt-1">Amount is calculated based on kilos and PO rate</p>
+                    className="bg-gray-100"
+                    placeholder="Calculated based on kilos and PO rate" onChange={undefined} min={undefined} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Payment Status</Label>
-                  <select 
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={editModal.data.paymentStatus} 
-                    onChange={e => setEditModal(prev => ({ 
-                      ...prev, 
-                      data: { ...prev.data, paymentStatus: e.target.value } 
-                    }))}
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Paid">Paid</option>
-                    <option value="Rejected">Rejected</option>
-                  </select>
+                  <p className="text-sm text-gray-500">Use status buttons to change payment status</p>
+                  <Input 
+                    value={editModal.data.paymentStatus}
+                    readOnly
+                    className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                  />
                 </div>
               </div>
             )}
@@ -1149,7 +1212,8 @@ const PrimaPage = () => {
                     onChange={e => setEditModal(prev => ({
                       ...prev,
                       data: { ...prev.data, date: e.target.value }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
+                    }))}
+                    required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Kilos In</Label>
@@ -1160,7 +1224,8 @@ const PrimaPage = () => {
                     onChange={e => setEditModal(prev => ({
                       ...prev,
                       data: { ...prev.data, kilosIn: parseFloat(e.target.value) || 0 }
-                    }))} min={undefined} max={undefined}                  />
+                    }))}
+                    required min={undefined} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Kilos Out</Label>
@@ -1171,7 +1236,8 @@ const PrimaPage = () => {
                     onChange={e => setEditModal(prev => ({
                       ...prev,
                       data: { ...prev.data, kilosOut: parseFloat(e.target.value) || 0 }
-                    }))} min={undefined} max={undefined}                  />
+                    }))}
+                    required min={undefined} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Surplus</Label>
@@ -1182,7 +1248,8 @@ const PrimaPage = () => {
                     onChange={e => setEditModal(prev => ({
                       ...prev,
                       data: { ...prev.data, surplus: parseFloat(e.target.value) || 0 }
-                    }))} min={undefined} max={undefined}                  />
+                    }))}
+                    required min={undefined} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Color</Label>
