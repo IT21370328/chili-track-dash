@@ -37,12 +37,22 @@ import { getStock, getStockHistory, addStock, updateStock, deleteStock } from ".
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// =================== Middleware ===================
 app.use(cors());
 app.use(express.json());
 
+// Log incoming requests for debugging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // =================== Helper for async handlers ===================
 const asyncHandler = fn => (req, res, next) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
+  Promise.resolve(fn(req, res, next)).catch(error => {
+    console.error(`Error in ${req.method} ${req.url}:`, error.message);
+    next(error);
+  });
 };
 
 // =================== Root Route ===================
@@ -89,7 +99,7 @@ app.get("/pettycash", asyncHandler(async (req, res) => {
 
 app.post("/pettycash", asyncHandler(async (req, res) => {
   const result = await addPettyCash(req.body);
-  res.json(result);
+  res.status(201).json(result);
 }));
 
 app.put("/pettycash/:id", asyncHandler(async (req, res) => {
@@ -115,7 +125,7 @@ app.get("/expenses", asyncHandler(async (req, res) => {
 
 app.post("/expenses", asyncHandler(async (req, res) => {
   const result = await addExpense(req.body);
-  res.json(result);
+  res.status(201).json(result);
 }));
 
 app.put("/expenses/:id", asyncHandler(async (req, res) => {
@@ -146,12 +156,14 @@ app.get("/production/summary", asyncHandler(async (req, res) => {
 
 app.post("/production", asyncHandler(async (req, res) => {
   const result = await addProduction(req.body);
-  res.json(result);
+  res.status(201).json(result);
 }));
 
 app.get("/production/range", asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
-  if (!startDate || !endDate) return res.status(400).json({ error: "startDate and endDate are required" });
+  if (!startDate || !endDate) {
+    return res.status(400).json({ error: "startDate and endDate are required" });
+  }
   const rows = await getProductionByDateRange(startDate, endDate);
   res.json(rows);
 }));
@@ -173,6 +185,7 @@ app.get("/primatransactions", asyncHandler(async (req, res) => {
 }));
 
 app.post("/primatransactions", asyncHandler(async (req, res) => {
+  console.log("POST /primatransactions received:", req.body); // Debug log
   const result = await addPrimaTransaction(req.body);
   res.status(201).json(result);
 }));
@@ -184,7 +197,9 @@ app.put("/primatransactions/:id", asyncHandler(async (req, res) => {
 
 app.put("/primatransactions/:id/status", asyncHandler(async (req, res) => {
   const { paymentStatus } = req.body;
-  if (!paymentStatus) return res.status(400).json({ error: "paymentStatus is required" });
+  if (!paymentStatus) {
+    return res.status(400).json({ error: "paymentStatus is required" });
+  }
   const result = await updatePrimaTransactionStatus(req.params.id, paymentStatus);
   res.json(result);
 }));
@@ -202,7 +217,7 @@ app.get("/employees", asyncHandler(async (req, res) => {
 
 app.post("/employees", asyncHandler(async (req, res) => {
   const result = await addEmployee(req.body);
-  res.json(result);
+  res.status(201).json(result);
 }));
 
 app.put("/employees/:id", asyncHandler(async (req, res) => {
@@ -238,7 +253,7 @@ app.get("/stock/history", asyncHandler(async (req, res) => {
 
 app.post("/stock", asyncHandler(async (req, res) => {
   const result = await addStock(req.body);
-  res.json(result);
+  res.status(201).json(result);
 }));
 
 app.put("/stock/:id", asyncHandler(async (req, res) => {
@@ -254,7 +269,7 @@ app.delete("/stock/:id", asyncHandler(async (req, res) => {
 // =================== Purchase Orders Routes ===================
 app.post("/po", asyncHandler(async (req, res) => {
   const result = await addPO(req.body);
-  res.json(result);
+  res.status(201).json(result);
 }));
 
 app.get("/pos", asyncHandler(async (req, res) => {
@@ -264,6 +279,9 @@ app.get("/pos", asyncHandler(async (req, res) => {
 
 app.get("/pos/:poNumber", asyncHandler(async (req, res) => {
   const po = await getPOByNumber(req.params.poNumber);
+  if (!po) {
+    return res.status(404).json({ error: `PO ${req.params.poNumber} not found` });
+  }
   res.json(po);
 }));
 
@@ -276,6 +294,17 @@ app.delete("/pos/:poNumber", asyncHandler(async (req, res) => {
   const result = await deletePO(req.params.poNumber);
   res.json(result);
 }));
+
+// =================== Global Error Handler ===================
+app.use((error, req, res, next) => {
+  console.error(`[ERROR ${new Date().toISOString()}] ${req.method} ${req.url}:`, error.stack);
+  res.status(error.status || 500).json({
+    error: error.message || "Internal Server Error",
+    path: req.url,
+    method: req.method,
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // =================== Start Server ===================
 app.listen(PORT, () => {
