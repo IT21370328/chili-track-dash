@@ -89,13 +89,16 @@ export async function initializeTables() {
         dateOfExpiration TEXT,
         productCode TEXT,
         batchCode TEXT,
-        invoiceNo TEXT,
         numberOfBoxes INTEGER, -- Changed to INTEGER assuming it's a count
         truckNo TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (poId) REFERENCES pos(id) ON DELETE CASCADE,
         FOREIGN KEY (poNumber) REFERENCES pos(poNumber) ON DELETE SET NULL
       )
+    `);
+
+    await db.execute(`
+     ALTER TABLE primatransactions ADD COLUMN invoiceNo TEXT
     `);
 
     await db.execute(`
@@ -111,6 +114,18 @@ export async function initializeTables() {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    await db.execute(`
+  CREATE TABLE IF NOT EXISTS audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    action TEXT NOT NULL, -- 'ADD', 'DELETE', 'EDIT'
+    entity_type TEXT NOT NULL, -- e.g., 'expenses', 'purchases'
+    entity_id INTEGER NOT NULL, -- ID of the record
+    admin_id INTEGER, -- Admin who performed the action
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    details TEXT -- Description of the action
+  )
+`);
 
     console.log("✅ All tables initialized successfully on Turso!");
   } catch (err) {
