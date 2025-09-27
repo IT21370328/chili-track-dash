@@ -111,17 +111,6 @@ export async function initializeTables() {
       )
     `);
 
-    await db.execute(`
-  CREATE TABLE IF NOT EXISTS audit_logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    action TEXT NOT NULL, -- 'ADD', 'DELETE', 'EDIT'
-    entity_type TEXT NOT NULL, -- e.g., 'expenses', 'purchases'
-    entity_id INTEGER NOT NULL, -- ID of the record
-    admin_id INTEGER, -- Admin who performed the action
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    details TEXT -- Description of the action
-  )
-`);
 
     console.log("✅ All tables initialized successfully on Turso!");
   } catch (err) {
