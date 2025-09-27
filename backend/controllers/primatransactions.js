@@ -1,7 +1,12 @@
 import dotenv from "dotenv";
-import { db } from "./db.js"; // Import db client from db.js
+import { createClient } from "@libsql/client";
 
-dotenv.config(); // Kept for safety, but likely redundant if db.js handles it
+dotenv.config(); // Load .env
+
+const client = createClient({
+  url: process.env.TURSO_URL,
+  authToken: process.env.TURSO_API_KEY,
+});
 
 // Add Prima Transaction
 export const addPrimaTransaction = async (transactionData) => {
