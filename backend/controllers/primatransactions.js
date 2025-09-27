@@ -20,7 +20,7 @@ await client.execute(`
     poNumber TEXT,
     dateOfExpiration TEXT,
     productCode TEXT,
-    batchCode TEXT,
+    batchNo TEXT,
     numberOfBoxes INTEGER,
     truckNo TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -30,7 +30,7 @@ await client.execute(`
 
 // Add Prima Transaction (with poId lookup)
 export const addPrimaTransaction = async (transactionData) => {
-  const { date, kilosDelivered, amount, paymentStatus, poNumber, dateOfExpiration, productCode, batchCode, numberOfBoxes, truckNo } = transactionData;
+  const { date, kilosDelivered, amount, paymentStatus, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo } = transactionData;
 
   if (!poNumber) throw new Error("poNumber is required");
 
@@ -45,9 +45,9 @@ export const addPrimaTransaction = async (transactionData) => {
 
   const { lastInsertRowid } = await client.execute(
     `INSERT INTO primatransactions 
-      (date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchCode, numberOfBoxes, truckNo)
+      (date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchCode, numberOfBoxes, truckNo]
+    [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo]
   );
 
   const { rows } = await client.execute(
@@ -68,7 +68,7 @@ export const getPrimaTransactions = async () => {
 
 // Update Prima Transaction (general update)
 export const updatePrimaTransaction = async (id, transactionData) => {
-  const { date, kilosDelivered, amount, paymentStatus, poNumber, dateOfExpiration, productCode, batchCode, numberOfBoxes, truckNo } = transactionData;
+  const { date, kilosDelivered, amount, paymentStatus, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo } = transactionData;
 
   const { rows: poRows } = await client.execute(
     "SELECT id FROM pos WHERE poNumber = ?",
@@ -81,9 +81,9 @@ export const updatePrimaTransaction = async (id, transactionData) => {
   await client.execute(
     `UPDATE primatransactions 
      SET date = ?, kilosDelivered = ?, amount = ?, paymentStatus = ?, poId = ?, poNumber = ?, 
-         dateOfExpiration = ?, productCode = ?, batchCode = ?, numberOfBoxes = ?, truckNo = ?
+         dateOfExpiration = ?, productCode = ?, batchNo = ?, numberOfBoxes = ?, truckNo = ?
      WHERE id = ?`,
-    [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchCode, numberOfBoxes, truckNo, id]
+    [date, kilosDelivered, amount, paymentStatus, poId, poNumber, dateOfExpiration, productCode, batchNo, numberOfBoxes, truckNo, id]
   );
 
   const { rows } = await client.execute(
