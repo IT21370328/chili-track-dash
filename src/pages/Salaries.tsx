@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { logAction } from "@/pages/logHelper"; // Added logger import
+import { logAction } from "@/pages/logHelper";
 
 interface Employee {
   id: number;
@@ -25,18 +25,32 @@ interface Employee {
   lastPaid?: string;
 }
 
+interface FormData {
+  name: string;
+  salary: string;
+  startDate: string;
+  endDate: string;
+}
+
+interface SummaryCardData {
+  label: string;
+  value: number; // Explicitly type as number
+  icon: React.ComponentType<{ className?: string }>;
+  description: string;
+}
+
 const API_URL = "https://chili-track-dash.onrender.com";
 
 const Salaries = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [formData, setFormData] = useState({ name: "", salary: "", startDate: "", endDate: "" });
+  const [formData, setFormData] = useState<FormData>({ name: "", salary: "", startDate: "", endDate: "" });
   const [editModal, setEditModal] = useState<Employee | null>(null);
-  const [editData, setEditData] = useState({ name: "", salary: "", startDate: "", endDate: "" });
+  const [editData, setEditData] = useState<FormData>({ name: "", salary: "", startDate: "", endDate: "" });
   const [deleteConfirm, setDeleteConfirm] = useState<Employee | null>(null);
   const [filterRange, setFilterRange] = useState({ start: "", end: "" });
   const { toast } = useToast();
-  const currentUser = localStorage.getItem("username") || "Unknown"; // Added for logging
-  const today = new Date().toISOString().split("T")[0]; // Added to restrict future dates
+  const currentUser = localStorage.getItem("username") || "Unknown";
+  const today = new Date().toISOString().split("T")[0];
 
   // Fetch employees
   const fetchEmployees = async () => {
@@ -296,13 +310,12 @@ const Salaries = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 grid-rows-2">
-          {[
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+          {([
             { label: "Total Salary", value: totalSalary, icon: DollarSign, description: "Total salary obligation" },
             { label: "Paid Salary", value: paidSalary, icon: Check, description: "Total amount paid" },
             { label: "Unpaid Salary", value: unpaidSalary, icon: Clock, description: "Pending salary payments" },
-            { label: "Placeholder", value: "N/A", icon: Users, description: "Reserved for future metrics" },
-          ].map((card, i) => (
+          ] as SummaryCardData[]).map((card, i) => (
             <Card
               key={i}
               className="p-6 bg-white/90 backdrop-blur-sm border border-slate-200/50 shadow-lg flex items-center gap-4 min-w-[220px]"
@@ -312,7 +325,7 @@ const Salaries = () => {
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-600">{card.label}</p>
-                <p className="text-2xl font-bold text-slate-900">{card.value === "N/A" ? card.value : `Rs.${card.value.toLocaleString()}`}</p>
+                <p className="text-2xl font-bold text-slate-900">{`Rs.${card.value.toLocaleString()}`}</p>
                 <p className="text-xs text-slate-500 mt-1">{card.description}</p>
               </div>
             </Card>
