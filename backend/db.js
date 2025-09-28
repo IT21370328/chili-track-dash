@@ -89,7 +89,7 @@ export async function initializeTables() {
         dateOfExpiration TEXT,
         productCode TEXT,
         batchCode TEXT,
-        numberOfBoxes INTEGER,
+        numberOfBoxes INTEGER, -- Changed to INTEGER assuming it's a count
         truckNo TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (poId) REFERENCES pos(id) ON DELETE CASCADE,
@@ -106,45 +106,20 @@ export async function initializeTables() {
         startDate TEXT,
         endDate TEXT,
         lastPaid TEXT,
-        email TEXT UNIQUE,
-        phone TEXT,
-        position TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    // Migration: Add new columns if they don't exist
-    try {
-      await db.execute(`ALTER TABLE employees ADD COLUMN email TEXT UNIQUE`);
-    } catch (err) {
-      if (!err.message.includes("duplicate column name")) {
-        console.error("❌ Failed to add email column:", err.message);
-      }
-    }
-    try {
-      await db.execute(`ALTER TABLE employees ADD COLUMN phone TEXT`);
-    } catch (err) {
-      if (!err.message.includes("duplicate column name")) {
-        console.error("❌ Failed to add phone column:", err.message);
-      }
-    }
-    try {
-      await db.execute(`ALTER TABLE employees ADD COLUMN position TEXT`);
-    } catch (err) {
-      if (!err.message.includes("duplicate column name")) {
-        console.error("❌ Failed to add position column:", err.message);
-      }
-    }
 
     console.log("✅ All tables initialized successfully on Turso!");
   } catch (err) {
     console.error("❌ Table initialization failed:", err.message);
-    throw err;
+    throw err; // Rethrow to allow calling code to handle the error
   }
 }
 
-// Initialize tables on startup
+// Initialize tables on startup (optional, consider calling explicitly in app)
 initializeTables().catch((err) => {
   console.error("❌ Failed to initialize tables on startup:", err.message);
 });

@@ -1,77 +1,113 @@
 const { db } = require("../db");
 
 // Get all employees
-exports.getEmployees = async () => {
+exports.getAllEmployees = async (req, res) => {
   try {
     const result = await db.execute("SELECT * FROM employees ORDER BY id DESC");
-    return result.rows;
+    res.json(result.rows);
   } catch (err) {
     console.error("Error fetching employees:", err.message);
-    throw new Error("Failed to fetch employees");
+    res.status(500).json({ error: "Failed to fetch employees" });
   }
 };
 
-// Add a new employee
-exports.addEmployee = async (data) => {
-  const { name, salary, startDate, endDate, email, phone, position } = data;
-  if (!name || !salary || !startDate || !endDate || !email || !phone || !position) {
-    throw new Error("All fields are required");
-  }
-  const salaryNum = Number(salary);
-  if (isNaN(salaryNum) || salaryNum <= 0) {
-    throw new Error("Salary must be a positive number");
-  }
-  if (startDate > endDate) {
-    throw new Error("End date cannot be before start date");
-  }
+// Get employee by ID
+exports.getEmployeeById = async (req, res) => {
   try {
+    const { id } = req.params;
+    const result = await db.execute({
+      sql: "SELECT * FROM employees WHERE id = ?",
+      args: [id],
+    });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error fetching employee:", err.message);
+    res.status(500).json({ error: "Failed to fetch employee" });
+  }
+};
+
+// Create new employee
+exports.createEmployee = async (req, res) => {
+  try {
+    const { name, salary, startDate, endDate, email, phone, position } = req.body;
+    if (!name || !salary || !startDate || !endDate || !email || !phone || !position) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+    if (isNaN(salary) || salary <= 0) {
+      return res.status(400).json({ error: "Salary must be a positive number" });
+    }
+    if (startDate > endDate) {
+      return res.status(400).json({ error: "End date cannot be before start date" });
+    }
     const result = await db.execute({
       sql: `INSERT INTO employees (name, salary, startDate, endDate, email, phone, position) 
             VALUES (?, ?, ?, ?, ?, ?, ?) 
             RETURNING *`,
-      args: [name, salaryNum, startDate, endDate, email, phone, position],
+      args: [name, salary, startDate, endDate, email, phone, position],
     });
-    return result.rows[0];
+    res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error("Error creating employee:", err.message);
-    throw new Error("Failed to create employee");
+    res.status(500).json({ error: "Failed to create employee" });
   }
 };
 
-// Update an employee
-exports.updateEmployee = async (id, data) => {
-  const { name, salary, startDate, endDate, email, phone, position } = data;
-  if (!name || !salary || !startDate || !endDate || !email || !phone || !position) {
-    throw new Error("All fields are required");
-  }
-  const salaryNum = Number(salary);
-  if (isNaN(salaryNum) || salaryNum <= 0) {
-    throw new Error("Salary must be a positive number");
-  }
-  if (startDate > endDate) {
-    throw new Error("End date cannot be before start date");
-  }
+// Update employee
+exports.updateEmployee = async (req, res) => {
   try {
+    const { id } = req.params;
+    const { name, salary, startDate, endDate, email, phone, position } = req.body;
+    if (!name || !salary || !startDate || !endDate || !email || !phone || !position) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+    if (isNaN(salary) || salary <= 0) {
+      return res.status(400).json({ error: "Salary must be a positive number" });
+    }
+    if (startDate > endDate) {
+      return res.status(400).json({ error: "End date cannot be before start date" });
+    }
     const result = await db.execute({
       sql: `UPDATE employees 
             SET name = ?, salary = ?, startDate = ?, endDate = ?, email = ?, phone = ?, position = ?, updated_at = CURRENT_TIMESTAMP 
             WHERE id = ? 
             RETURNING *`,
-      args: [name, salaryNum, startDate, endDate, email, phone, position, id],
+      args: [name, salary, startDate, endDate, email, phone, position, id],
     });
     if (result.rows.length === 0) {
-      throw new Error("Employee not found");
+      return res.status(404).json({ error: "Employee not found" });
     }
-    return result.rows[0];
+    res.json(result.rows[0]);
   } catch (err) {
     console.error("Error updating employee:", err.message);
-    throw new Error("Failed to update employee");
+    res.status(500).json({ error: "Failed to update employee" });
   }
 };
 
-// Mark employee salary as paid
-exports.markSalaryPaid = async (id) => {
+// Delete employee
+exports.deleteEmployee = async (req, res) => {
   try {
+    const { id } = req.params;
+    const result = await db.execute({
+      sql: "DELETE FROM employees WHERE id = ? RETURNING *",
+      args: [id],
+    });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+    res.json({ message: "Employee deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting employee:", err.message);
+    res.status(500).json({ error: "Failed to delete employee" });
+  }
+};
+
+// Mark employee as paid
+exports.markEmployeePaid = async (req, res) => {
+  try {
+    const { id } = req.params;
     const result = await db.execute({
       sql: `UPDATE employees 
             SET status = 'paid', lastPaid = CURRENT_DATE, updated_at = CURRENT_TIMESTAMP 
@@ -80,48 +116,11 @@ exports.markSalaryPaid = async (id) => {
       args: [id],
     });
     if (result.rows.length === 0) {
-      throw new Error("Employee not found");
+      return res.status(404).json({ error: "Employee not found" });
     }
-    return result.rows[0];
+    res.json(result.rows[0]);
   } catch (err) {
     console.error("Error marking employee as paid:", err.message);
-    throw new Error("Failed to mark employee as paid");
-  }
-};
-
-// Reset employee salary status
-exports.resetSalaryStatus = async (id) => {
-  try {
-    const result = await db.execute({
-      sql: `UPDATE employees 
-            SET status = 'unpaid', lastPaid = NULL, updated_at = CURRENT_TIMESTAMP 
-            WHERE id = ? 
-            RETURNING *`,
-      args: [id],
-    });
-    if (result.rows.length === 0) {
-      throw new Error("Employee not found");
-    }
-    return result.rows[0];
-  } catch (err) {
-    console.error("Error resetting employee salary status:", err.message);
-    throw new Error("Failed to reset employee salary status");
-  }
-};
-
-// Delete an employee
-exports.deleteEmployee = async (id) => {
-  try {
-    const result = await db.execute({
-      sql: "DELETE FROM employees WHERE id = ? RETURNING *",
-      args: [id],
-    });
-    if (result.rows.length === 0) {
-      throw new Error("Employee not found");
-    }
-    return { message: "Employee deleted successfully" };
-  } catch (err) {
-    console.error("Error deleting employee:", err.message);
-    throw new Error("Failed to delete employee");
+    res.status(500).json({ error: "Failed to mark employee as paid" });
   }
 };
