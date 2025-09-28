@@ -1,4 +1,5 @@
-import jsPDF from 'jspdf';
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 interface PrimaTransaction {
   id: number;
@@ -11,77 +12,81 @@ interface PrimaTransaction {
 
 export const generateInvoice = (transaction: PrimaTransaction, onGenerate?: () => void) => {
   const doc = new jsPDF();
-  
-  // Company Details
+
+  // HEADER (Company Info)
   doc.setFontSize(18);
-  doc.setTextColor(34, 139, 34); // Forest Green for header
-  doc.text("Chili Track Dashboard", 105, 20, { align: "center" });
-  doc.setFontSize(12);
-  doc.text("Invoice", 105, 30, { align: "center" });
+  doc.setFont("helvetica", "bold");
+  doc.text("Ma's De Cozta (PVT) LTD.", 20, 20);
   doc.setFontSize(10);
-  doc.setTextColor(0, 100, 0); // Dark Green for details
-  doc.text("Address: Your Company Address Here", 20, 40);
-  doc.text("Phone: +123-456-7890", 20, 45);
-  doc.text("Email: info@chilitrack.com", 20, 50);
-  doc.text(`Invoice Date: ${new Date().toLocaleDateString()}`, 20, 55);
-  doc.text(`Invoice ID: DEL-${transaction.id}`, 20, 60);
+  doc.setFont("helvetica", "normal");
+  doc.text("39/3/3 A Pannala watta, Pannala", 20, 26);
+  doc.text("Phone: 0761518884", 20, 31);
+  doc.text("Email: decostamadu81924@gmail.com", 20, 36);
 
-  // Customer Details
-  doc.text("Billed To:", 120, 40);
-  doc.text("Prima Company", 120, 45);
-  doc.text("Customer Address Here", 120, 50);
-  doc.text("Phone: +987-654-3210", 120, 55);
+  // INVOICE TITLE
+  doc.setFontSize(16);
+  doc.setTextColor(0, 102, 204);
+  doc.text("INVOICE", 170, 20, { align: "right" });
+  doc.setTextColor(0, 0, 0);
 
-  // Horizontal line
-  doc.setDrawColor(144, 238, 144); // Light Green for line
-  doc.setLineWidth(0.5);
-  doc.line(20, 70, 190, 70);
-
-  // Delivery Details
-  doc.setFontSize(12);
-  doc.setTextColor(34, 139, 34); // Forest Green for section header
-  doc.text("Delivery Details:", 20, 80);
+  // Invoice Details
   doc.setFontSize(10);
-  doc.setTextColor(0, 100, 0); // Dark Green for details
-  doc.text(`PO Number: ${transaction.poNumber}`, 20, 90);
-  doc.text(`Delivery Date: ${new Date(transaction.date).toLocaleDateString()}`, 20, 95);
-  doc.text(`Kilos Delivered: ${transaction.kilosDelivered} kg`, 20, 100);
-  doc.text(`Amount: Rs ${transaction.amount.toLocaleString()}`, 20, 105);
-  doc.text(`Payment Status: ${transaction.paymentStatus}`, 20, 110);
+  doc.text(`Date: ${new Date(transaction.date).toLocaleDateString()}`, 150, 30);
+  doc.text(`Invoice #: ${transaction.id}`, 150, 36);
+  doc.text(`Due Date: N/A`, 150, 42);
+  doc.text(`PO No: ${transaction.poNumber}`, 150, 48);
 
-  // Table for Items
-  doc.setFillColor(144, 238, 144); // Light Green for table header background
-  doc.rect(20, 120, 170, 10, "F");
-  doc.setTextColor(0, 100, 0); // Dark Green for table headers
-  doc.text("Description", 22, 127);
-  doc.text("Quantity (kg)", 100, 127);
-  doc.text("Amount (Rs)", 150, 127);
+  // TO & SHIP TO
+  doc.setFont("helvetica", "bold");
+  doc.text("TO:", 20, 55);
+  doc.text("SHIP TO:", 120, 55);
+  doc.setFont("helvetica", "normal");
+  doc.text("Ceylon Agro Industries\n346, Negombo Road,\nSeeduwa.", 20, 62);
+  doc.text("Ceylon Agro Industries\n346, Negombo Road,\nSeeduwa.", 120, 62);
 
-  doc.text("Chili Powder Delivery", 22, 140);
-  doc.text(`${transaction.kilosDelivered}`, 100, 140);
-  doc.text(`Rs ${transaction.amount.toLocaleString()}`, 150, 140);
+  // TABLE
+  (doc as any).autoTable({
+    startY: 90,
+    head: [["No.", "Description", "Quantity", "Unit Price", "Amount"]],
+    body: [
+      [
+        "01",
+        "Scotch Bonnet (Nai Miris) Powder",
+        `${transaction.kilosDelivered} kg`,
+        `12,000.00 LKR/kg`,
+        `${transaction.amount.toLocaleString()} LKR`,
+      ],
+    ],
+    styles: { fontSize: 10 },
+    headStyles: { fillColor: [0, 102, 204] },
+  });
 
-  // Total
-  doc.setDrawColor(144, 238, 144); // Light Green for total line
-  doc.setLineWidth(0.5);
-  doc.line(20, 150, 190, 150);
-  doc.setTextColor(0, 100, 0); // Dark Green for total text
-  doc.text("Total Amount:", 130, 160);
-  doc.text(`Rs ${transaction.amount.toLocaleString()}`, 150, 160);
+  // TOTALS
+  let finalY = (doc as any).lastAutoTable.finalY + 10;
+  doc.text(`Sub Total: ${transaction.amount.toLocaleString()} LKR`, 140, finalY);
+  doc.text(`Taxes: 0`, 140, finalY + 6);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Total: ${transaction.amount.toLocaleString()} LKR`, 140, finalY + 12);
+  doc.setFont("helvetica", "normal");
 
-  // Footer
-  doc.setFontSize(9);
-  doc.setTextColor(0, 100, 0); // Dark Green for footer
-  doc.text("Thank you for your business!", 105, 200, { align: "center" });
-  doc.text("Terms: Payment due within 30 days.", 105, 205, { align: "center" });
+  // BANK DETAILS
+  doc.setFontSize(10);
+  doc.text("Thank you for your business", 20, finalY + 25);
+  doc.text("BANK: Sampath Bank", 20, finalY + 32);
+  doc.text("BRANCH: Pannala", 20, finalY + 38);
+  doc.text("ACCOUNT NAME: MA'S DE COZTA PVT LTD", 20, finalY + 44);
+  doc.text("ACCOUNT NUMBER: 016610003145", 20, finalY + 50);
 
-  // Save the PDF
-  doc.save(`invoice_delivery_${transaction.id}.pdf`);
+  // FOOTER - Signature
+  doc.text("Checked by: ___________", 20, finalY + 70);
+  doc.text(`Date: ${new Date(transaction.date).toLocaleDateString()}`, 20, finalY + 76);
 
-  // Call onGenerate callback if provided
+  // SAVE PDF
+  doc.save(`invoice_${transaction.id}.pdf`);
+
   if (onGenerate) onGenerate();
 };
 
-// Export a dummy component to satisfy module requirements
+// Dummy component
 const Invoice = () => null;
 export default Invoice;
