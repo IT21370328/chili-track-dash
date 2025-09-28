@@ -53,7 +53,7 @@ const AuditLogs = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 grid-rows-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 grid-rows-1">
           <SummaryCard
             title="Total Logs"
             value={summaryMetrics.totalLogs}
