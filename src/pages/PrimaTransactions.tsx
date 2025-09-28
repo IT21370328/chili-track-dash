@@ -1062,69 +1062,117 @@ const PrimaPage = () => {
               </div>
             )}
 
-            <div className="w-full border border-slate-200 rounded-lg overflow-hidden">
-              <div className="bg-slate-200/60">
-                <div className="grid grid-cols-11 gap-4 p-3 font-semibold text-sm">
-                  <div>Date</div>
-                  <div>Kilos Delivered</div>
-                  <div>Number of Boxes</div>
-                  <div>Expiration Date</div>
-                  <div>Product Code</div>
-                  <div>Batch Code</div>
-                  <div>Truck No</div>
-                  <div>Invoice No</div>
-                  <div>Amount</div>
-                  <div>Status</div>
-                  <div className="text-right">Actions</div>
+            <div className="space-y-4">
+              {transactions.filter(t => t.poNumber === selectedPO.poNumber).length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No deliveries recorded for this PO yet</p>
                 </div>
-              </div>
-              <div>
-                {transactions.filter(t => t.poNumber === selectedPO.poNumber).map(tx => (
-                  <div key={tx.id} className="grid grid-cols-11 gap-4 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0">
-                    <div>{tx.date}</div>
-                    <div>{tx.kilosDelivered}</div>
-                    <div>{tx.numberOfBoxes != null ? tx.numberOfBoxes : "N/A"}</div>
-                    <div>{tx.dateOfExpiration || "N/A"}</div>
-                    <div>{tx.productCode || "N/A"}</div>
-                    <div>{tx.batchCode || "N/A"}</div>
-                    <div>{tx.truckNo || "N/A"}</div>
-                    <div>{tx.invoiceNo || "N/A"}</div>
-                    <div>Rs {tx.amount.toLocaleString()}</div>
-                    <div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${tx.paymentStatus === "Pending" ? "bg-yellow-100 text-yellow-700" : tx.paymentStatus === "Approved" ? "bg-blue-100 text-blue-700" : tx.paymentStatus === "Rejected" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
-                        {tx.paymentStatus}
-                      </span>
-                    </div>
-                    <div className="text-right space-x-2">
-                      {tx.paymentStatus === "Pending" && (
-                        <>
-                          <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white" onClick={() => confirmStatusUpdate(tx.id, "Approved")}>Approve</Button>
-                          <Button size="sm" variant="destructive" onClick={() => confirmStatusUpdate(tx.id, "Rejected")}>Reject</Button>
-                        </>
-                      )}
-                      {tx.paymentStatus === "Approved" && (
-                        <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white" onClick={() => confirmStatusUpdate(tx.id, "Paid")}>Mark Paid</Button>
-                      )}
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => generateInvoice(tx, () => showToast({ 
-                          title: "Success", 
-                          description: `Invoice for delivery ${tx.id} generated and downloaded.` 
-                        }))}
-                      >
-                        <Download className="w-3 h-3" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleEditTransaction(tx)}>
-                        <Pencil className="w-3 h-3" />
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => confirmDelete(tx.id, "transaction", tx)}>
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
+              ) : (
+                transactions.filter(t => t.poNumber === selectedPO.poNumber).map(tx => (
+                  <div key={tx.id} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                      {/* Main Info Section */}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
+                            <Truck className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-lg text-slate-800">{tx.date}</h4>
+                            <p className="text-sm text-slate-600">Delivery #{tx.id}</p>
+                          </div>
+                          <div className="ml-auto">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${tx.paymentStatus === "Pending" ? "bg-yellow-100 text-yellow-700" : tx.paymentStatus === "Approved" ? "bg-blue-100 text-blue-700" : tx.paymentStatus === "Rejected" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                              {tx.paymentStatus}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <p className="text-slate-500 font-medium">Kilos Delivered</p>
+                            <p className="text-slate-800 font-semibold">{tx.kilosDelivered}kg</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 font-medium">Number of Boxes</p>
+                            <p className="text-slate-800 font-semibold">{tx.numberOfBoxes != null ? tx.numberOfBoxes : "N/A"}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 font-medium">Amount</p>
+                            <p className="text-slate-800 font-semibold">Rs {tx.amount.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 font-medium">Expiration Date</p>
+                            <p className="text-slate-800 font-semibold">{tx.dateOfExpiration || "N/A"}</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-3">
+                          <div>
+                            <p className="text-slate-500 font-medium">Product Code</p>
+                            <p className="text-slate-800 font-semibold">{tx.productCode || "N/A"}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 font-medium">Batch Code</p>
+                            <p className="text-slate-800 font-semibold">{tx.batchCode || "N/A"}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 font-medium">Truck No</p>
+                            <p className="text-slate-800 font-semibold">{tx.truckNo || "N/A"}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500 font-medium">Invoice No</p>
+                            <p className="text-slate-800 font-semibold">{tx.invoiceNo || "N/A"}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Actions Section */}
+                      <div className="flex flex-col sm:flex-row gap-2 lg:flex-col lg:w-40">
+                        <div className="flex flex-wrap gap-2">
+                          {tx.paymentStatus === "Pending" && (
+                            <>
+                              <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white flex-1 sm:flex-none" onClick={() => confirmStatusUpdate(tx.id, "Approved")}>
+                                Approve
+                              </Button>
+                              <Button size="sm" variant="destructive" className="flex-1 sm:flex-none" onClick={() => confirmStatusUpdate(tx.id, "Rejected")}>
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                          {tx.paymentStatus === "Approved" && (
+                            <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white flex-1 sm:flex-none" onClick={() => confirmStatusUpdate(tx.id, "Paid")}>
+                              Mark Paid
+                            </Button>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="flex-1 sm:flex-none"
+                            onClick={() => generateInvoice(tx, () => showToast({ 
+                              title: "Success", 
+                              description: `Invoice for delivery ${tx.id} generated and downloaded.` 
+                            }))}
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            Invoice
+                          </Button>
+                          <Button size="sm" variant="outline" className="flex-1 sm:flex-none" onClick={() => handleEditTransaction(tx)}>
+                            <Pencil className="w-3 h-3 mr-1" />
+                            Edit
+                          </Button>
+                          <Button size="sm" variant="destructive" onClick={() => confirmDelete(tx.id, "transaction", tx)}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                ))
+              )}
             </div>
           </div>
         </div>
