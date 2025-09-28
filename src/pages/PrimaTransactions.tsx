@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Eye, X, Truck, DollarSign, Clock, Package, Download, Pencil, Trash2 } from "lucide-react";
 import { generateInvoice } from './Invoice';
+import { logAction } from "@/pages/logHelper"; // ✅ Added logger import
 
 // Use environment variable for API URL
 const API_URL = process.env.REACT_APP_API_URL || "https://chili-track-dash.onrender.com";
@@ -10,22 +11,22 @@ interface PO {
   poNumber: string;
   date: string;
   totalKilos: number;
-  remainingKilos: number; // Added to match pos table schema
+  remainingKilos: number;
   amount: number;
   status: "Pending" | "Completed";
 }
 
 interface PrimaTransaction {
   id: number;
-  poId: number; // Added to match schema
-  poNumber: string | null; // Nullable to match schema
+  poId: number;
+  poNumber: string | null;
   date: string;
   kilosDelivered: number;
   amount: number;
-  numberOfBoxes: number | null; // Changed to number|null to match INTEGER schema
+  numberOfBoxes: number | null;
   dateOfExpiration: string | null;
   productCode: string | null;
-  invoiceNo: string |null;
+  invoiceNo: string | null;
   batchCode: string | null;
   truckNo: string | null;
   paymentStatus: "Pending" | "Approved" | "Paid" | "Rejected";
@@ -109,10 +110,10 @@ const PrimaPage = () => {
       date: string; 
       kilosDelivered: string; 
       amount: string; 
-      numberOfBoxes: string; // Changed to numberOfBoxes
+      numberOfBoxes: string;
       dateOfExpiration: string;
       productCode: string;
-      invoiceNo : string;
+      invoiceNo: string;
       batchCode: string;
       truckNo: string;
     } 
@@ -134,6 +135,7 @@ const PrimaPage = () => {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const today = new Date().toISOString().split("T")[0];
+  const currentUser = localStorage.getItem("username") || "Unknown"; // ✅ Added for logging
 
   // -------------------- Filter Functions --------------------
   const filteredPOs = pos.filter(po => {
@@ -145,7 +147,7 @@ const PrimaPage = () => {
 
   const filteredTransactions = transactions.filter(tx => {
     const txDate = new Date(tx.date);
-    const fromMatch = !dateFrom || txDate >= new Date(dateFrom + "T00:00:00");
+    const fromMatch = !dateFrom || txDate >= new Date(txDate + "T00:00:00");
     const toMatch = !dateTo || txDate <= new Date(dateTo + "T23:59:59");
     return fromMatch && toMatch;
   });
@@ -189,11 +191,10 @@ const PrimaPage = () => {
         throw new Error(errorData.error || `Failed to fetch transactions: ${res.statusText}`);
       }
       const data = await res.json() || [];
-      // Map numberOfBoxes to number|null
       setTransactions(data.map(tx => ({
         ...tx,
-        numberOfBoxes: tx.numberOfBoxes != null ? Number(tx.numberOfBoxes) : null, // Convert to number or null
-        poNumber: tx.poNumber, // Ensure nullable
+        numberOfBoxes: tx.numberOfBoxes != null ? Number(tx.numberOfBoxes) : null,
+        poNumber: tx.poNumber,
       }))); 
     } catch (error: any) { 
       showToast({ title: "Error", description: error.message, variant: "destructive" }); 
@@ -250,16 +251,13 @@ const PrimaPage = () => {
       
       console.log(`Found PO: ${relatedPO.poNumber}, Current Status: ${relatedPO.status}, Total: ${relatedPO.totalKilos}kg, Remaining: ${relatedPO.remainingKilos}kg`);
       
-      // Get all transactions for this PO
       const poTransactions = freshTransactions.filter(t => t.poNumber === poNumber);
       console.log(`Found ${poTransactions.length} transactions for PO ${poNumber}`);
       
-      // Calculate total delivered (excluding rejected deliveries)
       const totalDelivered = poTransactions
         .filter(t => t.paymentStatus !== "Rejected")
         .reduce((sum, t) => sum + t.kilosDelivered, 0);
       
-      // Calculate approved deliveries only (for completion status)
       const approvedDelivered = poTransactions
         .filter(t => t.paymentStatus === "Approved" || t.paymentStatus === "Paid")
         .reduce((sum, t) => sum + t.kilosDelivered, 0);
@@ -267,10 +265,8 @@ const PrimaPage = () => {
       console.log(`Total delivered (excl. rejected): ${totalDelivered}kg`);
       console.log(`Approved/Paid delivered: ${approvedDelivered}kg`);
       
-      // Calculate remaining kilos based on total delivered (including pending)
       const newRemainingKilos = Math.max(relatedPO.totalKilos - totalDelivered, 0);
       
-      // Determine new status: Completed only when remaining kilos = 0 AND all delivered kilos are approved/paid
       const allKilosDelivered = newRemainingKilos === 0;
       const allDeliveredAreApproved = totalDelivered > 0 && approvedDelivered >= totalDelivered;
       const newPOStatus = (allKilosDelivered && allDeliveredAreApproved) ? "Completed" : "Pending";
@@ -278,9 +274,8 @@ const PrimaPage = () => {
       console.log(`Status check: All kilos delivered: ${allKilosDelivered}, All delivered are approved: ${allDeliveredAreApproved}`);
       console.log(`New remaining kilos: ${newRemainingKilos}kg, New status: ${newPOStatus}`);
       
-      // Update PO if status or remaining kilos changed
       const statusChanged = newPOStatus !== relatedPO.status;
-      const remainingChanged = Math.abs(newRemainingKilos - relatedPO.remainingKilos) > 0.01; // Use small epsilon for float comparison
+      const remainingChanged = Math.abs(newRemainingKilos - relatedPO.remainingKilos) > 0.01;
       
       if (statusChanged || remainingChanged) {
         console.log(`Updating PO - Status changed: ${statusChanged}, Remaining changed: ${remainingChanged}`);
@@ -306,7 +301,6 @@ const PrimaPage = () => {
         
         console.log(`PO updated successfully`);
         
-        // Refresh PO data in the UI
         await fetchPOs();
         
         let message = `PO ${poNumber} remaining kilos updated to ${newRemainingKilos}kg`;
@@ -349,7 +343,7 @@ const PrimaPage = () => {
         totalKilos: totalKilosNum, 
         amount: amountNum, 
         status: "Pending",
-        remainingKilos: totalKilosNum // Initialize remaining kilos to total kilos
+        remainingKilos: totalKilosNum
       };
       
       console.log("Creating PO with data:", poData);
@@ -365,6 +359,16 @@ const PrimaPage = () => {
       }
       
       await Promise.all([fetchPOs(), fetchTransactions(), fetchProduction()]);
+      
+      try {
+        await logAction(
+          currentUser,
+          "Create PO",
+          `Created PO ${poNumber} with ${totalKilosNum}kg for Rs${amountNum}`
+        );
+      } catch (error) {
+        console.error("Failed to log create PO action:", error);
+      }
       
       showToast({ title: "PO Created", description: `PO ${poNumber} created successfully` });
       setNewPO({ poNumber: "", date: "", totalKilos: "", amount: "" });
@@ -389,7 +393,6 @@ const PrimaPage = () => {
       .reduce((sum, t) => sum + t.kilosDelivered, 0);
     const computed = Math.max(po.totalKilos - deliveredForPO, 0);
     
-    // Log discrepancy if any
     if (Math.abs(computed - po.remainingKilos) > 0.01) {
       console.warn(`Remaining kilos mismatch for PO ${po.poNumber}: DB shows ${po.remainingKilos}kg, computed ${computed}kg`);
     }
@@ -401,7 +404,7 @@ const PrimaPage = () => {
 
   const calculateNumberOfBoxes = (kilos: number) => {
     if (isNaN(kilos) || kilos <= 0) return 0;
-    return Math.ceil(kilos / 10); // Return as number to match schema
+    return Math.ceil(kilos / 10);
   };
 
   const calculateExpirationDate = (date: string) => {
@@ -411,7 +414,6 @@ const PrimaPage = () => {
     return expDate.toISOString().split("T")[0];
   };
 
-  // Update the handleAddDelivery function to ensure proper status updates
   const handleAddDelivery = async (po: PO) => {
     if (po.status === "Completed") { 
       showToast({ title: "PO Completed", description: "Cannot add deliveries to a completed PO", variant: "destructive" }); 
@@ -462,8 +464,17 @@ const PrimaPage = () => {
       }
       const savedTransaction = await res.json();
       
-      // Refresh all data to ensure consistency
       await Promise.all([fetchTransactions(), fetchPOs()]);
+      
+      try {
+        await logAction(
+          currentUser,
+          "Add Delivery",
+          `Added delivery of ${kilos}kg for PO ${po.poNumber} (Transaction ID: ${savedTransaction.id})`
+        );
+      } catch (error) {
+        console.error("Failed to log add delivery action:", error);
+      }
       
       setDeliveryForm(prev => ({ 
         ...prev, 
@@ -505,7 +516,7 @@ const PrimaPage = () => {
     setEditModal({ 
       show: true, 
       type: "transaction", 
-      data: { ...transaction } // numberOfBoxes is already number|null
+      data: { ...transaction }
     });
   };
 
@@ -528,7 +539,6 @@ const PrimaPage = () => {
     const { type, data } = editModal;
     if (!data) return;
 
-    // Validate required fields for transactions
     if (type === "transaction") {
       if (!data.date || !data.kilosDelivered || !data.amount || !data.productCode || !data.batchCode || !data.truckNo || !data.dateOfExpiration || !data.invoiceNo) {
         showToast({ title: "Error", description: "All fields (date, kilos delivered, amount, product code, batch number, truck number, expiration date, invoice number) are required", variant: "destructive" });
@@ -551,19 +561,23 @@ const PrimaPage = () => {
     try {
       let endpoint = "";
       let successMessage = "";
+      let logMessage = "";
       
       switch (type) {
         case "po":
           endpoint = `${API_URL}/pos/${data.poNumber}`;
           successMessage = "PO updated successfully";
+          logMessage = `Updated PO ${data.poNumber} (${data.totalKilos}kg, Rs${data.amount})`;
           break;
         case "transaction":
           endpoint = `${API_URL}/primatransactions/${data.id}`;
           successMessage = "Transaction updated successfully";
+          logMessage = `Updated transaction ID: ${data.id} for PO ${data.poNumber} (${data.kilosDelivered}kg)`;
           break;
         case "production":
           endpoint = `${API_URL}/production/${data.id}`;
           successMessage = "Production record updated successfully";
+          logMessage = `Updated production record ID: ${data.id} (${data.kilosIn}kg in, ${data.kilosOut}kg out, ${data.color})`;
           break;
       }
 
@@ -583,7 +597,6 @@ const PrimaPage = () => {
         throw new Error(errorData.error || `Failed to update record: ${res.statusText}`);
       }
 
-      // Refresh data first
       if (type === "po") {
         await fetchPOs();
       } else if (type === "transaction") {
@@ -592,13 +605,18 @@ const PrimaPage = () => {
         await fetchProduction();
       }
 
-      // Then update PO status if it was a transaction edit
       if (type === "transaction" && data.poNumber) {
         console.log(`Updating PO status after transaction edit`);
         const statusMessage = await updatePOStatusBasedOnDeliveries(data.poNumber);
         if (statusMessage) {
           successMessage += `. ${statusMessage}`;
         }
+      }
+
+      try {
+        await logAction(currentUser, `Update ${type.charAt(0).toUpperCase() + type.slice(1)}`, logMessage);
+      } catch (error) {
+        console.error(`Failed to log update ${type} action:`, error);
       }
 
       showToast({ title: "Success", description: successMessage });
@@ -639,19 +657,23 @@ const PrimaPage = () => {
     try {
       let endpoint = "";
       let successMessage = "";
+      let logMessage = "";
       
       switch (recordType) {
         case "po":
           endpoint = `${API_URL}/pos/${data.poNumber}`;
           successMessage = "PO deleted successfully";
+          logMessage = `Deleted PO ${data.poNumber}`;
           break;
         case "transaction":
           endpoint = `${API_URL}/primatransactions/${id}`;
           successMessage = "Transaction deleted successfully";
+          logMessage = `Deleted transaction ID: ${id} for PO ${data.poNumber}`;
           break;
         case "production":
           endpoint = `${API_URL}/production/${id}`;
           successMessage = "Production record deleted successfully";
+          logMessage = `Deleted production record ID: ${id}`;
           break;
       }
 
@@ -674,6 +696,12 @@ const PrimaPage = () => {
         await fetchTransactions();
       } else if (recordType === "production") {
         await fetchProduction();
+      }
+
+      try {
+        await logAction(currentUser, `Delete ${recordType.charAt(0).toUpperCase() + recordType.slice(1)}`, logMessage);
+      } catch (error) {
+        console.error(`Failed to log delete ${recordType} action:`, error);
       }
 
       showToast({ title: "Success", description: successMessage });
@@ -705,8 +733,17 @@ const PrimaPage = () => {
       
       const updatedTransaction = await transactionRes.json();
       
-      // Refresh transactions first
       await fetchTransactions();
+      
+      try {
+        await logAction(
+          currentUser,
+          "Update Transaction Status",
+          `Marked transaction ID: ${confirmModal.id} for PO ${updatedTransaction.poNumber} as ${confirmModal.status}`
+        );
+      } catch (error) {
+        console.error("Failed to log update transaction status action:", error);
+      }
       
       const statusMessage = await updatePOStatusBasedOnDeliveries(updatedTransaction.poNumber);
       
@@ -743,7 +780,7 @@ const PrimaPage = () => {
     </div>
   );
 
-  const exportTransactions = () => {
+  const exportTransactions = async () => {
     const csvContent = [
       ["PO Number", "Date", "Kilos Delivered", "Number of Boxes", "Expiration Date", "Product Code", "Batch Code", "Truck No", "Amount", "Payment Status", "Invoice Number"],
       ...filteredTransactions.map(t => [
@@ -765,6 +802,50 @@ const PrimaPage = () => {
     link.href = URL.createObjectURL(blob);
     link.download = `prima_transactions_${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
+
+    try {
+      await logAction(
+        currentUser,
+        "Export Transactions",
+        `Exported ${filteredTransactions.length} transaction records`
+      );
+      showToast({ title: "Success", description: "Transactions exported successfully" });
+    } catch (error) {
+      console.error("Failed to log export transactions action:", error);
+      showToast({
+        title: "Warning",
+        description: "Transactions exported, but failed to log action",
+        variant: "default",
+      });
+    }
+  };
+
+  // -------------------- Invoice Generation Wrapper --------------------
+  const handleGenerateInvoice = async (transaction: PrimaTransaction) => {
+    try {
+      await generateInvoice(transaction, () => {
+        try {
+          logAction(
+            currentUser,
+            "Generate Invoice",
+            `Generated invoice for transaction ID: ${transaction.id} (PO ${transaction.poNumber})`
+          );
+        } catch (error) {
+          console.error("Failed to log generate invoice action:", error);
+        }
+        showToast({ 
+          title: "Success", 
+          description: `Invoice for delivery ${transaction.id} generated and downloaded.` 
+        });
+      });
+    } catch (error) {
+      console.error("Invoice generation failed:", error);
+      showToast({
+        title: "Error",
+        description: "Failed to generate invoice",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -789,13 +870,10 @@ const PrimaPage = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 grid-rows-2">
         <SummaryCard title="Total Delivered" value={`${totalDelivered}kg`} icon={Truck} description="All deliveries including paid, pending, and rejected" />
         <SummaryCard title="Total Revenue" value={`Rs${totalRevenue.toLocaleString()}`} icon={DollarSign} description="Expected revenue" />
         <SummaryCard title="Paid Amount" value={`Rs${paidAmount.toLocaleString()}`} icon={DollarSign} description="Cash received" />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
         <SummaryCard title="Pending Approval" value={`Rs${pendingApproval.toLocaleString()}`} icon={Clock} description="Awaiting payment after approval" />
         <SummaryCard title="Rejected Powder" value={`${rejectedPowder}kg`} icon={X} description="Returned stock" />
         <SummaryCard title="Available Stock" value={`${availableStock.toFixed(2)}kg`} icon={Package} description="Usable stock" />
@@ -809,19 +887,19 @@ const PrimaPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="flex flex-col space-y-1">
               <Label>PO Number</Label>
-              <Input value={newPO.poNumber} onChange={e => setNewPO({ ...newPO, poNumber: e.target.value })} required min={undefined} max={undefined} step={undefined} />
+              <Input value={newPO.poNumber} onChange={e => setNewPO({ ...newPO, poNumber: e.target.value })} required />
             </div>
             <div className="flex flex-col space-y-1">
               <Label>Date</Label>
-              <Input type="date" max={today} value={newPO.date} onChange={e => setNewPO({ ...newPO, date: e.target.value })} required min={undefined} step={undefined} />
+              <Input type="date" max={today} value={newPO.date} onChange={e => setNewPO({ ...newPO, date: e.target.value })} required />
             </div>
             <div className="flex flex-col space-y-1">
               <Label>Total Kilos</Label>
-              <Input type="number" min={1} step="0.01" value={newPO.totalKilos} onChange={e => setNewPO({ ...newPO, totalKilos: e.target.value })} required max={undefined} />
+              <Input type="number" min={1} step="0.01" value={newPO.totalKilos} onChange={e => setNewPO({ ...newPO, totalKilos: e.target.value })} required />
             </div>
             <div className="flex flex-col space-y-1">
               <Label>Amount (Rs)</Label>
-              <Input type="number" min={1} step="0.01" value={newPO.amount} onChange={e => setNewPO({ ...newPO, amount: e.target.value })} required max={undefined} />
+              <Input type="number" min={1} step="0.01" value={newPO.amount} onChange={e => setNewPO({ ...newPO, amount: e.target.value })} required />
               <Button type="submit" className="mt-2 flex items-center justify-center" onClick={handleCreatePO}>
                 <Plus className="w-4 h-4 mr-2" />Create PO
               </Button>
@@ -840,13 +918,17 @@ const PrimaPage = () => {
                 value={dateFrom}
                 onChange={e => setDateFrom(e.target.value)}
                 placeholder="From"
-                className="w-40" min={undefined} max={undefined} step={undefined}              />
+                className="w-40"
+                max={today}
+              />
               <Input 
                 type="date"
                 value={dateTo}
                 onChange={e => setDateTo(e.target.value)}
                 placeholder="To"
-                className="w-40" min={undefined} max={undefined} step={undefined}              />
+                className="w-40"
+                max={today}
+              />
               {(dateFrom || dateTo) && 
                 <Button variant="outline" size="sm" onClick={resetDateFilter}>
                   Reset
@@ -943,8 +1025,10 @@ const PrimaPage = () => {
                               dateOfExpiration: newExpiration
                             }
                           }));
-                        } }
-                        required min={undefined} max={undefined} step={undefined}                      />
+                        }}
+                        required
+                        max={today}
+                      />
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Expiration Date</Label>
@@ -955,7 +1039,8 @@ const PrimaPage = () => {
                           ...prev,
                           [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], dateOfExpiration: e.target.value }
                         }))}
-                        required min={undefined} max={undefined} step={undefined}                      />
+                        required
+                      />
                     </div>
                   </div>
 
@@ -981,7 +1066,7 @@ const PrimaPage = () => {
                                 ...prev[selectedPO.poNumber], 
                                 kilosDelivered: e.target.value, 
                                 amount: amount.toFixed(2),
-                                numberOfBoxes: numberOfBoxes.toString() // Store as string for input, convert to number in transactionData
+                                numberOfBoxes: numberOfBoxes.toString()
                               } 
                             }));
                           }
@@ -995,7 +1080,8 @@ const PrimaPage = () => {
                         readOnly
                         placeholder="Number of Boxes"
                         value={deliveryForm[selectedPO.poNumber]?.numberOfBoxes || ""}
-                        className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                      />
+                        className="bg-gray-100"
+                      />
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Amount (Rs)</Label>
@@ -1003,7 +1089,8 @@ const PrimaPage = () => {
                         readOnly
                         placeholder="Amount (Rs)"
                         value={deliveryForm[selectedPO.poNumber]?.amount || ""}
-                        className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                      />
+                        className="bg-gray-100"
+                      />
                     </div>
                   </div>
 
@@ -1016,7 +1103,8 @@ const PrimaPage = () => {
                           ...prev,
                           [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], productCode: e.target.value }
                         }))}
-                        required min={undefined} max={undefined} step={undefined}                      />
+                        required
+                      />
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Batch Code</Label>
@@ -1026,7 +1114,8 @@ const PrimaPage = () => {
                           ...prev,
                           [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], batchCode: e.target.value }
                         }))}
-                        required min={undefined} max={undefined} step={undefined}                      />
+                        required
+                      />
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Truck Number</Label>
@@ -1036,7 +1125,8 @@ const PrimaPage = () => {
                           ...prev,
                           [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], truckNo: e.target.value }
                         }))}
-                        required min={undefined} max={undefined} step={undefined}                      />
+                        required
+                      />
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Invoice Number</Label>
@@ -1046,7 +1136,8 @@ const PrimaPage = () => {
                           ...prev,
                           [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], invoiceNo: e.target.value }
                         }))}
-                        required min={undefined} max={undefined} step={undefined}                      />
+                        required
+                      />
                     </div>
                   </div>
 
@@ -1062,7 +1153,7 @@ const PrimaPage = () => {
               </div>
             )}
 
-           <div className="space-y-4">
+            <div className="space-y-4">
               {transactions.filter(t => t.poNumber === selectedPO.poNumber).length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -1072,7 +1163,6 @@ const PrimaPage = () => {
                 transactions.filter(t => t.poNumber === selectedPO.poNumber).map(tx => (
                   <div key={tx.id} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex flex-col lg:flex-row gap-6">
-                      {/* Main Info Section */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-3">
@@ -1128,7 +1218,6 @@ const PrimaPage = () => {
                         </div>
                       </div>
 
-                      {/* Actions Section */}
                       <div className="lg:w-48 flex-shrink-0">
                         <div className="flex flex-col gap-2">
                           {tx.paymentStatus === "Pending" && (
@@ -1150,10 +1239,7 @@ const PrimaPage = () => {
                             size="sm" 
                             variant="outline" 
                             className="w-full"
-                            onClick={() => generateInvoice(tx, () => showToast({ 
-                              title: "Success", 
-                              description: `Invoice for delivery ${tx.id} generated and downloaded.` 
-                            }))}
+                            onClick={() => handleGenerateInvoice(tx)}
                           >
                             <Download className="w-3 h-3 mr-1" />
                             Invoice
@@ -1194,7 +1280,8 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, poNumber: e.target.value }
                     }))}
-                    required min={undefined} max={undefined} step={undefined}                  />
+                    required
+                  />
                 </div>
                 <div>
                   <Label>Date</Label>
@@ -1205,7 +1292,9 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, date: e.target.value }
                     }))}
-                    required min={undefined} max={undefined} step={undefined}                  />
+                    required
+                    max={today}
+                  />
                 </div>
                 <div>
                   <Label>Total Kilos</Label>
@@ -1217,7 +1306,9 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, totalKilos: parseFloat(e.target.value) || 0 }
                     }))}
-                    required min={undefined} max={undefined}                  />
+                    required
+                    min={0}
+                  />
                 </div>
                 <div>
                   <Label>Amount (Rs)</Label>
@@ -1229,7 +1320,9 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, amount: parseFloat(e.target.value) || 0 }
                     }))}
-                    required min={undefined} max={undefined}                  />
+                    required
+                    min={0}
+                  />
                 </div>
                 <div>
                   <Label>Status</Label>
@@ -1257,7 +1350,8 @@ const PrimaPage = () => {
                     onChange={e => setEditModal(prev => ({
                       ...prev,
                       data: { ...prev.data, poNumber: e.target.value || null }
-                    }))} min={undefined} max={undefined} step={undefined}                  />
+                    }))}
+                  />
                 </div>
                 <div>
                   <Label>Date</Label>
@@ -1268,7 +1362,9 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, date: e.target.value }
                     }))}
-                    required min={undefined} max={undefined} step={undefined}                  />
+                    required
+                    max={today}
+                  />
                 </div>
                 <div>
                   <Label>Kilos Delivered</Label>
@@ -1289,8 +1385,10 @@ const PrimaPage = () => {
                           numberOfBoxes: calculatedNumberOfBoxes
                         }
                       }));
-                    } }
-                    required min={undefined} max={undefined}                  />
+                    }}
+                    required
+                    min={0}
+                  />
                 </div>
                 <div>
                   <Label>Number of Boxes</Label>
@@ -1299,7 +1397,8 @@ const PrimaPage = () => {
                     value={editModal.data.numberOfBoxes != null ? editModal.data.numberOfBoxes : ""}
                     readOnly
                     className="bg-gray-100"
-                    placeholder="Calculated as kilos / 10" onChange={undefined} min={undefined} max={undefined} step={undefined}                  />
+                    placeholder="Calculated as kilos / 10"
+                  />
                 </div>
                 <div>
                   <Label>Expiration Date</Label>
@@ -1310,7 +1409,8 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, dateOfExpiration: e.target.value || null }
                     }))}
-                    required min={undefined} max={undefined} step={undefined}                  />
+                    required
+                  />
                 </div>
                 <div>
                   <Label>Product Code</Label>
@@ -1320,7 +1420,8 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, productCode: e.target.value || null }
                     }))}
-                    required min={undefined} max={undefined} step={undefined}                  />
+                    required
+                  />
                 </div>
                 <div>
                   <Label>Batch Code</Label>
@@ -1330,7 +1431,8 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, batchCode: e.target.value || null }
                     }))}
-                    required min={undefined} max={undefined} step={undefined}                  />
+                    required
+                  />
                 </div>
                 <div>
                   <Label>Invoice Number</Label>
@@ -1340,7 +1442,8 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, invoiceNo: e.target.value || null }
                     }))}
-                    required min={undefined} max={undefined} step={undefined}                  />
+                    required
+                  />
                 </div>
                 <div>
                   <Label>Truck Number</Label>
@@ -1350,7 +1453,8 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, truckNo: e.target.value || null }
                     }))}
-                    required min={undefined} max={undefined} step={undefined}                  />
+                    required
+                  />
                 </div>
                 <div>
                   <Label>Amount (Rs)</Label>
@@ -1360,7 +1464,8 @@ const PrimaPage = () => {
                     value={editModal.data.amount}
                     readOnly
                     className="bg-gray-100"
-                    placeholder="Calculated based on kilos and PO rate" onChange={undefined} min={undefined} max={undefined}                  />
+                    placeholder="Calculated based on kilos and PO rate"
+                  />
                 </div>
                 <div>
                   <Label>Payment Status</Label>
@@ -1368,7 +1473,8 @@ const PrimaPage = () => {
                   <Input 
                     value={editModal.data.paymentStatus}
                     readOnly
-                    className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                  />
+                    className="bg-gray-100"
+                  />
                 </div>
               </div>
             )}
@@ -1384,7 +1490,9 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, date: e.target.value }
                     }))}
-                    required min={undefined} max={undefined} step={undefined}                  />
+                    required
+                    max={today}
+                  />
                 </div>
                 <div>
                   <Label>Kilos In</Label>
@@ -1396,7 +1504,9 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, kilosIn: parseFloat(e.target.value) || 0 }
                     }))}
-                    required min={undefined} max={undefined}                  />
+                    required
+                    min={0}
+                  />
                 </div>
                 <div>
                   <Label>Kilos Out</Label>
@@ -1408,7 +1518,9 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, kilosOut: parseFloat(e.target.value) || 0 }
                     }))}
-                    required min={undefined} max={undefined}                  />
+                    required
+                    min={0}
+                  />
                 </div>
                 <div>
                   <Label>Surplus</Label>
@@ -1420,7 +1532,9 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, surplus: parseFloat(e.target.value) || 0 }
                     }))}
-                    required min={undefined} max={undefined}                  />
+                    required
+                    min={0}
+                  />
                 </div>
                 <div>
                   <Label>Color</Label>
