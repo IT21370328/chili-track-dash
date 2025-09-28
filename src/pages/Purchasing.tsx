@@ -343,7 +343,7 @@ const Purchasing = () => {
           </CardContent>
         </Card>
 
-        /* Red Bonnets */
+        {/* Red Bonnets */}
         <Card className="bg-white/90 shadow-lg rounded-2xl">
           <CardContent className="flex flex-col justify-between p-4">
             <div className="flex items-center justify-between mb-2">
@@ -357,7 +357,7 @@ const Purchasing = () => {
           </CardContent>
         </Card>
 
-        /* Green Bonnets */
+        {/* Green Bonnets */}
         <Card className="bg-white/90 shadow-lg rounded-2xl">
           <CardContent className="flex flex-col justify-between p-4">
             <div className="flex items-center justify-between mb-2">
