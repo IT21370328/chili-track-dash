@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { logAction } from "@/pages/logHelper"; 
 
 interface Production {
   id: number;
@@ -46,40 +47,40 @@ const ProductionPage = () => {
   const [editingRecord, setEditingRecord] = useState<Production | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleExport = () => {
-  if (filteredRecords.length === 0) {
-    toast({ title: "No data", description: "No production records to export.", variant: "destructive" });
-    return;
-  }
-
-  const headers = ["Date", "Kilos In", "Green Dry Kilos", "Red Dry Kilos", "Surplus", "Color"];
-  const rows = filteredRecords.map(r => [
-    new Date(r.date).toLocaleDateString(),
-    r.kilosIn.toFixed(2),
-    r.color === "green" ? r.kilosOut.toFixed(2) : "0",
-    r.color === "red" ? r.kilosOut.toFixed(2) : "0",
-    r.surplus.toFixed(2),
-    r.color
-  ]);
-
-  const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
-
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.setAttribute("download", `production_${new Date().toISOString().split("T")[0]}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-
-  toast({ title: "✅ Exported", description: "Production records exported successfully." });
-};
-
-
   const { toast } = useToast();
   const today = new Date().toISOString().split("T")[0];
+  const currentUser = localStorage.getItem("username") || "Unknown";
+
+  const handleExport = () => {
+    if (filteredRecords.length === 0) {
+      toast({ title: "No data", description: "No production records to export.", variant: "destructive" });
+      return;
+    }
+
+    const headers = ["Date", "Kilos In", "Green Dry Kilos", "Red Dry Kilos", "Surplus", "Color"];
+    const rows = filteredRecords.map(r => [
+      new Date(r.date).toLocaleDateString(),
+      r.kilosIn.toFixed(2),
+      r.color === "green" ? r.kilosOut.toFixed(2) : "0",
+      r.color === "red" ? r.kilosOut.toFixed(2) : "0",
+      r.surplus.toFixed(2),
+      r.color
+    ]);
+
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `production_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({ title: "✅ Exported", description: "Production records exported successfully." });
+  };
 
   // Fetch production
   const fetchData = async () => {
@@ -153,6 +154,7 @@ const ProductionPage = () => {
       });
       const saved = await res.json();
       setRecords(prev => [...prev, { id: saved.id ?? Date.now(), date, kilosIn: kilosInValue, kilosOut: kilosOutValue, color, surplus: parseFloat(surplus.toFixed(2)) }]);
+      logAction(currentUser, "Add Production", `Added ${color} record (In: ${kilosInValue}, Out: ${kilosOutValue}, Surplus: ${surplus.toFixed(2)})`);
       toast({ title: "✅ Production Recorded", description: `In: ${kilosInValue} → Out: ${kilosOutValue} (Surplus: ${surplus.toFixed(2)} kg)` });
       setFormData({ date: "", kilosIn: "", kilosOut: "", color: "" });
     } catch {
@@ -175,6 +177,7 @@ const ProductionPage = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...editingRecord, surplus: parseFloat(surplus.toFixed(2)) })
       });
+      logAction(currentUser, "Update Production", `Updated record ID: ${editingRecord.id}`);
       toast({ title: "✏️ Updated", description: `Record updated successfully` });
       setIsDialogOpen(false);
       fetchData();
@@ -188,6 +191,7 @@ const ProductionPage = () => {
     if (!confirm("Are you sure you want to delete this record?")) return;
     try {
       await fetch(`${API_URL}/production/${id}`, { method: "DELETE" });
+      logAction(currentUser, "Delete Production", `Deleted record ID: ${id}`);
       toast({ title: "🗑️ Deleted", description: "Record removed successfully" });
       fetchData();
     } catch {
@@ -228,24 +232,24 @@ const ProductionPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/20 to-slate-100 p-4 sm:p-6">
-  <div className="max-w-7xl mx-auto space-y-8">
-    {/* Header */}
-    <div className="bg-white/80 rounded-2xl p-4 sm:p-6 shadow-lg flex flex-col sm:flex-row items-start sm:items-center gap-3">
-      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-        <Package className="w-5 h-5 text-white" />
-      </div>
-      <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Production Dashboard</h1>
-      <Button
-        variant="outline"
-        size="sm"
-        className="ml-auto mt-2 sm:mt-0 gap-2"
-        onClick={handleExport}
-      >
-        <Download className="w-4 h-4" /> Export
-      </Button>
-    </div>
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="bg-white/80 rounded-2xl p-4 sm:p-6 shadow-lg flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+            <Package className="w-5 h-5 text-white" />
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Production Dashboard</h1>
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-auto mt-2 sm:mt-0 gap-2"
+            onClick={handleExport}
+          >
+            <Download className="w-4 h-4" /> Export
+          </Button>
+        </div>
 
-    {/* Summary Cards */}
+       {/* Summary Cards */}
    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 grid-rows-2">
   <SummaryCard title="Total Kilos In" value={`${totals.totalIn.toFixed(2)}kg`} icon={Package} />
   <SummaryCard title="Green Dry Kilos" value={`${totals.totalGreenOut.toFixed(2)}kg`} icon={Truck} />
