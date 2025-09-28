@@ -270,12 +270,12 @@ const PrimaPage = () => {
       // Calculate remaining kilos based on total delivered (including pending)
       const newRemainingKilos = Math.max(relatedPO.totalKilos - totalDelivered, 0);
       
-      // Determine new status: Completed only when all kilos are delivered AND approved/paid
+      // Determine new status: Completed only when remaining kilos = 0 AND all delivered kilos are approved/paid
       const allKilosDelivered = newRemainingKilos === 0;
-      const allApproved = approvedDelivered >= relatedPO.totalKilos;
-      const newPOStatus = (allKilosDelivered && allApproved) ? "Completed" : "Pending";
+      const allDeliveredAreApproved = totalDelivered > 0 && approvedDelivered >= totalDelivered;
+      const newPOStatus = (allKilosDelivered && allDeliveredAreApproved) ? "Completed" : "Pending";
       
-      console.log(`Status check: All kilos delivered: ${allKilosDelivered}, All approved: ${allApproved}`);
+      console.log(`Status check: All kilos delivered: ${allKilosDelivered}, All delivered are approved: ${allDeliveredAreApproved}`);
       console.log(`New remaining kilos: ${newRemainingKilos}kg, New status: ${newPOStatus}`);
       
       // Update PO if status or remaining kilos changed
