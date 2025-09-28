@@ -72,12 +72,6 @@ const AuditLogs = () => {
             icon={FileText}
             description="Distinct users in logs"
           />
-          <SummaryCard
-            title="Placeholder"
-            value="N/A"
-            icon={FileText}
-            description="Reserved for future metrics"
-          />
         </div>
 
         {/* Logs Table */}
