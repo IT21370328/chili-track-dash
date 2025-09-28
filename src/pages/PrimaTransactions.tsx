@@ -221,72 +221,112 @@ const PrimaPage = () => {
 
   // -------------------- Auto Update PO Status Function --------------------
   const updatePOStatusBasedOnDeliveries = async (poNumber: string) => {
-  try {
-    const [freshTransactionsRes, freshPOsRes] = await Promise.all([
-      fetch(`${API_URL}/primatransactions`), 
-      fetch(`${API_URL}/pos`)
-    ]);
-    if (!freshTransactionsRes.ok || !freshPOsRes.ok) {
-      const errorData = await Promise.all([
-        freshTransactionsRes.json().catch(() => ({})),
-        freshPOsRes.json().catch(() => ({}))
+    try {
+      console.log(`Updating PO status for: ${poNumber}`);
+      
+      const [freshTransactionsRes, freshPOsRes] = await Promise.all([
+        fetch(`${API_URL}/primatransactions`), 
+        fetch(`${API_URL}/pos`)
       ]);
-      throw new Error(errorData[0].error || errorData[1].error || "Failed to fetch data for PO status update");
-    }
-    const [freshTransactions, freshPOs] = await Promise.all([
-      freshTransactionsRes.json(), 
-      freshPOsRes.json()
-    ]);
-    
-    const relatedPO = freshPOs.find(po => po.poNumber === poNumber);
-    if (!relatedPO) return null;
-    
-    // Calculate total delivered (excluding rejected deliveries)
-    const totalDelivered = freshTransactions
-      .filter(t => t.poNumber === poNumber && t.paymentStatus !== "Rejected")
-      .reduce((sum, t) => sum + t.kilosDelivered, 0);
-    
-    // Calculate approved deliveries only (for completion status)
-    const approvedDelivered = freshTransactions
-      .filter(t => t.poNumber === poNumber && (t.paymentStatus === "Approved" || t.paymentStatus === "Paid"))
-      .reduce((sum, t) => sum + t.kilosDelivered, 0);
-    
-    // Calculate remaining kilos based on total delivered (including pending)
-    const newRemainingKilos = Math.max(relatedPO.totalKilos - totalDelivered, 0);
-    
-    // Determine new status: Completed only when all kilos are delivered AND approved/paid
-    const newPOStatus = (newRemainingKilos === 0 && approvedDelivered >= relatedPO.totalKilos) ? "Completed" : "Pending";
-    
-    // Update PO if status or remaining kilos changed
-    if (newPOStatus !== relatedPO.status || newRemainingKilos !== relatedPO.remainingKilos) {
-      const res = await fetch(`${API_URL}/pos/${relatedPO.poNumber}`, { 
-        method: "PUT", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ 
+      
+      if (!freshTransactionsRes.ok || !freshPOsRes.ok) {
+        const errorData = await Promise.all([
+          freshTransactionsRes.json().catch(() => ({})),
+          freshPOsRes.json().catch(() => ({}))
+        ]);
+        throw new Error(errorData[0].error || errorData[1].error || "Failed to fetch data for PO status update");
+      }
+      
+      const [freshTransactions, freshPOs] = await Promise.all([
+        freshTransactionsRes.json(), 
+        freshPOsRes.json()
+      ]);
+      
+      const relatedPO = freshPOs.find(po => po.poNumber === poNumber);
+      if (!relatedPO) {
+        console.log(`PO ${poNumber} not found`);
+        return null;
+      }
+      
+      console.log(`Found PO: ${relatedPO.poNumber}, Current Status: ${relatedPO.status}, Total: ${relatedPO.totalKilos}kg, Remaining: ${relatedPO.remainingKilos}kg`);
+      
+      // Get all transactions for this PO
+      const poTransactions = freshTransactions.filter(t => t.poNumber === poNumber);
+      console.log(`Found ${poTransactions.length} transactions for PO ${poNumber}`);
+      
+      // Calculate total delivered (excluding rejected deliveries)
+      const totalDelivered = poTransactions
+        .filter(t => t.paymentStatus !== "Rejected")
+        .reduce((sum, t) => sum + t.kilosDelivered, 0);
+      
+      // Calculate approved deliveries only (for completion status)
+      const approvedDelivered = poTransactions
+        .filter(t => t.paymentStatus === "Approved" || t.paymentStatus === "Paid")
+        .reduce((sum, t) => sum + t.kilosDelivered, 0);
+      
+      console.log(`Total delivered (excl. rejected): ${totalDelivered}kg`);
+      console.log(`Approved/Paid delivered: ${approvedDelivered}kg`);
+      
+      // Calculate remaining kilos based on total delivered (including pending)
+      const newRemainingKilos = Math.max(relatedPO.totalKilos - totalDelivered, 0);
+      
+      // Determine new status: Completed only when all kilos are delivered AND approved/paid
+      const allKilosDelivered = newRemainingKilos === 0;
+      const allApproved = approvedDelivered >= relatedPO.totalKilos;
+      const newPOStatus = (allKilosDelivered && allApproved) ? "Completed" : "Pending";
+      
+      console.log(`Status check: All kilos delivered: ${allKilosDelivered}, All approved: ${allApproved}`);
+      console.log(`New remaining kilos: ${newRemainingKilos}kg, New status: ${newPOStatus}`);
+      
+      // Update PO if status or remaining kilos changed
+      const statusChanged = newPOStatus !== relatedPO.status;
+      const remainingChanged = Math.abs(newRemainingKilos - relatedPO.remainingKilos) > 0.01; // Use small epsilon for float comparison
+      
+      if (statusChanged || remainingChanged) {
+        console.log(`Updating PO - Status changed: ${statusChanged}, Remaining changed: ${remainingChanged}`);
+        
+        const updatePayload = { 
           status: newPOStatus, 
           remainingKilos: newRemainingKilos 
-        }) 
-      });
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to update PO status: ${res.statusText}`);
+        };
+        
+        console.log(`Update payload:`, updatePayload);
+        
+        const res = await fetch(`${API_URL}/pos/${relatedPO.poNumber}`, { 
+          method: "PUT", 
+          headers: { "Content-Type": "application/json" }, 
+          body: JSON.stringify(updatePayload) 
+        });
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error(`Update failed:`, errorText);
+          throw new Error(`Failed to update PO status: ${res.statusText} - ${errorText}`);
+        }
+        
+        console.log(`PO updated successfully`);
+        
+        // Refresh PO data in the UI
+        await fetchPOs();
+        
+        let message = `PO ${poNumber} remaining kilos updated to ${newRemainingKilos}kg`;
+        if (statusChanged) {
+          message += `. Status changed to ${newPOStatus}`;
+        }
+        
+        console.log(`Success message: ${message}`);
+        return message;
+      } else {
+        console.log(`No changes needed for PO ${poNumber}`);
       }
       
-      await fetchPOs(); // Refresh PO data
-      
-      let message = `PO ${poNumber} remaining kilos updated to ${newRemainingKilos}kg`;
-      if (newPOStatus !== relatedPO.status) {
-        message += `. Status changed to ${newPOStatus}`;
-      }
-      return message;
+      return null;
+    } catch (error: any) {
+      console.error("Failed to update PO status:", error.message);
+      console.error("Stack trace:", error.stack);
+      return null;
     }
-    
-    return null;
-  } catch (error: any) {
-    console.error("Failed to update PO status:", error.message);
-    return null;
-  }
-};
+  };
 
   // -------------------- PO Functions --------------------
   const handleCreatePO = async (e: React.FormEvent) => {
@@ -303,32 +343,59 @@ const PrimaPage = () => {
       return;
     }
     try {
+      const poData = { 
+        poNumber, 
+        date, 
+        totalKilos: totalKilosNum, 
+        amount: amountNum, 
+        status: "Pending",
+        remainingKilos: totalKilosNum // Initialize remaining kilos to total kilos
+      };
+      
+      console.log("Creating PO with data:", poData);
+      
       const res = await fetch(`${API_URL}/po`, { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ poNumber, date, totalKilos: totalKilosNum, amount: amountNum, status: "Pending" }) 
+        body: JSON.stringify(poData) 
       });
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error || `Failed to create PO: ${res.statusText}`);
       }
+      
       await Promise.all([fetchPOs(), fetchTransactions(), fetchProduction()]);
       
       showToast({ title: "PO Created", description: `PO ${poNumber} created successfully` });
       setNewPO({ poNumber: "", date: "", totalKilos: "", amount: "" });
     } catch (error: any) { 
+      console.error("PO creation failed:", error.message);
       showToast({ title: "Error", description: error.message, variant: "destructive" }); 
     }
   };
 
-  // Also update the getRemainingKilos function to be more accurate
-    const getRemainingKilos = (po: PO) => {
+  // Get remaining kilos with better accuracy
+  const getRemainingKilos = (po: PO) => {
     const deliveredForPO = transactions
       .filter(t => t.poNumber === po.poNumber && t.paymentStatus !== "Rejected")
       .reduce((sum, t) => sum + t.kilosDelivered, 0);
     return Math.max(po.totalKilos - deliveredForPO, 0);
   };
 
+  // Display remaining kilos with discrepancy check
+  const getDisplayRemainingKilos = (po: PO) => {
+    const deliveredForPO = transactions
+      .filter(t => t.poNumber === po.poNumber && t.paymentStatus !== "Rejected")
+      .reduce((sum, t) => sum + t.kilosDelivered, 0);
+    const computed = Math.max(po.totalKilos - deliveredForPO, 0);
+    
+    // Log discrepancy if any
+    if (Math.abs(computed - po.remainingKilos) > 0.01) {
+      console.warn(`Remaining kilos mismatch for PO ${po.poNumber}: DB shows ${po.remainingKilos}kg, computed ${computed}kg`);
+    }
+    
+    return computed;
+  };
 
   const getMaxDeliverable = (po: PO) => Math.min(getRemainingKilos(po), getAvailableStock());
 
@@ -345,82 +412,85 @@ const PrimaPage = () => {
   };
 
   // Update the handleAddDelivery function to ensure proper status updates
-const handleAddDelivery = async (po: PO) => {
-  if (po.status === "Completed") { 
-    showToast({ title: "PO Completed", description: "Cannot add deliveries to a completed PO", variant: "destructive" }); 
-    return; 
-  }
-  const { date = "", kilosDelivered = "", amount = "", productCode = "", batchCode = "", truckNo = "", dateOfExpiration = "", invoiceNo = "" } = deliveryForm[po.poNumber] || {};
-  const kilos = parseFloat(kilosDelivered);
-  const amt = parseFloat(amount);
-  if (!date || !kilos || !amt || !productCode || !batchCode || !truckNo || !dateOfExpiration || !invoiceNo) { 
-    showToast({ title: "Error", description: "Please fill all required fields (date, kilos, product code, batch number, truck number, expiration date, invoice number)", variant: "destructive" }); 
-    return; 
-  }
-  if (isNaN(kilos) || isNaN(amt) || kilos <= 0 || amt <= 0) {
-    showToast({ title: "Error", description: "Kilos Delivered and Amount must be positive numbers", variant: "destructive" });
-    return;
-  }
-  if (kilos > getMaxDeliverable(po)) { 
-    showToast({ title: "Error", description: `Exceeds max deliverable (${getMaxDeliverable(po)}kg) or available stock (${getAvailableStock()}kg)`, variant: "destructive" }); 
-    return; 
-  }
-  try {
-    const numberOfBoxes = calculateNumberOfBoxes(kilos);
-    const transactionData = { 
-      poId: po.id,
-      poNumber: po.poNumber, 
-      date, 
-      kilosDelivered: kilos, 
-      amount: amt, 
-      paymentStatus: "Pending",
-      numberOfBoxes,
-      invoiceNo,
-      dateOfExpiration,
-      productCode,
-      batchCode,
-      truckNo
-    };
-    const res = await fetch(`${API_URL}/primatransactions`, { 
-      method: "POST", 
-      headers: { "Content-Type": "application/json" }, 
-      body: JSON.stringify(transactionData) 
-    });
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.error || `Failed to add delivery: ${res.statusText} (${res.status})`);
+  const handleAddDelivery = async (po: PO) => {
+    if (po.status === "Completed") { 
+      showToast({ title: "PO Completed", description: "Cannot add deliveries to a completed PO", variant: "destructive" }); 
+      return; 
     }
-    const savedTransaction = await res.json();
-    
-    // Refresh all data to ensure consistency
-    await Promise.all([fetchTransactions(), fetchPOs()]);
-    
-    setDeliveryForm(prev => ({ 
-      ...prev, 
-      [po.poNumber]: { 
-        date: "", 
-        kilosDelivered: "", 
-        amount: "", 
-        numberOfBoxes: "", 
-        dateOfExpiration: "",
-        invoiceNo: "",
-        productCode: "",
-        batchCode: "",
-        truckNo: ""
-      } 
-    }));
-    
-    const statusMessage = await updatePOStatusBasedOnDeliveries(po.poNumber);
-    const message = statusMessage 
-      ? `${kilos}kg delivered for PO ${po.poNumber}. ${statusMessage}`
-      : `${kilos}kg delivered for PO ${po.poNumber}`;
+    const { date = "", kilosDelivered = "", amount = "", productCode = "", batchCode = "", truckNo = "", dateOfExpiration = "", invoiceNo = "" } = deliveryForm[po.poNumber] || {};
+    const kilos = parseFloat(kilosDelivered);
+    const amt = parseFloat(amount);
+    if (!date || !kilos || !amt || !productCode || !batchCode || !truckNo || !dateOfExpiration || !invoiceNo) { 
+      showToast({ title: "Error", description: "Please fill all required fields (date, kilos, product code, batch number, truck number, expiration date, invoice number)", variant: "destructive" }); 
+      return; 
+    }
+    if (isNaN(kilos) || isNaN(amt) || kilos <= 0 || amt <= 0) {
+      showToast({ title: "Error", description: "Kilos Delivered and Amount must be positive numbers", variant: "destructive" });
+      return;
+    }
+    if (kilos > getMaxDeliverable(po)) { 
+      showToast({ title: "Error", description: `Exceeds max deliverable (${getMaxDeliverable(po)}kg) or available stock (${getAvailableStock()}kg)`, variant: "destructive" }); 
+      return; 
+    }
+    try {
+      const numberOfBoxes = calculateNumberOfBoxes(kilos);
+      const transactionData = { 
+        poId: po.id,
+        poNumber: po.poNumber, 
+        date, 
+        kilosDelivered: kilos, 
+        amount: amt, 
+        paymentStatus: "Pending",
+        numberOfBoxes,
+        invoiceNo,
+        dateOfExpiration,
+        productCode,
+        batchCode,
+        truckNo
+      };
       
-    showToast({ title: "Delivery Added", description: message });
-  } catch (error: any) { 
-    console.error("Delivery addition failed:", error.message);
-    showToast({ title: "Error", description: `Failed to add delivery: ${error.message}`, variant: "destructive" }); 
-  }
-};
+      console.log("Adding delivery:", transactionData);
+      
+      const res = await fetch(`${API_URL}/primatransactions`, { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify(transactionData) 
+      });
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to add delivery: ${res.statusText} (${res.status})`);
+      }
+      const savedTransaction = await res.json();
+      
+      // Refresh all data to ensure consistency
+      await Promise.all([fetchTransactions(), fetchPOs()]);
+      
+      setDeliveryForm(prev => ({ 
+        ...prev, 
+        [po.poNumber]: { 
+          date: "", 
+          kilosDelivered: "", 
+          amount: "", 
+          numberOfBoxes: "", 
+          dateOfExpiration: "",
+          invoiceNo: "",
+          productCode: "",
+          batchCode: "",
+          truckNo: ""
+        } 
+      }));
+      
+      const statusMessage = await updatePOStatusBasedOnDeliveries(po.poNumber);
+      const message = statusMessage 
+        ? `${kilos}kg delivered for PO ${po.poNumber}. ${statusMessage}`
+        : `${kilos}kg delivered for PO ${po.poNumber}`;
+        
+      showToast({ title: "Delivery Added", description: message });
+    } catch (error: any) { 
+      console.error("Delivery addition failed:", error.message);
+      showToast({ title: "Error", description: `Failed to add delivery: ${error.message}`, variant: "destructive" }); 
+    }
+  };
 
   // -------------------- Edit Functions --------------------
   const handleEditPO = (po: PO) => {
@@ -497,12 +567,14 @@ const handleAddDelivery = async (po: PO) => {
           break;
       }
 
+      console.log(`Updating ${type} via ${endpoint}`);
+
       const res = await fetch(endpoint, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
-          poId: data.poNumber ? pos.find(po => po.poNumber === data.poNumber)?.id : null, // Include poId
+          poId: data.poNumber ? pos.find(po => po.poNumber === data.poNumber)?.id : null,
         })
       });
 
@@ -511,19 +583,22 @@ const handleAddDelivery = async (po: PO) => {
         throw new Error(errorData.error || `Failed to update record: ${res.statusText}`);
       }
 
-      if (type === "transaction") {
-        const statusMessage = await updatePOStatusBasedOnDeliveries(data.poNumber);
-        if (statusMessage) {
-          successMessage += `. ${statusMessage}`;
-        }
-      }
-
+      // Refresh data first
       if (type === "po") {
         await fetchPOs();
       } else if (type === "transaction") {
         await fetchTransactions();
       } else if (type === "production") {
         await fetchProduction();
+      }
+
+      // Then update PO status if it was a transaction edit
+      if (type === "transaction" && data.poNumber) {
+        console.log(`Updating PO status after transaction edit`);
+        const statusMessage = await updatePOStatusBasedOnDeliveries(data.poNumber);
+        if (statusMessage) {
+          successMessage += `. ${statusMessage}`;
+        }
       }
 
       showToast({ title: "Success", description: successMessage });
@@ -616,6 +691,8 @@ const handleAddDelivery = async (po: PO) => {
   const updateStatus = async () => {
     if (!confirmModal.id || !confirmModal.status) return;
     try {
+      console.log(`Updating transaction ${confirmModal.id} to ${confirmModal.status}`);
+      
       const transactionRes = await fetch(`${API_URL}/primatransactions/${confirmModal.id}/status`, { 
         method: "PUT", 
         headers: { "Content-Type": "application/json" }, 
@@ -628,12 +705,10 @@ const handleAddDelivery = async (po: PO) => {
       
       const updatedTransaction = await transactionRes.json();
       
-      const statusMessage = await updatePOStatusBasedOnDeliveries(updatedTransaction.poNumber);
+      // Refresh transactions first
+      await fetchTransactions();
       
-      setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? { 
-        ...updatedTransaction, 
-        numberOfBoxes: updatedTransaction.numberOfBoxes != null ? Number(updatedTransaction.numberOfBoxes) : null 
-      } : t));
+      const statusMessage = await updatePOStatusBasedOnDeliveries(updatedTransaction.poNumber);
       
       const message = statusMessage 
         ? `Transaction marked as ${confirmModal.status}. ${statusMessage}`
@@ -641,6 +716,7 @@ const handleAddDelivery = async (po: PO) => {
         
       showToast({ title: "Status Updated", description: message });
     } catch (error: any) { 
+      console.error("Status update failed:", error.message);
       showToast({ title: "Error", description: `Failed to update status: ${error.message}`, variant: "destructive" }); 
     }
     setConfirmModal({ show: false, type: "status" });
@@ -799,7 +875,7 @@ const handleAddDelivery = async (po: PO) => {
                   <div className="font-medium">{po.poNumber}</div>
                   <div>{new Date(po.date).toLocaleDateString()}</div>
                   <div>{po.totalKilos}</div>
-                  <div>{po.remainingKilos}</div>
+                  <div>{getDisplayRemainingKilos(po)}</div>
                   <div>Rs {po.amount.toLocaleString()}</div>
                   <div>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${po.status === "Pending" ? "bg-yellow-100 text-yellow-700" : "bg-green-100 text-green-700"}`}>
@@ -929,6 +1005,9 @@ const handleAddDelivery = async (po: PO) => {
                         value={deliveryForm[selectedPO.poNumber]?.amount || ""}
                         className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                      />
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="flex flex-col space-y-1">
                       <Label>Product Code</Label>
                       <Input 
@@ -985,7 +1064,7 @@ const handleAddDelivery = async (po: PO) => {
 
             <div className="w-full border border-slate-200 rounded-lg overflow-hidden">
               <div className="bg-slate-200/60">
-                <div className="grid grid-cols-10 gap-4 p-3 font-semibold text-sm">
+                <div className="grid grid-cols-11 gap-4 p-3 font-semibold text-sm">
                   <div>Date</div>
                   <div>Kilos Delivered</div>
                   <div>Number of Boxes</div>
@@ -1001,15 +1080,15 @@ const handleAddDelivery = async (po: PO) => {
               </div>
               <div>
                 {transactions.filter(t => t.poNumber === selectedPO.poNumber).map(tx => (
-                  <div key={tx.id} className="grid grid-cols-10 gap-4 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0">
+                  <div key={tx.id} className="grid grid-cols-11 gap-4 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0">
                     <div>{tx.date}</div>
                     <div>{tx.kilosDelivered}</div>
                     <div>{tx.numberOfBoxes != null ? tx.numberOfBoxes : "N/A"}</div>
                     <div>{tx.dateOfExpiration || "N/A"}</div>
                     <div>{tx.productCode || "N/A"}</div>
                     <div>{tx.batchCode || "N/A"}</div>
-                    <div>{tx.invoiceNo || "N/A"}</div>
                     <div>{tx.truckNo || "N/A"}</div>
+                    <div>{tx.invoiceNo || "N/A"}</div>
                     <div>Rs {tx.amount.toLocaleString()}</div>
                     <div>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${tx.paymentStatus === "Pending" ? "bg-yellow-100 text-yellow-700" : tx.paymentStatus === "Approved" ? "bg-blue-100 text-blue-700" : tx.paymentStatus === "Rejected" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
