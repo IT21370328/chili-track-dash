@@ -15,33 +15,6 @@ export const generateInvoice = (transaction: PrimaTransaction, onGenerate?: () =
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
 
-  // HEADER - Company Info
-  doc.setFontSize(20);
-  doc.setFont('helvetica', 'bold');
-  doc.text("Ma's De cozta", 20, 20);
-  
-  // Underline
-  doc.setLineWidth(1);
-  doc.line(20, 22, pageWidth - 20, 22);
-  
-  // Company details
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text("Ma's De cozta(PVT)LTD.", 20, 32);
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('39/3/3 A Pannala watta,Pannala', 20, 40);
-  doc.text('0761518884', 20, 46);
-  doc.text('decostamadu81924@gmail.com', 20, 52);
-
-  // INVOICE TITLE
-  doc.setFontSize(24);
-  doc.setFont('helvetica', 'bold');
-  doc.text('INVOICE', pageWidth / 2, 70, { align: 'center' });
-  
-  // Underline for INVOICE
-  doc.line(pageWidth / 2 - 30, 72, pageWidth / 2 + 30, 72);
 
   // Invoice details - Right side
   doc.setFontSize(10);
