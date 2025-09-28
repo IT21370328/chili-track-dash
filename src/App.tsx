@@ -13,7 +13,6 @@ import PrimaTransactions from "./pages/PrimaTransactions";
 import Salaries from "./pages/Salaries";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
-import Invoice from "./pages/Invoice";
 import Logs from "./pages/AuditLogTracker"
 
 const queryClient = new QueryClient();
