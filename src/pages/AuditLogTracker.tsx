@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { AuditLogEntry } from "../utils/loghelper";
+import { AuditLogEntry } from "@/utils/loghelper";
 
 const AuditLogs = () => {
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
