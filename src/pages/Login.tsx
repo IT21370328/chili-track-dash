@@ -1,3 +1,4 @@
+// src/pages/Login.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,33 +7,13 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
 import Bg from "../assets/bg.jpg";
-
-interface AuditLogEntry {
-  id: string;
-  timestamp: string;
-  user: string;
-  action: string;
-  details: string;
-}
+import { logAction } from "../utils/loghelper"
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  const logAction = (user: string, action: string, details: string) => {
-    const timestamp = new Date().toISOString();
-    const logEntry: AuditLogEntry = {
-      id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-      user,
-      action,
-      details,
-      timestamp,
-    };
-    const existingLogs: AuditLogEntry[] = JSON.parse(localStorage.getItem("auditLogs") || "[]");
-    localStorage.setItem("auditLogs", JSON.stringify([...existingLogs, logEntry]));
-  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,25 +51,21 @@ const Login: React.FC = () => {
           <p className="text-slate-500 text-sm sm:text-base text-center">Sign in to access your dashboard</p>
         </div>
         <div className="space-y-4 sm:space-y-5">
-          <div>
-            <Input
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="bg-white/80 backdrop-blur-sm border-gray-300 focus:ring-indigo-500"
-              required
-            />
-          </div>
-          <div>
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-white/80 backdrop-blur-sm border-gray-300 focus:ring-indigo-500"
-              required
-            />
-          </div>
+          <Input
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="bg-white/80 backdrop-blur-sm border-gray-300 focus:ring-indigo-500"
+            required
+          />
+          <Input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="bg-white/80 backdrop-blur-sm border-gray-300 focus:ring-indigo-500"
+            required
+          />
           <Button
             type="submit"
             onClick={handleLogin}
