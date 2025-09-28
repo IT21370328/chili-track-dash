@@ -153,7 +153,7 @@ const Expenses = () => {
       {/* Header */}
       <div className="bg-white/80 rounded-2xl p-4 sm:p-6 shadow-lg flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-          <DollarSign className="w-5 h-5 sm:w-6 h-6 text-white" />
+          <DollarSign className="w-5 h-5 sm:w-6 text-white" />
         </div>
         <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Expenses Dashboard</h1>
         <Button
@@ -169,7 +169,7 @@ const Expenses = () => {
       {/* Summary Card */}
       <Card className="bg-white/90 backdrop-blur-sm border border-slate-200/50 shadow-lg rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-          <DollarSign className="w-6 h-6 sm:w-7 h-7 text-white" />
+          <DollarSign className="w-6 h-6 sm:w-7 text-white" />
         </div>
         <div>
           <h2 className="text-sm sm:text-base font-medium text-slate-600">Total Expenses</h2>

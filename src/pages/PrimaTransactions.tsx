@@ -887,19 +887,19 @@ const PrimaPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="flex flex-col space-y-1">
               <Label>PO Number</Label>
-              <Input value={newPO.poNumber} onChange={e => setNewPO({ ...newPO, poNumber: e.target.value })} required />
+              <Input value={newPO.poNumber} onChange={e => setNewPO({ ...newPO, poNumber: e.target.value })} required min={undefined} max={undefined} step={undefined} />
             </div>
             <div className="flex flex-col space-y-1">
               <Label>Date</Label>
-              <Input type="date" max={today} value={newPO.date} onChange={e => setNewPO({ ...newPO, date: e.target.value })} required />
+              <Input type="date" max={today} value={newPO.date} onChange={e => setNewPO({ ...newPO, date: e.target.value })} required min={undefined} step={undefined} />
             </div>
             <div className="flex flex-col space-y-1">
               <Label>Total Kilos</Label>
-              <Input type="number" min={1} step="0.01" value={newPO.totalKilos} onChange={e => setNewPO({ ...newPO, totalKilos: e.target.value })} required />
+              <Input type="number" min={1} step="0.01" value={newPO.totalKilos} onChange={e => setNewPO({ ...newPO, totalKilos: e.target.value })} required max={undefined} />
             </div>
             <div className="flex flex-col space-y-1">
               <Label>Amount (Rs)</Label>
-              <Input type="number" min={1} step="0.01" value={newPO.amount} onChange={e => setNewPO({ ...newPO, amount: e.target.value })} required />
+              <Input type="number" min={1} step="0.01" value={newPO.amount} onChange={e => setNewPO({ ...newPO, amount: e.target.value })} required max={undefined} />
               <Button type="submit" className="mt-2 flex items-center justify-center" onClick={handleCreatePO}>
                 <Plus className="w-4 h-4 mr-2" />Create PO
               </Button>
@@ -919,16 +919,14 @@ const PrimaPage = () => {
                 onChange={e => setDateFrom(e.target.value)}
                 placeholder="From"
                 className="w-40"
-                max={today}
-              />
+                max={today} min={undefined} step={undefined}              />
               <Input 
                 type="date"
                 value={dateTo}
                 onChange={e => setDateTo(e.target.value)}
                 placeholder="To"
                 className="w-40"
-                max={today}
-              />
+                max={today} min={undefined} step={undefined}              />
               {(dateFrom || dateTo) && 
                 <Button variant="outline" size="sm" onClick={resetDateFilter}>
                   Reset
@@ -1025,10 +1023,9 @@ const PrimaPage = () => {
                               dateOfExpiration: newExpiration
                             }
                           }));
-                        }}
+                        } }
                         required
-                        max={today}
-                      />
+                        max={today} min={undefined} step={undefined}                      />
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Expiration Date</Label>
@@ -1039,8 +1036,7 @@ const PrimaPage = () => {
                           ...prev,
                           [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], dateOfExpiration: e.target.value }
                         }))}
-                        required
-                      />
+                        required min={undefined} max={undefined} step={undefined}                      />
                     </div>
                   </div>
 
@@ -1080,8 +1076,7 @@ const PrimaPage = () => {
                         readOnly
                         placeholder="Number of Boxes"
                         value={deliveryForm[selectedPO.poNumber]?.numberOfBoxes || ""}
-                        className="bg-gray-100"
-                      />
+                        className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                      />
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Amount (Rs)</Label>
@@ -1089,8 +1084,7 @@ const PrimaPage = () => {
                         readOnly
                         placeholder="Amount (Rs)"
                         value={deliveryForm[selectedPO.poNumber]?.amount || ""}
-                        className="bg-gray-100"
-                      />
+                        className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                      />
                     </div>
                   </div>
 
@@ -1103,8 +1097,7 @@ const PrimaPage = () => {
                           ...prev,
                           [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], productCode: e.target.value }
                         }))}
-                        required
-                      />
+                        required min={undefined} max={undefined} step={undefined}                      />
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Batch Code</Label>
@@ -1114,8 +1107,7 @@ const PrimaPage = () => {
                           ...prev,
                           [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], batchCode: e.target.value }
                         }))}
-                        required
-                      />
+                        required min={undefined} max={undefined} step={undefined}                      />
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Truck Number</Label>
@@ -1125,8 +1117,7 @@ const PrimaPage = () => {
                           ...prev,
                           [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], truckNo: e.target.value }
                         }))}
-                        required
-                      />
+                        required min={undefined} max={undefined} step={undefined}                      />
                     </div>
                     <div className="flex flex-col space-y-1">
                       <Label>Invoice Number</Label>
@@ -1136,8 +1127,7 @@ const PrimaPage = () => {
                           ...prev,
                           [selectedPO.poNumber]: { ...prev[selectedPO.poNumber], invoiceNo: e.target.value }
                         }))}
-                        required
-                      />
+                        required min={undefined} max={undefined} step={undefined}                      />
                     </div>
                   </div>
 
@@ -1280,8 +1270,7 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, poNumber: e.target.value }
                     }))}
-                    required
-                  />
+                    required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Date</Label>
@@ -1293,8 +1282,7 @@ const PrimaPage = () => {
                       data: { ...prev.data, date: e.target.value }
                     }))}
                     required
-                    max={today}
-                  />
+                    max={today} min={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Total Kilos</Label>
@@ -1307,8 +1295,7 @@ const PrimaPage = () => {
                       data: { ...prev.data, totalKilos: parseFloat(e.target.value) || 0 }
                     }))}
                     required
-                    min={0}
-                  />
+                    min={0} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Amount (Rs)</Label>
@@ -1321,8 +1308,7 @@ const PrimaPage = () => {
                       data: { ...prev.data, amount: parseFloat(e.target.value) || 0 }
                     }))}
                     required
-                    min={0}
-                  />
+                    min={0} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Status</Label>
@@ -1350,8 +1336,7 @@ const PrimaPage = () => {
                     onChange={e => setEditModal(prev => ({
                       ...prev,
                       data: { ...prev.data, poNumber: e.target.value || null }
-                    }))}
-                  />
+                    }))} min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Date</Label>
@@ -1363,8 +1348,7 @@ const PrimaPage = () => {
                       data: { ...prev.data, date: e.target.value }
                     }))}
                     required
-                    max={today}
-                  />
+                    max={today} min={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Kilos Delivered</Label>
@@ -1385,10 +1369,9 @@ const PrimaPage = () => {
                           numberOfBoxes: calculatedNumberOfBoxes
                         }
                       }));
-                    }}
+                    } }
                     required
-                    min={0}
-                  />
+                    min={0} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Number of Boxes</Label>
@@ -1397,8 +1380,7 @@ const PrimaPage = () => {
                     value={editModal.data.numberOfBoxes != null ? editModal.data.numberOfBoxes : ""}
                     readOnly
                     className="bg-gray-100"
-                    placeholder="Calculated as kilos / 10"
-                  />
+                    placeholder="Calculated as kilos / 10" onChange={undefined} min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Expiration Date</Label>
@@ -1409,8 +1391,7 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, dateOfExpiration: e.target.value || null }
                     }))}
-                    required
-                  />
+                    required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Product Code</Label>
@@ -1420,8 +1401,7 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, productCode: e.target.value || null }
                     }))}
-                    required
-                  />
+                    required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Batch Code</Label>
@@ -1431,8 +1411,7 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, batchCode: e.target.value || null }
                     }))}
-                    required
-                  />
+                    required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Invoice Number</Label>
@@ -1442,8 +1421,7 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, invoiceNo: e.target.value || null }
                     }))}
-                    required
-                  />
+                    required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Truck Number</Label>
@@ -1453,8 +1431,7 @@ const PrimaPage = () => {
                       ...prev,
                       data: { ...prev.data, truckNo: e.target.value || null }
                     }))}
-                    required
-                  />
+                    required min={undefined} max={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Amount (Rs)</Label>
@@ -1464,8 +1441,7 @@ const PrimaPage = () => {
                     value={editModal.data.amount}
                     readOnly
                     className="bg-gray-100"
-                    placeholder="Calculated based on kilos and PO rate"
-                  />
+                    placeholder="Calculated based on kilos and PO rate" onChange={undefined} min={undefined} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Payment Status</Label>
@@ -1473,8 +1449,7 @@ const PrimaPage = () => {
                   <Input 
                     value={editModal.data.paymentStatus}
                     readOnly
-                    className="bg-gray-100"
-                  />
+                    className="bg-gray-100" onChange={undefined} min={undefined} max={undefined} step={undefined}                  />
                 </div>
               </div>
             )}
@@ -1491,8 +1466,7 @@ const PrimaPage = () => {
                       data: { ...prev.data, date: e.target.value }
                     }))}
                     required
-                    max={today}
-                  />
+                    max={today} min={undefined} step={undefined}                  />
                 </div>
                 <div>
                   <Label>Kilos In</Label>
@@ -1505,8 +1479,7 @@ const PrimaPage = () => {
                       data: { ...prev.data, kilosIn: parseFloat(e.target.value) || 0 }
                     }))}
                     required
-                    min={0}
-                  />
+                    min={0} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Kilos Out</Label>
@@ -1519,8 +1492,7 @@ const PrimaPage = () => {
                       data: { ...prev.data, kilosOut: parseFloat(e.target.value) || 0 }
                     }))}
                     required
-                    min={0}
-                  />
+                    min={0} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Surplus</Label>
@@ -1533,8 +1505,7 @@ const PrimaPage = () => {
                       data: { ...prev.data, surplus: parseFloat(e.target.value) || 0 }
                     }))}
                     required
-                    min={0}
-                  />
+                    min={0} max={undefined}                  />
                 </div>
                 <div>
                   <Label>Color</Label>

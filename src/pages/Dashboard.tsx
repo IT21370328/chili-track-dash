@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Clock, Package, DollarSign } from "lucide-react";
+import { Plus, Clock, Package, DollarSign, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom"; 
+import { Button } from "@/components/ui/button";
+import { logAction } from "@/pages/logHelper"; 
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -34,6 +37,9 @@ const Dashboard = () => {
   const [pettyCashSummary, setPettyCashSummary] = useState({ totalInflow: 0, totalOutflow: 0, balance: 0, totalTransactions: 0 });
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const { toast } = useToast();
+  const navigate = useNavigate(); // Added for navigation
+  const userRole = localStorage.getItem("userRole") || ""; // Added to check admin role
+  const currentUser = localStorage.getItem("username") || "Unknown"; // Added for logging
 
   const fetchData = async () => {
     try {
@@ -46,6 +52,13 @@ const Dashboard = () => {
         fetch(`${API_URL}/expenses`)
       ]);
 
+      if (!txRes.ok) throw new Error(`Failed to fetch transactions: ${txRes.statusText}`);
+      if (!prodRes.ok) throw new Error(`Failed to fetch production: ${prodRes.statusText}`);
+      if (!purchaseRes.ok) throw new Error(`Failed to fetch purchases: ${purchaseRes.statusText}`);
+      if (!pettyRes.ok) throw new Error(`Failed to fetch petty cash: ${pettyRes.statusText}`);
+      if (!pettySummaryRes.ok) throw new Error(`Failed to fetch petty cash summary: ${pettySummaryRes.statusText}`);
+      if (!expenseRes.ok) throw new Error(`Failed to fetch expenses: ${expenseRes.statusText}`);
+
       setTransactions(await txRes.json());
       setProduction(await prodRes.json());
       setPurchases(await purchaseRes.json());
@@ -54,8 +67,8 @@ const Dashboard = () => {
       const pettySummary = await pettySummaryRes.json();
       setPettyCashSummary({ totalInflow: pettySummary.totalInflow, totalOutflow: pettySummary.totalOutflow, balance: pettySummary.balance, totalTransactions: pettyData.length });
       setExpenses(await expenseRes.json());
-    } catch (err) {
-      toast({ title: "Error", description: "Failed to fetch dashboard data", variant: "destructive" });
+    } catch (err: any) {
+      toast({ title: "Error", description: `Failed to fetch dashboard data: ${err.message}`, variant: "destructive" });
       console.error(err);
     }
   };
@@ -114,6 +127,18 @@ const Dashboard = () => {
     </div>
   );
 
+  // Handle View Logs button click
+  const handleViewLogs = async () => {
+    try {
+      await logAction(currentUser, "View Audit Logs", "Navigated to audit logs page");
+      navigate("/logs");
+    } catch (error) {
+      console.error("Failed to log view logs action:", error);
+      toast({ title: "Warning", description: "Navigated to audit logs, but failed to log action.", variant: "default" });
+      navigate("/logs");
+    }
+  };
+
   return (
     <div className="min-h-screen p-4 sm:p-6 bg-slate-50 space-y-6">
       {/* Header */}
@@ -127,6 +152,17 @@ const Dashboard = () => {
             <p className="text-sm sm:text-base text-slate-600">Overview of purchases, production, payments, petty cash & expenses</p>
           </div>
         </div>
+        {userRole === "admin" && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2 sm:mt-0 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300"
+            onClick={handleViewLogs}
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            View Logs
+          </Button>
+        )}
       </div>
 
       {/* Summary Cards */}
