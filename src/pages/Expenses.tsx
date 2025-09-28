@@ -35,6 +35,16 @@ const Expenses = () => {
   const { toast } = useToast();
   const today = new Date().toISOString().split("T")[0];
 
+  // Function to log actions
+  const logAction = (action: string, details: string) => {
+    const user = localStorage.getItem("username") || "Unknown";
+    const role = localStorage.getItem("userRole") || "Unknown";
+    const timestamp = new Date().toISOString();
+    const logEntry = { user, role, action, details, timestamp };
+    const existingLogs = JSON.parse(localStorage.getItem("auditLogs") || "[]");
+    localStorage.setItem("auditLogs", JSON.stringify([...existingLogs, logEntry]));
+  };
+
   const handleExport = () => {
     if (filteredExpenses.length === 0) {
       toast({ title: "No data", description: "No expenses to export.", variant: "destructive" });
@@ -61,6 +71,7 @@ const Expenses = () => {
     URL.revokeObjectURL(url);
 
     toast({ title: "✅ Exported", description: "Filtered expenses exported successfully." });
+    logAction("export", "Exported filtered expenses");
   };
 
   const fetchData = async () => {
@@ -68,6 +79,7 @@ const Expenses = () => {
       const res = await fetch(`${API_URL}/expenses`);
       const data = await res.json();
       setExpenses(data);
+      logAction("fetch", "Fetched expenses data");
     } catch (err) {
       toast({ title: "Error", description: "Failed to fetch expenses", variant: "destructive" });
     }
@@ -100,6 +112,7 @@ const Expenses = () => {
         body: JSON.stringify({ ...formData, cost: parseFloat(formData.cost) })
       });
       toast({ title: "✅ Expense Added", description: `${formData.description} recorded` });
+      logAction("add", JSON.stringify(formData));
       setFormData({ date: "", category: "", description: "", cost: "" });
       fetchData();
     } catch {
@@ -121,6 +134,7 @@ const Expenses = () => {
         body: JSON.stringify({ ...editingExpense, cost: parseFloat(editingExpense.cost.toString()) })
       });
       toast({ title: "✏️ Expense Updated", description: `${editingExpense.description} updated successfully` });
+      logAction("edit", JSON.stringify(editingExpense));
       setIsDialogOpen(false);
       fetchData();
     } catch {
@@ -133,13 +147,17 @@ const Expenses = () => {
     try {
       await fetch(`${API_URL}/expenses/${id}`, { method: "DELETE" });
       toast({ title: "🗑️ Deleted", description: "Expense removed successfully" });
+      logAction("delete", `Expense ID: ${id}`);
       fetchData();
     } catch {
       toast({ title: "Error", description: "Failed to delete expense", variant: "destructive" });
     }
   };
 
-  const resetFilters = () => setFilters({ dateFrom: "", dateTo: "" });
+  const resetFilters = () => {
+    setFilters({ dateFrom: "", dateTo: "" });
+    logAction("reset_filters", "Reset date filters");
+  };
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-8">
@@ -404,3 +422,45 @@ const Expenses = () => {
 };
 
 export default Expenses;
+
+// Updated AuditLog component for another page
+export const AuditLog = () => {
+  const logs = JSON.parse(localStorage.getItem("auditLogs") || "[]")
+  const userRole = localStorage.getItem("userRole")
+
+  if (userRole !== "admin") {
+    return <div>Access Denied: Only admins can view audit logs.</div>
+  }
+
+  return (
+    <div className="p-4">
+      <h2 className="text-xl font-bold mb-4">Audit Logs</h2>
+      {logs.length === 0 ? (
+        <p>No logs available.</p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Timestamp</TableHead>
+              <TableHead>User</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead>Details</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {logs.map((log, index) => (
+              <TableRow key={index}>
+                <TableCell>{new Date(log.timestamp).toLocaleString()}</TableCell>
+                <TableCell>{log.user}</TableCell>
+                <TableCell>{log.role}</TableCell>
+                <TableCell>{log.action}</TableCell>
+                <TableCell>{log.details}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </div>
+  )
+}
