@@ -1011,61 +1011,148 @@ const PrimaPage = () => {
               </div>
             )}
 
-            <div className="w-full border border-slate-200 rounded-lg overflow-x-auto">
-              <div className="bg-slate-200/60 sticky top-0 z-10">
-                <div className="grid grid-cols-[150px_150px_120px_150px_150px_150px_150px_150px_150px_250px] gap-4 p-4 font-semibold text-sm">
-                  <div className="cursor-pointer" onClick={() => handleSort('date')}>
-                    Date {sortConfig?.key === 'date' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+            <div className="space-y-4">
+              {filteredAndSortedTransactions(selectedPO.poNumber).map((tx, index) => (
+                <div
+                  key={tx.id}
+                  className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  {/* Card Header */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                        <Truck className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg text-slate-900">
+                          Delivery #{tx.id}
+                        </h3>
+                        <p className="text-sm text-slate-500">
+                          {new Date(tx.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      tx.paymentStatus === "Pending" 
+                        ? "bg-yellow-100 text-yellow-700" 
+                        : tx.paymentStatus === "Approved" 
+                        ? "bg-blue-100 text-blue-700" 
+                        : tx.paymentStatus === "Rejected" 
+                        ? "bg-red-100 text-red-700" 
+                        : "bg-green-100 text-green-700"
+                    }`}>
+                      {tx.paymentStatus}
+                    </span>
                   </div>
-                  <div className="cursor-pointer" onClick={() => handleSort('kilosDelivered')}>
-                    Kilos Delivered {sortConfig?.key === 'kilosDelivered' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+
+                  {/* Card Content Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                        Kilos Delivered
+                      </label>
+                      <p className="text-lg font-semibold text-slate-900 mt-1">
+                        {tx.kilosDelivered} kg
+                      </p>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                        Amount
+                      </label>
+                      <p className="text-lg font-semibold text-slate-900 mt-1">
+                        Rs {tx.amount.toLocaleString()}
+                      </p>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                        Number of Boxes
+                      </label>
+                      <p className="text-lg font-semibold text-slate-900 mt-1">
+                        {tx.numberOfBoxes != null ? tx.numberOfBoxes : "N/A"}
+                      </p>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                        Product Code
+                      </label>
+                      <p className="text-sm font-medium text-slate-900 mt-1">
+                        {tx.productCode || "N/A"}
+                      </p>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                        Batch Code
+                      </label>
+                      <p className="text-sm font-medium text-slate-900 mt-1">
+                        {tx.batchCode || "N/A"}
+                      </p>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                        Truck Number
+                      </label>
+                      <p className="text-sm font-medium text-slate-900 mt-1">
+                        {tx.truckNo || "N/A"}
+                      </p>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                        Invoice Number
+                      </label>
+                      <p className="text-sm font-medium text-slate-900 mt-1">
+                        {tx.invoiceNo || "N/A"}
+                      </p>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-lg p-3">
+                      <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                        Expiration Date
+                      </label>
+                      <p className="text-sm font-medium text-slate-900 mt-1">
+                        {tx.dateOfExpiration ? new Date(tx.dateOfExpiration).toLocaleDateString() : "N/A"}
+                      </p>
+                    </div>
                   </div>
-                  <div>Number of Boxes</div>
-                  <div className="cursor-pointer" onClick={() => handleSort('dateOfExpiration')}>
-                    Expiration Date {sortConfig?.key === 'dateOfExpiration' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </div>
-                  <div>Product Code</div>
-                  <div>Batch Code</div>
-                  <div>Truck No</div>
-                  <div className="cursor-pointer" onClick={() => handleSort('invoiceNo')}>
-                    Invoice No {sortConfig?.key === 'invoiceNo' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </div>
-                  <div className="cursor-pointer" onClick={() => handleSort('amount')}>
-                    Amount {sortConfig?.key === 'amount' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </div>
-                  <div className="cursor-pointer text-right" onClick={() => handleSort('paymentStatus')}>
-                    Status {sortConfig?.key === 'paymentStatus' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-                  </div>
-                </div>
-              </div>
-              <div>
-                {filteredAndSortedTransactions(selectedPO.poNumber).map((tx, index) => (
-                  <div
-                    key={tx.id}
-                    className={`grid grid-cols-[150px_150px_120px_150px_150px_150px_150px_150px_150px_250px] gap-4 p-4 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-slate-100 transition-colors border-b border-slate-100 last:border-b-0`}
-                  >
-                    <div className="truncate" title={tx.date}>{tx.date}</div>
-                    <div className="truncate" title={tx.kilosDelivered.toString()}>{tx.kilosDelivered}</div>
-                    <div className="truncate" title={tx.numberOfBoxes != null ? tx.numberOfBoxes.toString() : "N/A"}>{tx.numberOfBoxes != null ? tx.numberOfBoxes : "N/A"}</div>
-                    <div className="truncate" title={tx.dateOfExpiration || "N/A"}>{tx.dateOfExpiration || "N/A"}</div>
-                    <div className="truncate" title={tx.productCode || "N/A"}>{tx.productCode || "N/A"}</div>
-                    <div className="truncate" title={tx.batchCode || "N/A"}>{tx.batchCode || "N/A"}</div>
-                    <div className="truncate" title={tx.truckNo || "N/A"}>{tx.truckNo || "N/A"}</div>
-                    <div className="truncate" title={tx.invoiceNo || "N/A"}>{tx.invoiceNo || "N/A"}</div>
-                    <div className="truncate" title={`Rs ${tx.amount.toLocaleString()}`}>Rs {tx.amount.toLocaleString()}</div>
-                    <div className="text-right flex items-center justify-end gap-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${tx.paymentStatus === "Pending" ? "bg-yellow-100 text-yellow-700" : tx.paymentStatus === "Approved" ? "bg-blue-100 text-blue-700" : tx.paymentStatus === "Rejected" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
-                        {tx.paymentStatus}
-                      </span>
+
+                  {/* Card Actions */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-slate-200">
+                    <div className="flex flex-wrap items-center gap-2">
                       {tx.paymentStatus === "Pending" && (
                         <>
-                          <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white" onClick={() => confirmStatusUpdate(tx.id, "Approved")}>Approve</Button>
-                          <Button size="sm" variant="destructive" onClick={() => confirmStatusUpdate(tx.id, "Rejected")}>Reject</Button>
+                          <Button 
+                            size="sm" 
+                            className="bg-blue-500 hover:bg-blue-600 text-white"
+                            onClick={() => confirmStatusUpdate(tx.id, "Approved")}
+                          >
+                            Approve
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive" 
+                            onClick={() => confirmStatusUpdate(tx.id, "Rejected")}
+                          >
+                            Reject
+                          </Button>
                         </>
                       )}
                       {tx.paymentStatus === "Approved" && (
-                        <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white" onClick={() => confirmStatusUpdate(tx.id, "Paid")}>Mark Paid</Button>
+                        <Button 
+                          size="sm" 
+                          className="bg-green-500 hover:bg-green-600 text-white"
+                          onClick={() => confirmStatusUpdate(tx.id, "Paid")}
+                        >
+                          Mark Paid
+                        </Button>
                       )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
                       <Button
                         size="sm"
                         variant="outline"
@@ -1074,18 +1161,34 @@ const PrimaPage = () => {
                           description: `Invoice for delivery ${tx.id} generated and downloaded.`
                         }))}
                       >
-                        <Download className="w-3 h-3" />
+                        <Download className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleEditTransaction(tx)}>
-                        <Pencil className="w-3 h-3" />
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => handleEditTransaction(tx)}
+                      >
+                        <Pencil className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => confirmDelete(tx.id, "transaction", tx)}>
-                        <Trash2 className="w-3 h-3" />
+                      <Button 
+                        size="sm" 
+                        variant="destructive" 
+                        onClick={() => confirmDelete(tx.id, "transaction", tx)}
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
+
+              {filteredAndSortedTransactions(selectedPO.poNumber).length === 0 && (
+                <div className="text-center py-8 text-slate-500">
+                  <Package className="w-12 h-12 mx-auto mb-3 text-slate-400" />
+                  <p className="text-lg font-medium">No deliveries found</p>
+                  <p className="text-sm">Try adjusting your search criteria</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
