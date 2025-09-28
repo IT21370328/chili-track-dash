@@ -31,7 +31,7 @@ const Login: React.FC = () => {
       localStorage.setItem("username", "Worker1");
       logAction("Worker1", "login", "Worker logged in");
       toast({ title: "Login Successful", description: "Welcome, Worker!" });
-      navigate("/worker-dashboard");
+      navigate("/dashboard");
     } else {
       toast({ title: "Login Failed", description: "Invalid username or password", variant: "destructive" });
     }
