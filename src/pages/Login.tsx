@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";
 import Bg from "../assets/bg.jpg";
-import { logAction } from "@/utils/loghelper"
+import { logAction } from "@/pages/logHelper"
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
