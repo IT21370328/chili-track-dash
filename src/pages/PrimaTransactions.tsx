@@ -1062,111 +1062,184 @@ const PrimaPage = () => {
               </div>
             )}
 
-            <div className="space-y-4">
+           <div className="space-y-6">
               {transactions.filter(t => t.poNumber === selectedPO.poNumber).length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>No deliveries recorded for this PO yet</p>
+                <div className="text-center py-16 text-slate-500">
+                  <div className="w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl mx-auto mb-6 flex items-center justify-center">
+                    <Package className="w-10 h-10 text-slate-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2 text-slate-700">No Deliveries Yet</h3>
+                  <p className="text-slate-500 max-w-md mx-auto">Once you add deliveries for this PO, they will appear here with all their details and status information.</p>
                 </div>
               ) : (
                 transactions.filter(t => t.poNumber === selectedPO.poNumber).map(tx => (
-                  <div key={tx.id} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div key={tx.id} className="bg-white/95 backdrop-blur-sm border border-slate-200/80 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-8">
                       {/* Main Info Section */}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
-                            <Truck className="w-5 h-5 text-white" />
+                      <div className="flex-1 min-w-0">
+                        {/* Header */}
+                        <div className="flex items-center justify-between mb-8">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+                              <Truck className="w-7 h-7 text-white" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-xl text-slate-900 tracking-tight">{new Date(tx.date).toLocaleDateString('en-US', { 
+                                weekday: 'short', 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: 'numeric' 
+                              })}</h4>
+                              <p className="text-sm text-slate-500 font-medium mt-1">Delivery #{tx.id}</p>
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-semibold text-lg text-slate-800">{tx.date}</h4>
-                            <p className="text-sm text-slate-600">Delivery #{tx.id}</p>
-                          </div>
-                          <div className="ml-auto">
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${tx.paymentStatus === "Pending" ? "bg-yellow-100 text-yellow-700" : tx.paymentStatus === "Approved" ? "bg-blue-100 text-blue-700" : tx.paymentStatus === "Rejected" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                          <div className="flex items-center gap-3">
+                            <span className={`px-4 py-2 rounded-xl text-sm font-bold tracking-wide shadow-sm ${
+                              tx.paymentStatus === "Pending" 
+                                ? "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border border-amber-200" 
+                                : tx.paymentStatus === "Approved" 
+                                ? "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200" 
+                                : tx.paymentStatus === "Rejected" 
+                                ? "bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200" 
+                                : "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-200"
+                            }`}>
                               {tx.paymentStatus}
                             </span>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div>
-                            <p className="text-slate-500 font-medium">Kilos Delivered</p>
-                            <p className="text-slate-800 font-semibold">{tx.kilosDelivered}kg</p>
+                        {/* Primary Stats */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                          <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl p-5 border border-slate-200/50">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
+                                <Package className="w-4 h-4 text-white" />
+                              </div>
+                              <p className="text-slate-600 font-medium text-sm">Weight</p>
+                            </div>
+                            <p className="text-slate-900 font-bold text-2xl">{tx.kilosDelivered}<span className="text-lg text-slate-600 ml-1">kg</span></p>
                           </div>
-                          <div>
-                            <p className="text-slate-500 font-medium">Number of Boxes</p>
-                            <p className="text-slate-800 font-semibold">{tx.numberOfBoxes != null ? tx.numberOfBoxes : "N/A"}</p>
+                          <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl p-5 border border-slate-200/50">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
+                                <Package className="w-4 h-4 text-white" />
+                              </div>
+                              <p className="text-slate-600 font-medium text-sm">Boxes</p>
+                            </div>
+                            <p className="text-slate-900 font-bold text-2xl">{tx.numberOfBoxes != null ? tx.numberOfBoxes : "—"}</p>
                           </div>
-                          <div>
-                            <p className="text-slate-500 font-medium">Amount</p>
-                            <p className="text-slate-800 font-semibold">Rs {tx.amount.toLocaleString()}</p>
+                          <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl p-5 border border-slate-200/50">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-purple-500 rounded-lg flex items-center justify-center">
+                                <DollarSign className="w-4 h-4 text-white" />
+                              </div>
+                              <p className="text-slate-600 font-medium text-sm">Value</p>
+                            </div>
+                            <p className="text-slate-900 font-bold text-2xl">Rs {tx.amount.toLocaleString()}</p>
                           </div>
-                          <div>
-                            <p className="text-slate-500 font-medium">Expiration Date</p>
-                            <p className="text-slate-800 font-semibold">{tx.dateOfExpiration || "N/A"}</p>
+                          <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-2xl p-5 border border-slate-200/50">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                                <Clock className="w-4 h-4 text-white" />
+                              </div>
+                              <p className="text-slate-600 font-medium text-sm">Expires</p>
+                            </div>
+                            <p className="text-slate-900 font-bold text-lg">{tx.dateOfExpiration ? new Date(tx.dateOfExpiration).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' }) : "—"}</p>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-3">
-                          <div>
-                            <p className="text-slate-500 font-medium">Product Code</p>
-                            <p className="text-slate-800 font-semibold">{tx.productCode || "N/A"}</p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500 font-medium">Batch Code</p>
-                            <p className="text-slate-800 font-semibold">{tx.batchCode || "N/A"}</p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500 font-medium">Truck No</p>
-                            <p className="text-slate-800 font-semibold">{tx.truckNo || "N/A"}</p>
-                          </div>
-                          <div>
-                            <p className="text-slate-500 font-medium">Invoice No</p>
-                            <p className="text-slate-800 font-semibold">{tx.invoiceNo || "N/A"}</p>
+                        {/* Details Grid */}
+                        <div className="bg-gradient-to-br from-slate-50/50 to-white rounded-2xl border border-slate-200/60 p-6">
+                          <h5 className="text-slate-700 font-semibold mb-4 text-sm uppercase tracking-wider">Delivery Details</h5>
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div>
+                              <p className="text-slate-500 font-medium text-xs uppercase tracking-wider mb-2">Product Code</p>
+                              <p className="text-slate-800 font-semibold text-sm bg-white px-3 py-2 rounded-lg border border-slate-200">{tx.productCode || "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500 font-medium text-xs uppercase tracking-wider mb-2">Batch Code</p>
+                              <p className="text-slate-800 font-semibold text-sm bg-white px-3 py-2 rounded-lg border border-slate-200">{tx.batchCode || "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500 font-medium text-xs uppercase tracking-wider mb-2">Truck Number</p>
+                              <p className="text-slate-800 font-semibold text-sm bg-white px-3 py-2 rounded-lg border border-slate-200">{tx.truckNo || "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500 font-medium text-xs uppercase tracking-wider mb-2">Invoice Number</p>
+                              <p className="text-slate-800 font-semibold text-sm bg-white px-3 py-2 rounded-lg border border-slate-200">{tx.invoiceNo || "—"}</p>
+                            </div>
                           </div>
                         </div>
                       </div>
 
                       {/* Actions Section */}
-                      <div className="flex flex-col sm:flex-row gap-2 lg:flex-col lg:w-40">
-                        <div className="flex flex-wrap gap-2">
-                          {tx.paymentStatus === "Pending" && (
-                            <>
-                              <Button size="sm" className="bg-blue-500 hover:bg-blue-600 text-white flex-1 sm:flex-none" onClick={() => confirmStatusUpdate(tx.id, "Approved")}>
-                                Approve
+                      <div className="xl:w-64 flex-shrink-0">
+                        <div className="bg-gradient-to-br from-slate-50 to-slate-100/80 rounded-2xl p-6 border border-slate-200/60 h-full">
+                          <h5 className="text-slate-700 font-semibold mb-6 text-sm uppercase tracking-wider">Actions</h5>
+                          
+                          {/* Status Actions */}
+                          <div className="space-y-3 mb-6">
+                            {tx.paymentStatus === "Pending" && (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200" 
+                                  onClick={() => confirmStatusUpdate(tx.id, "Approved")}
+                                >
+                                  ✓ Approve Delivery
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  className="w-full bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200" 
+                                  onClick={() => confirmStatusUpdate(tx.id, "Rejected")}
+                                >
+                                  ✗ Reject Delivery
+                                </Button>
+                              </>
+                            )}
+                            {tx.paymentStatus === "Approved" && (
+                              <Button 
+                                size="sm" 
+                                className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200" 
+                                onClick={() => confirmStatusUpdate(tx.id, "Paid")}
+                              >
+                                💰 Mark as Paid
                               </Button>
-                              <Button size="sm" variant="destructive" className="flex-1 sm:flex-none" onClick={() => confirmStatusUpdate(tx.id, "Rejected")}>
-                                Reject
-                              </Button>
-                            </>
-                          )}
-                          {tx.paymentStatus === "Approved" && (
-                            <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white flex-1 sm:flex-none" onClick={() => confirmStatusUpdate(tx.id, "Paid")}>
-                              Mark Paid
+                            )}
+                          </div>
+
+                          {/* Utility Actions */}
+                          <div className="space-y-3 border-t border-slate-200 pt-6">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="w-full font-medium hover:bg-slate-100 border-slate-300 transition-all duration-200"
+                              onClick={() => generateInvoice(tx, () => showToast({ 
+                                title: "Success", 
+                                description: `Invoice for delivery ${tx.id} generated and downloaded.` 
+                              }))}
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Download Invoice
                             </Button>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="flex-1 sm:flex-none"
-                            onClick={() => generateInvoice(tx, () => showToast({ 
-                              title: "Success", 
-                              description: `Invoice for delivery ${tx.id} generated and downloaded.` 
-                            }))}
-                          >
-                            <Download className="w-3 h-3 mr-1" />
-                            Invoice
-                          </Button>
-                          <Button size="sm" variant="outline" className="flex-1 sm:flex-none" onClick={() => handleEditTransaction(tx)}>
-                            <Pencil className="w-3 h-3 mr-1" />
-                            Edit
-                          </Button>
-                          <Button size="sm" variant="destructive" onClick={() => confirmDelete(tx.id, "transaction", tx)}>
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="w-full font-medium hover:bg-slate-100 border-slate-300 transition-all duration-200" 
+                              onClick={() => handleEditTransaction(tx)}
+                            >
+                              <Pencil className="w-4 h-4 mr-2" />
+                              Edit Details
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              className="w-full bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200" 
+                              onClick={() => confirmDelete(tx.id, "transaction", tx)}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
