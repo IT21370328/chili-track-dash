@@ -1,9 +1,9 @@
+// src/pages/PettyCash.tsx
 import { useState, useEffect, useMemo } from "react";
 import {
   Plus,
   Wallet,
   TrendingUp,
-  TrendingDown,
   Pencil,
   Trash2,
   X,
@@ -29,7 +29,14 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { logAction } from "@/pages/logHelper"; // ✅ import the logger
 
 interface Transaction {
   id: number;
@@ -55,38 +62,56 @@ const PettyCash = () => {
     type: "inflow" as "inflow" | "outflow"
   });
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [summary, setSummary] = useState<Summary>({ totalInflow: 0, totalOutflow: 0, balance: 0 });
+  const [summary, setSummary] = useState<Summary>({
+    totalInflow: 0,
+    totalOutflow: 0,
+    balance: 0
+  });
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [editDialog, setEditDialog] = useState<{ open: boolean; transaction?: Transaction }>({ open: false });
-  
+  const [editDialog, setEditDialog] = useState<{
+    open: boolean;
+    transaction?: Transaction;
+  }>({ open: false });
+
   const { toast } = useToast();
+  const currentUser = localStorage.getItem("username") || "Unknown";
 
   const handleExport = () => {
     if (transactions.length === 0) {
-      toast({ title: "No data", description: "No transactions to export.", variant: "destructive" });
+      toast({
+        title: "No data",
+        description: "No transactions to export.",
+        variant: "destructive"
+      });
       return;
     }
     const headers = ["Date", "Description", "Type", "Amount", "Balance"];
-    const rows = transactions.map(t => [
+    const rows = transactions.map((t) => [
       new Date(t.date).toLocaleDateString(),
       t.description,
       t.type,
       t.amount.toFixed(2),
-      t.balance.toFixed(2),
+      t.balance.toFixed(2)
     ]);
-    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const csvContent = [headers, ...rows].map((e) => e.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `pettycash_transactions_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute(
+      "download",
+      `pettycash_transactions_${new Date().toISOString().split("T")[0]}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast({ title: "✅ Exported", description: "Transactions exported successfully." });
+    toast({
+      title: "✅ Exported",
+      description: "Transactions exported successfully."
+    });
   };
 
   const fetchData = async () => {
@@ -108,7 +133,9 @@ const PettyCash = () => {
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((t) => {
@@ -128,12 +155,19 @@ const PettyCash = () => {
     });
   }, [transactions, search, dateFrom, dateTo]);
 
-  const resetDateFilter = () => { setDateFrom(""); setDateTo(""); };
+  const resetDateFilter = () => {
+    setDateFrom("");
+    setDateTo("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.amount || !formData.description) {
-      toast({ title: "Error", description: "Please fill all fields.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Please fill all fields.",
+        variant: "destructive"
+      });
       return;
     }
     try {
@@ -146,27 +180,47 @@ const PettyCash = () => {
           type: formData.type
         })
       });
-      toast({ title: "Transaction Recorded", description: `${formData.type === "inflow" ? "Added" : "Removed"} Rs.${parseFloat(formData.amount).toFixed(2)}` });
+      logAction(
+        currentUser,
+        "Add Transaction",
+        `Added ${formData.type} of Rs.${formData.amount} (${formData.description})`
+      );
+      toast({
+        title: "Transaction Recorded",
+        description: `${formData.type === "inflow" ? "Added" : "Removed"} Rs.${parseFloat(formData.amount).toFixed(2)}`
+      });
       setFormData({ amount: "", description: "", type: "inflow" });
       fetchData();
     } catch (err) {
-      toast({ title: "Error", description: "Failed to add transaction.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to add transaction.",
+        variant: "destructive"
+      });
       console.error(err);
     }
   };
 
-  const handleEdit = (transaction: Transaction) => setEditDialog({ open: true, transaction });
+  const handleEdit = (transaction: Transaction) =>
+    setEditDialog({ open: true, transaction });
+
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this transaction?")) return;
     try {
       await fetch(`${API_URL}/pettycash/${id}`, { method: "DELETE" });
+      logAction(currentUser, "Delete Transaction", `Deleted transaction ID: ${id}`);
       toast({ title: "Deleted", description: "Transaction has been deleted." });
       fetchData();
     } catch (err) {
-      toast({ title: "Error", description: "Failed to delete transaction.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to delete transaction.",
+        variant: "destructive"
+      });
       console.error(err);
     }
   };
+
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editDialog.transaction) return;
@@ -177,11 +231,23 @@ const PettyCash = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editDialog.transaction)
       });
-      toast({ title: "Updated", description: "Transaction updated successfully." });
+      logAction(
+        currentUser,
+        "Update Transaction",
+        `Updated transaction: ${editDialog.transaction.description}`
+      );
+      toast({
+        title: "Updated",
+        description: "Transaction updated successfully."
+      });
       setEditDialog({ open: false });
       fetchData();
     } catch (err) {
-      toast({ title: "Error", description: "Failed to update transaction.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to update transaction.",
+        variant: "destructive"
+      });
       console.error(err);
     }
   };
@@ -189,7 +255,6 @@ const PettyCash = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-8">
-
         {/* Header */}
         <Card className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-200/50 shadow-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
@@ -197,8 +262,12 @@ const PettyCash = () => {
               <Wallet className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-2xl font-bold text-slate-800 truncate">Petty Cash Dashboard</h1>
-              <p className="text-slate-600 text-sm truncate">Manage cash inflow & outflow</p>
+              <h1 className="text-2xl font-bold text-slate-800 truncate">
+                Petty Cash Dashboard
+              </h1>
+              <p className="text-slate-600 text-sm truncate">
+                Manage cash inflow & outflow
+              </p>
             </div>
           </div>
 
@@ -425,3 +494,4 @@ const PettyCash = () => {
 };
 
 export default PettyCash;
+
