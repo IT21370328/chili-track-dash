@@ -23,7 +23,7 @@ import {
 } from "./controllers/primatransactions.js";
 import { 
   getEmployees, 
-  addEmployee, 
+  addEmployees, 
   markSalaryPaid, 
   resetSalaryStatus, 
   updateEmployee, 
@@ -158,7 +158,7 @@ app.get("/employees", (req, res) => {
 });
 
 app.post("/employees", (req, res) => {
-  addEmployee(req.body, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
+  addEmployees(req.body, (err, result) => err ? res.status(400).json({ error: err.message }) : res.json(result));
 });
 
 app.put("/employees/:id", (req, res) => {
