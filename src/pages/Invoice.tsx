@@ -1,11 +1,9 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-// Assuming Logo is a base64 string or an object that contains one after import
-import Logo from "../assets/logo.jpg"; 
 
 // IMPORTANT: Replace this placeholder with the actual base64 string 
 // of your logo (e.g., const BASE64_LOGO = 'data:image/jpeg;base64,/9j/4AAQSkZJ...';)
-const BASE64_LOGO = {Logo}; // <<< REPLACE THIS LINE
+const BASE64_LOGO = "../assets/logo.jpg"; // <<< REPLACE THIS LINE
 
 interface PrimaTransaction {
   id: number;
