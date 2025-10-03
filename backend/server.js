@@ -27,7 +27,7 @@ import { addPrimaTransaction, getPrimaTransactions, updatePrimaTransaction, upda
 
 
 import { 
-  getEmployees, AddSalary, markSalaryPaid, resetSalaryStatus, 
+  getEmployees, addEmployee, markSalaryPaid, resetSalaryStatus, 
   updateEmployee, deleteEmployee 
 } from "./controllers/employees.js";
 
@@ -247,47 +247,36 @@ const startServer = async () => {
   }));
 
   // =================== Employees Routes ===================
-  app.get("/employees", (req, res) => {
-    getEmployees((err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json(rows);
-    });
-  });
+app.get("/employees", asyncHandler(async (req, res) => {
+  const rows = await getEmployees();
+  res.json(rows);
+}));
 
-  app.post("/employees", (req, res) => {
-    AddSalary(req.body, (err, result) => {
-      if (err) return res.status(400).json({ error: err.message });
-      res.status(201).json(result);
-    });
-  });
+app.post("/employees", asyncHandler(async (req, res) => {
+  const result = await addEmployee(req.body);
+  res.status(201).json(result);
+}));
 
-  app.put("/employees/:id", (req, res) => {
-    updateEmployee(req.params.id, req.body, (err, result) => {
-      if (err) return res.status(400).json({ error: err.message });
-      res.json(result);
-    });
-  });
+app.put("/employees/:id", asyncHandler(async (req, res) => {
+  const result = await updateEmployee(req.params.id, req.body);
+  res.json(result);
+}));
 
-  app.put("/employees/:id/pay", (req, res) => {
-    markSalaryPaid(req.params.id, (err, result) => {
-      if (err) return res.status(400).json({ error: err.message });
-      res.json(result);
-    });
-  });
+app.put("/employees/:id/pay", asyncHandler(async (req, res) => {
+  const result = await markSalaryPaid(req.params.id);
+  res.json(result);
+}));
 
-  app.put("/employees/:id/reset", (req, res) => {
-    resetSalaryStatus(req.params.id, (err, result) => {
-      if (err) return res.status(400).json({ error: err.message });
-      res.json(result);
-    });
-  });
+app.put("/employees/:id/reset", asyncHandler(async (req, res) => {
+  const result = await resetSalaryStatus(req.params.id);
+  res.json(result);
+}));
 
-  app.delete("/employees/:id", (req, res) => {
-    deleteEmployee(req.params.id, (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json(result);
-    });
-  });
+app.delete("/employees/:id", asyncHandler(async (req, res) => {
+  const result = await deleteEmployee(req.params.id);
+  res.json(result);
+}));
+
 
   // =================== Stock Routes ===================
   app.get("/stock", asyncHandler(async (req, res) => {
