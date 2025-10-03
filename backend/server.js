@@ -27,7 +27,7 @@ import { addPrimaTransaction, getPrimaTransactions, updatePrimaTransaction, upda
 
 
 import { 
-  getEmployees, addEmployee, markSalaryPaid, resetSalaryStatus, 
+  getEmployees, addEmployees, markSalaryPaid, resetSalaryStatus, 
   updateEmployee, deleteEmployee 
 } from "./controllers/employees.js";
 
@@ -271,7 +271,7 @@ app.get("/primatransactions/range", async (req, res) => {
   }));
 
   app.post("/employees", asyncHandler(async (req, res) => {
-    const result = await addEmployee(req.body);
+    const result = await addEmployees(req.body);
     res.status(201).json(result);
   }));
 
