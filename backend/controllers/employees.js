@@ -1,126 +1,73 @@
-const { db } = require("../db");
+// controllers/employees.js
+import { db } from "../db.js";
 
 // Get all employees
-exports.getAllEmployees = async (req, res) => {
-  try {
-    const result = await db.execute("SELECT * FROM employees ORDER BY id DESC");
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Error fetching employees:", err.message);
-    res.status(500).json({ error: "Failed to fetch employees" });
-  }
-};
+export function getEmployees(callback) {
+  const query = `SELECT * FROM employees ORDER BY id DESC`;
+  db.all(query, [], callback);
+}
 
-// Get employee by ID
-exports.getEmployeeById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await db.execute({
-      sql: "SELECT * FROM employees WHERE id = ?",
-      args: [id],
-    });
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Employee not found" });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("Error fetching employee:", err.message);
-    res.status(500).json({ error: "Failed to fetch employee" });
-  }
-};
+// Add employee
+export function addEmployees(employee, callback) {
+  const { name, salary, startDate, endDate } = employee;
+  if (!name || salary === undefined) return callback(new Error("Name and salary are required"));
 
-// Create new employee
-exports.createEmployee = async (req, res) => {
-  try {
-    const { name, salary, startDate, endDate, email, phone, position } = req.body;
-    if (!name || !salary || !startDate || !endDate || !email || !phone || !position) {
-      return res.status(400).json({ error: "All fields are required" });
-    }
-    if (isNaN(salary) || salary <= 0) {
-      return res.status(400).json({ error: "Salary must be a positive number" });
-    }
-    if (startDate > endDate) {
-      return res.status(400).json({ error: "End date cannot be before start date" });
-    }
-    const result = await db.execute({
-      sql: `INSERT INTO employees (name, salary, startDate, endDate, email, phone, position) 
-            VALUES (?, ?, ?, ?, ?, ?, ?) 
-            RETURNING *`,
-      args: [name, salary, startDate, endDate, email, phone, position],
-    });
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error("Error creating employee:", err.message);
-    res.status(500).json({ error: "Failed to create employee" });
-  }
-};
+  const query = `
+    INSERT INTO employees (name, salary, startDate, endDate)
+    VALUES (?, ?, ?, ?)
+  `;
+  db.run(query, [name, salary, startDate, endDate], function (err) {
+    if (err) return callback(err);
+    db.get(`SELECT * FROM employees WHERE id = ?`, [this.lastID], callback);
+  });
+}
 
 // Update employee
-exports.updateEmployee = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, salary, startDate, endDate, email, phone, position } = req.body;
-    if (!name || !salary || !startDate || !endDate || !email || !phone || !position) {
-      return res.status(400).json({ error: "All fields are required" });
-    }
-    if (isNaN(salary) || salary <= 0) {
-      return res.status(400).json({ error: "Salary must be a positive number" });
-    }
-    if (startDate > endDate) {
-      return res.status(400).json({ error: "End date cannot be before start date" });
-    }
-    const result = await db.execute({
-      sql: `UPDATE employees 
-            SET name = ?, salary = ?, startDate = ?, endDate = ?, email = ?, phone = ?, position = ?, updated_at = CURRENT_TIMESTAMP 
-            WHERE id = ? 
-            RETURNING *`,
-      args: [name, salary, startDate, endDate, email, phone, position, id],
-    });
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Employee not found" });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("Error updating employee:", err.message);
-    res.status(500).json({ error: "Failed to update employee" });
-  }
-};
+export function updateEmployee(id, employee, callback) {
+  const { name, salary, startDate, endDate } = employee;
+  const query = `
+    UPDATE employees
+    SET name = ?, salary = ?, startDate = ?, endDate = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `;
+  db.run(query, [name, salary, startDate, endDate, id], function (err) {
+    if (err) return callback(err);
+    db.get(`SELECT * FROM employees WHERE id = ?`, [id], callback);
+  });
+}
 
 // Delete employee
-exports.deleteEmployee = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await db.execute({
-      sql: "DELETE FROM employees WHERE id = ? RETURNING *",
-      args: [id],
-    });
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Employee not found" });
-    }
-    res.json({ message: "Employee deleted successfully" });
-  } catch (err) {
-    console.error("Error deleting employee:", err.message);
-    res.status(500).json({ error: "Failed to delete employee" });
-  }
-};
+export function deleteEmployee(id, callback) {
+  const query = `DELETE FROM employees WHERE id = ?`;
+  db.run(query, [id], function (err) {
+    if (err) return callback(err);
+    callback(null, { message: "Employee deleted successfully", id });
+  });
+}
 
-// Mark employee as paid
-exports.markEmployeePaid = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await db.execute({
-      sql: `UPDATE employees 
-            SET status = 'paid', lastPaid = CURRENT_DATE, updated_at = CURRENT_TIMESTAMP 
-            WHERE id = ? 
-            RETURNING *`,
-      args: [id],
-    });
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Employee not found" });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("Error marking employee as paid:", err.message);
-    res.status(500).json({ error: "Failed to mark employee as paid" });
-  }
-};
+// Mark salary as paid
+export function markSalaryPaid(id, callback) {
+  const today = new Date().toISOString().split("T")[0];
+  const query = `
+    UPDATE employees 
+    SET status = 'paid', lastPaid = ?, updated_at = CURRENT_TIMESTAMP 
+    WHERE id = ?
+  `;
+  db.run(query, [today, id], function (err) {
+    if (err) return callback(err);
+    db.get(`SELECT * FROM employees WHERE id = ?`, [id], callback);
+  });
+}
+
+// Reset to unpaid (optional)
+export function resetSalaryStatus(id, callback) {
+  const query = `
+    UPDATE employees 
+    SET status = 'unpaid', updated_at = CURRENT_TIMESTAMP 
+    WHERE id = ?
+  `;
+  db.run(query, [id], function (err) {
+    if (err) return callback(err);
+    db.get(`SELECT * FROM employees WHERE id = ?`, [id], callback);
+  });
+}
