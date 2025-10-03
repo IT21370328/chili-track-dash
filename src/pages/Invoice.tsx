@@ -1,6 +1,10 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+// IMPORTANT: Replace this placeholder with the actual base64 string 
+// of your logo (e.g., const BASE64_LOGO = 'data:image/jpeg;base64,/9j/4AAQSkZJ...';)
+const BASE64_LOGO = "../assets/logo.jpg"; // <<< REPLACE THIS LINE
+
 interface PrimaTransaction {
   id: number;
   invoiceNo: string;
@@ -12,31 +16,34 @@ interface PrimaTransaction {
 }
 
 export const generateInvoice = (transaction: PrimaTransaction, onGenerate?: () => void) => {
-  const doc = new jsPDF('portrait', 'mm', 'a4'); // Using mm for units
+  const doc = new jsPDF('portrait', 'mm', 'a4'); 
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
 
   // --- Header Section ---
   // Blue banner at the top
-  doc.setFillColor(39, 90, 161); // Darker blue from the image
-  doc.rect(0, 0, pageWidth, 25, 'F'); // x, y, width, height, style
+  doc.setFillColor(39, 90, 161); 
+  doc.rect(0, 0, pageWidth, 25, 'F'); 
 
-  // Company Logo (assuming you have a base64 encoded image or can add one)
-  // For now, let's just place the text
+  // 🖼️ ADDED LOGO 🖼️
+  try {
+    // Add the image (Base64 string) to the PDF
+    // X=10, Y=5, Width=15, Height=15 (Adjust these values as needed for your logo size)
+    doc.addImage(BASE64_LOGO, 'JPEG', 10, 5, 15, 15);
+  } catch (e) {
+    console.warn("Logo image failed to load or is not a valid Base64 string. Using text placeholder.", e);
+  }
+
+  // Company Name/Details (Moved slightly to accommodate the logo)
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255); // White text
-  doc.text("MA'S DE COZTA", 25, 10);
+  doc.text("MA'S DE COZTA", 28, 10); // Start text after the logo area
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.text("Ma's De cozta (PVT)LTD", 25, 15);
+  doc.text("Ma's De cozta (PVT)LTD", 28, 15); // Start text after the logo area
 
-  // Placeholder for the small green logo circle
-  doc.setFillColor(85, 172, 85); // Green color
-  doc.circle(12, 12, 6, 'F'); // x, y, radius, style
-  doc.setTextColor(255, 255, 255); // White text for logo initial
-  doc.setFontSize(6);
-  doc.text("MDC", 10.5, 13);
+  // REMOVED: Placeholder for the small green logo circle
 
   // Header Contact Info (Top Right)
   doc.setFontSize(8);
@@ -45,6 +52,10 @@ export const generateInvoice = (transaction: PrimaTransaction, onGenerate?: () =
   doc.text('39/3/3 A, Pannala Watta, Pannala', pageWidth - 5, 8, { align: 'right' });
   doc.text('+94 70 15 98 886 / +94 33 62 137', pageWidth - 5, 13, { align: 'right' });
   doc.text('decoztamadu01974@gmail.com', pageWidth - 5, 18, { align: 'right' });
+
+  // ------------------------------------------------------------------
+  // --- The rest of the function remains the same ---
+  // ------------------------------------------------------------------
 
   // --- Invoice Title ---
   doc.setFontSize(22);
