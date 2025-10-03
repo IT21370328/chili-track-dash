@@ -1,81 +1,218 @@
-import { db } from "../db.js";
+import dotenv from "dotenv";
+import { createClient } from "@libsql/client";
 
-// Add Prima Transaction (with poId lookup)
-export const addPrimaTransaction = (transactionData, callback) => {
-  const { date, kilosDelivered, amount, paymentStatus, poNumber } = transactionData;
+dotenv.config(); // Load .env
 
-  if (!poNumber) return callback(new Error("poNumber is required"));
+const client = createClient({
+  url: process.env.TURSO_URL,
+  authToken: process.env.TURSO_API_KEY,
+});
 
-  db.get("SELECT id FROM pos WHERE poNumber = ?", [poNumber], (err, po) => {
-    if (err) return callback(err);
-    if (!po) return callback(new Error(`PO number ${poNumber} not found`));
-
-    const poId = po.id;
-
-    const query = `
-      INSERT INTO primatransactions 
-        (date, kilosDelivered, amount, paymentStatus, poId, poNumber)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-
-    db.run(query, [date, kilosDelivered, amount, paymentStatus, poId, poNumber], function(err) {
-      if (err) return callback(err);
-      db.get("SELECT * FROM primatransactions WHERE id = ?", [this.lastID], callback);
-    });
-  });
+// Validate payment status
+const validStatuses = ["Pending", "Approved", "Paid", "Rejected"];
+const validatePaymentStatus = (status) => {
+  if (!validStatuses.includes(status)) {
+    throw new Error(`Invalid payment status: ${status}. Must be one of ${validStatuses.join(", ")}`);
+  }
 };
 
-// Get all Prima Transactions
-export const getPrimaTransactions = (callback) => {
-  db.all("SELECT * FROM primatransactions ORDER BY date DESC", [], callback);
+// Validate number of boxes
+const validateNumberOfBoxes = (numberOfBoxes) => {
+  if (numberOfBoxes != null && (!Number.isInteger(numberOfBoxes) || numberOfBoxes < 0)) {
+    throw new Error("Number of boxes must be a non-negative integer or null");
+  }
 };
 
-// Update Prima Transaction (general update)
-export const updatePrimaTransaction = (id, transactionData, callback) => {
-  const { date, kilosDelivered, amount, paymentStatus, poNumber } = transactionData;
-
-  db.get("SELECT id FROM pos WHERE poNumber = ?", [poNumber], (err, po) => {
-    if (err) return callback(err);
-    if (!po) return callback(new Error(`PO number ${poNumber} not found`));
-
-    const poId = po.id;
-
-    const query = `
-      UPDATE primatransactions 
-      SET date = ?, kilosDelivered = ?, amount = ?, paymentStatus = ?, poId = ?, poNumber = ?
-      WHERE id = ?
-    `;
-
-    db.run(query, [date, kilosDelivered, amount, paymentStatus, poId, poNumber, id], function(err) {
-      if (err) return callback(err);
-      db.get("SELECT * FROM primatransactions WHERE id = ?", [id], callback);
-    });
-  });
+// Validate invoiceNo (optional, customize as needed)
+const validateInvoiceNo = (invoiceNo) => {
+  if (invoiceNo != null && typeof invoiceNo !== "string") {
+    throw new Error("Invoice number must be a string or null");
+  }
+  // Add additional validation (e.g., format, uniqueness) if needed
+  // Example: Ensure invoiceNo follows a pattern like "INV-12345"
+  // if (invoiceNo && !/^INV-\d+$/.test(invoiceNo)) {
+  //   throw new Error("Invoice number must follow the format INV-<numbers>");
+  // }
 };
 
-// Update transaction status only (with allowed transitions)
-export const updatePrimaTransactionStatus = (id, newStatus, callback) => {
-  db.get("SELECT * FROM primatransactions WHERE id = ?", [id], (err, row) => {
-    if (err) return callback(err);
-    if (!row) return callback(new Error("Transaction not found"));
-
-    const currentStatus = row.paymentStatus;
-    const allowedTransitions = { Pending: ["Approved", "Rejected"], Approved: ["Paid"] };
-
-    if (!allowedTransitions[currentStatus]?.includes(newStatus))
-      return callback(new Error(`Cannot change status from ${currentStatus} to ${newStatus}`));
-
-    db.run("UPDATE primatransactions SET paymentStatus = ? WHERE id = ?", [newStatus, id], (err) => {
-      if (err) return callback(err);
-      db.get("SELECT * FROM primatransactions WHERE id = ?", [id], callback);
-    });
-  });
+// Validate poId exists
+const validatePoId = async (poId) => {
+  const { rows } = await client.execute("SELECT id FROM pos WHERE id = ?", [poId]);
+  if (rows.length === 0) {
+    throw new Error(`PO with id ${poId} does not exist`);
+  }
 };
 
-// Delete a Prima Transaction
-export const deletePrimaTransaction = (id, callback) => {
-  db.run("DELETE FROM primatransactions WHERE id = ?", [id], function(err) {
-    if (err) return callback(err);
-    callback(null, { message: "Prima transaction deleted successfully", id });
-  });
+// Add a prima transaction
+export const addPrimaTransaction = async (transactionData) => {
+  const { poId, poNumber, date, kilosDelivered, amount, paymentStatus = "Pending", numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo, invoiceNo } = transactionData;
+
+  // Validations
+  if (!poId || !Number.isInteger(poId)) {
+    throw new Error("Valid poId is required");
+  }
+  await validatePoId(poId);
+  if (poNumber) {
+    const { rows } = await client.execute("SELECT poNumber FROM pos WHERE poNumber = ?", [poNumber]);
+    if (rows.length === 0) {
+      throw new Error(`PO with poNumber ${poNumber} does not exist`);
+    }
+  }
+  if (!date || !kilosDelivered || !amount) {
+    throw new Error("Date, kilosDelivered, and amount are required");
+  }
+  if (kilosDelivered <= 0 || amount <= 0) {
+    throw new Error("Kilos delivered and amount must be positive numbers");
+  }
+  validatePaymentStatus(paymentStatus);
+  validateNumberOfBoxes(numberOfBoxes);
+  validateInvoiceNo(invoiceNo);
+
+  const { lastInsertRowid } = await client.execute(
+    `INSERT INTO primatransactions (poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo, invoiceNo)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [poId, poNumber || null, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration || null, productCode || null, batchCode || null, truckNo || null, invoiceNo || null]
+  );
+
+  const { rows } = await client.execute(
+    "SELECT * FROM primatransactions WHERE id = ?",
+    [lastInsertRowid]
+  );
+
+  return rows[0];
+};
+
+// Get all prima transactions
+export const getPrimaTransactions = async () => {
+  const { rows } = await client.execute(
+    "SELECT id, poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo, invoiceNo FROM primatransactions ORDER BY date DESC"
+  );
+  return rows;
+};
+
+// Get prima transactions summary
+export const getPrimaTransactionsSummary = async () => {
+  const { rows } = await client.execute(
+    `SELECT 
+       COUNT(*) as totalRecords,
+       SUM(kilosDelivered) as totalKilosDelivered,
+       SUM(amount) as totalAmount,
+       SUM(CASE WHEN paymentStatus = 'Paid' THEN amount ELSE 0 END) as paidAmount,
+       SUM(CASE WHEN paymentStatus = 'Approved' THEN amount ELSE 0 END) as pendingApprovalAmount,
+       SUM(CASE WHEN paymentStatus = 'Rejected' THEN kilosDelivered ELSE 0 END) as rejectedKilos
+     FROM primatransactions`
+  );
+
+  const row = rows[0] || {};
+  return {
+    totalRecords: row.totalRecords || 0,
+    totalKilosDelivered: row.totalKilosDelivered ? parseFloat(row.totalKilosDelivered).toFixed(2) : "0.00",
+    totalAmount: row.totalAmount ? parseFloat(row.totalAmount).toFixed(2) : "0.00",
+    paidAmount: row.paidAmount ? parseFloat(row.paidAmount).toFixed(2) : "0.00",
+    pendingApprovalAmount: row.pendingApprovalAmount ? parseFloat(row.pendingApprovalAmount).toFixed(2) : "0.00",
+    rejectedKilos: row.rejectedKilos ? parseFloat(row.rejectedKilos).toFixed(2) : "0.00",
+  };
+};
+
+// Get prima transactions by date range
+export const getPrimaTransactionsByDateRange = async (startDate, endDate) => {
+  const { rows } = await client.execute(
+    `SELECT id, poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo, invoiceNo 
+     FROM primatransactions 
+     WHERE date BETWEEN ? AND ?
+     ORDER BY date DESC`,
+    [startDate, endDate]
+  );
+  return rows;
+};
+
+// Update prima transaction
+export const updatePrimaTransaction = async (id, transactionData) => {
+  const { poId, poNumber, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration, productCode, batchCode, truckNo, invoiceNo } = transactionData;
+
+  // Validations
+  if (!poId || !Number.isInteger(poId)) {
+    throw new Error("Valid poId is required");
+  }
+  await validatePoId(poId);
+  if (poNumber) {
+    const { rows } = await client.execute("SELECT poNumber FROM pos WHERE poNumber = ?", [poNumber]);
+    if (rows.length === 0) {
+      throw new Error(`PO with poNumber ${poNumber} does not exist`);
+    }
+  }
+  if (!date || !kilosDelivered || !amount) {
+    throw new Error("Date, kilosDelivered, and amount are required");
+  }
+  if (kilosDelivered <= 0 || amount <= 0) {
+    throw new Error("Kilos delivered and amount must be positive numbers");
+  }
+  validatePaymentStatus(paymentStatus);
+  validateNumberOfBoxes(numberOfBoxes);
+  validateInvoiceNo(invoiceNo);
+
+  await client.execute(
+    `UPDATE primatransactions
+     SET poId = ?, poNumber = ?, date = ?, kilosDelivered = ?, amount = ?, paymentStatus = ?, numberOfBoxes = ?, dateOfExpiration = ?, productCode = ?, batchCode = ?, truckNo = ?, invoiceNo = ?
+     WHERE id = ?`,
+    [poId, poNumber || null, date, kilosDelivered, amount, paymentStatus, numberOfBoxes, dateOfExpiration || null, productCode || null, batchCode || null, truckNo || null, invoiceNo || null, id]
+  );
+
+  const { rows } = await client.execute(
+    "SELECT * FROM primatransactions WHERE id = ?",
+    [id]
+  );
+
+  return rows[0];
+};
+
+// Update prima transaction status
+export const updatePrimaTransactionStatus = async (id, paymentStatus) => {
+  validatePaymentStatus(paymentStatus);
+
+  const { rows: currentRows } = await client.execute(
+    "SELECT paymentStatus FROM primatransactions WHERE id = ?",
+    [id]
+  );
+  if (currentRows.length === 0) {
+    throw new Error(`Transaction with id ${id} does not exist`);
+  }
+
+  const currentStatus = currentRows[0].paymentStatus;
+  const validTransitions = {
+    Pending: ["Approved", "Rejected"],
+    Approved: ["Paid"],
+    Paid: [],
+    Rejected: [],
+  };
+
+  if (!validTransitions[currentStatus].includes(paymentStatus)) {
+    throw new Error(`Invalid status transition from ${currentStatus} to ${paymentStatus}`);
+  }
+
+  await client.execute(
+    "UPDATE primatransactions SET paymentStatus = ? WHERE id = ?",
+    [paymentStatus, id]
+  );
+
+  const { rows } = await client.execute(
+    "SELECT * FROM primatransactions WHERE id = ?",
+    [id]
+  );
+
+  return rows[0];
+};
+
+// Delete prima transaction
+export const deletePrimaTransaction = async (id) => {
+  const { rows } = await client.execute(
+    "SELECT id FROM primatransactions WHERE id = ?",
+    [id]
+  );
+  if (rows.length === 0) {
+    throw new Error(`Transaction with id ${id} does not exist`);
+  }
+
+  await client.execute("DELETE FROM primatransactions WHERE id = ?", [id]);
+  return { message: "Prima transaction deleted successfully", id };
 };

@@ -1,21 +1,18 @@
-import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { Outlet } from "react-router-dom";
 
 export function MainLayout() {
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        {/* Sidebar */}
-        <AppSidebar />
+    <div className="min-h-screen flex w-full bg-gray-100">
+      {/* Sidebar */}
+      <AppSidebar />
 
-        {/* Main Content */}
-        <div className="flex-1 ml-64 flex flex-col">
-          <main className="flex-1 p-6">
-            <Outlet />
-          </main>
-        </div>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col ml-0 sm:ml-64 transition-all duration-300">
+        <main className="flex-1 p-6">
+          <Outlet />
+        </main>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }
