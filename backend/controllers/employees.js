@@ -1,4 +1,4 @@
-// controllers/salary.js
+// controllers/employees.js
 import dotenv from "dotenv";
 import { createClient } from "@libsql/client";
 
@@ -9,50 +9,65 @@ const client = createClient({
   authToken: process.env.TURSO_API_KEY,
 });
 
-// Get all salaries
-export const getSalaries = async () => {
-  const { rows } = await client.execute("SELECT * FROM salaries ORDER BY date DESC");
+// Get all employees
+export const getEmployees = async () => {
+  const { rows } = await client.execute("SELECT * FROM employees ORDER BY id DESC");
   return rows;
 };
 
-// Add a new salary
-export const addSalary = async (salary) => {
-  const { date, employee_id, amount } = salary;
-
-  if (!date || !employee_id || amount === undefined) {
-    throw new Error("Date, employee_id, and amount are required");
+// Add employee
+export const addEmployee = async (employee) => {
+  const { name, salary, startDate, endDate } = employee;
+  if (!name || salary === undefined) {
+    throw new Error("Name and salary are required");
   }
 
   const { lastInsertRowid } = await client.execute(
-    "INSERT INTO salaries (date, employee_id, amount) VALUES (?, ?, ?)",
-    [date, employee_id, amount]
+    "INSERT INTO employees (name, salary, startDate, endDate) VALUES (?, ?, ?, ?)",
+    [name, salary, startDate, endDate]
   );
 
-  const { rows } = await client.execute("SELECT * FROM salaries WHERE id = ?", [lastInsertRowid]);
+  const { rows } = await client.execute("SELECT * FROM employees WHERE id = ?", [lastInsertRowid]);
   return rows[0];
 };
 
-// Update an existing salary
-export const updateSalary = async (id, salary) => {
-  const { date, employee_id, amount } = salary;
-
+// Update employee
+export const updateEmployee = async (id, employee) => {
+  const { name, salary, startDate, endDate } = employee;
   await client.execute(
-    "UPDATE salaries SET date = ?, employee_id = ?, amount = ? WHERE id = ?",
-    [date, employee_id, amount, id]
+    "UPDATE employees SET name = ?, salary = ?, startDate = ?, endDate = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+    [name, salary, startDate, endDate, id]
   );
 
-  const { rows } = await client.execute("SELECT * FROM salaries WHERE id = ?", [id]);
+  const { rows } = await client.execute("SELECT * FROM employees WHERE id = ?", [id]);
   return rows[0];
 };
 
-// Delete a salary
-export const deleteSalary = async (id) => {
-  await client.execute("DELETE FROM salaries WHERE id = ?", [id]);
-  return { message: "Salary deleted successfully", id };
+// Delete employee
+export const deleteEmployee = async (id) => {
+  await client.execute("DELETE FROM employees WHERE id = ?", [id]);
+  return { message: "Employee deleted successfully", id };
 };
 
-// Get total salary summary
-export const getSalarySummary = async () => {
-  const { rows } = await client.execute("SELECT SUM(amount) as totalSalary FROM salaries");
-  return rows[0] || { totalSalary: 0 };
+// Mark salary as paid
+export const markSalaryPaid = async (id) => {
+  const today = new Date().toISOString().split("T")[0];
+  await client.execute(
+    "UPDATE employees SET status = 'paid', lastPaid = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+    [today, id]
+  );
+
+  const { rows } = await client.execute("SELECT * FROM employees WHERE id = ?", [id]);
+  return rows[0];
+};
+
+// Reset to unpaid (optional)
+export const resetSalaryStatus = async (id) => {
+  await client.execute(
+    "UPDATE employees SET status = 'unpaid', updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+    [id]
+  );
+
+  const { rows } = await client.execute("SELECT * FROM employees WHERE id = ?", [id]);
+  return rows[0];
 };
