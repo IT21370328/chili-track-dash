@@ -211,7 +211,7 @@ const Salaries = () => {
     <div className="p-6 max-w-7xl mx-auto space-y-8">
       {/* Header */}
       <div className="bg-white/80 rounded-2xl p-6 shadow-lg flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-700 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
           <DollarSign className="w-5 h-5 text-white" />
         </div>
         <h1 className="text-2xl font-bold text-slate-800">Salaries Dashboard</h1>
@@ -225,7 +225,7 @@ const Salaries = () => {
         <Card className="bg-white/90 shadow-lg rounded-2xl">
           <CardContent className="p-4">
             <h3 className="text-sm font-medium text-slate-600">Paid Salaries</h3>
-            <p className="text-xl font-bold text-green-600">Rs.{summary.paid.toLocaleString()}</p>
+            <p className="text-xl font-bold text-blue-600">Rs.{summary.paid.toLocaleString()}</p>
           </CardContent>
         </Card>
 
@@ -268,16 +268,18 @@ const Salaries = () => {
             />
             <Input
               type="date"
+              placeholder="Start Date"
               value={formData.startDate}
               onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
               max={today}
             />
             <Input
               type="date"
+              placeholder="End Date"
               value={formData.endDate}
               onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
             />
-            <Button type="submit" className="col-span-full bg-gradient-to-br from-green-500 to-green-700 text-white flex items-center gap-2">
+            <Button type="submit" className="col-span-full bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center gap-2">
               <Plus className="w-4 h-4" /> {editingId ? "Update Employee" : "Add Employee"}
             </Button>
           </form>
