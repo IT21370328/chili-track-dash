@@ -27,7 +27,7 @@ import { addPrimaTransaction, getPrimaTransactions, updatePrimaTransaction, upda
 
 
 import { 
-  getEmployees, addEmployees, markSalaryPaid, resetSalaryStatus, 
+  getEmployees, markSalaryPaid, resetSalaryStatus, 
   updateEmployee, deleteEmployee 
 } from "./controllers/employees.js";
 
@@ -254,12 +254,12 @@ const startServer = async () => {
     });
   });
 
-  app.post("/employees", (req, res) => {
-    addEmployees(req.body, (err, result) => {
-      if (err) return res.status(400).json({ error: err.message });
-      res.status(201).json(result);
-    });
-  });
+  // app.post("/employees", (req, res) => {
+  //   addEmployees(req.body, (err, result) => {
+  //     if (err) return res.status(400).json({ error: err.message });
+  //     res.status(201).json(result);
+  //   });
+  // });
 
   app.put("/employees/:id", (req, res) => {
     updateEmployee(req.params.id, req.body, (err, result) => {
