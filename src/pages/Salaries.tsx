@@ -268,12 +268,14 @@ const Salaries = () => {
             />
             <Input
               type="date"
+              placeholder="Start Date"
               value={formData.startDate}
               onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
               max={today}
             />
             <Input
               type="date"
+              placeholder="End Date"
               value={formData.endDate}
               onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
             />
