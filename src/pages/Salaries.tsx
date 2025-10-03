@@ -251,6 +251,7 @@ const Salaries = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>Name
             <Input
               type="text"
               placeholder="Name"
@@ -258,6 +259,8 @@ const Salaries = () => {
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
             />
+            </div>
+            <div>Salary
             <Input
               type="number"
               placeholder="Salary"
@@ -266,6 +269,8 @@ const Salaries = () => {
               required
               min="0"
             />
+            </div>
+            <div>Start Date
             <Input
               type="date"
               placeholder="Start Date"
@@ -273,12 +278,15 @@ const Salaries = () => {
               onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
               max={today}
             />
+            </div>
+            <div>End Date
             <Input
               type="date"
               placeholder="End Date"
               value={formData.endDate}
               onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
             />
+            </div>
             <Button type="submit" className="col-span-full bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center gap-2">
               <Plus className="w-4 h-4" /> {editingId ? "Update Employee" : "Add Employee"}
             </Button>
