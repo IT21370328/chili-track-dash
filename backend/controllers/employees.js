@@ -16,7 +16,7 @@ export const getEmployees = async () => {
 };
 
 // Add employee
-export const addEmployee = async (employee) => {
+export const AddSalary = async (employee) => {
   const { name, salary, startDate, endDate } = employee;
   if (!name || salary === undefined) {
     throw new Error("Name and salary are required");
