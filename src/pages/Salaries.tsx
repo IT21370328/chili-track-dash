@@ -251,7 +251,7 @@ const Salaries = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>Name
+            <div className="font-bold">Name
             <Input
               type="text"
               placeholder="Name"
@@ -260,7 +260,7 @@ const Salaries = () => {
               required
             />
             </div>
-            <div>Salary
+            <div className="font-bold">Salary
             <Input
               type="number"
               placeholder="Salary"
@@ -270,7 +270,7 @@ const Salaries = () => {
               min="0"
             />
             </div>
-            <div>Start Date
+            <div className="font-bold">Start Date
             <Input
               type="date"
               placeholder="Start Date"
@@ -279,7 +279,7 @@ const Salaries = () => {
               max={today}
             />
             </div>
-            <div>End Date
+            <div className="font-bold">End Date
             <Input
               type="date"
               placeholder="End Date"
