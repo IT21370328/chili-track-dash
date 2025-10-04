@@ -228,7 +228,6 @@ export default function CertificateOfAnalysis() {
                 produced in accordance with GMP principles
               </p>
             </div>
-
             {/* Signatures */}
             <div className="flex justify-between text-center text-xs mt-8">
               <div className="w-1/4 border-t-2 border-gray-300 pt-4">Quality Assurance Manager</div>
