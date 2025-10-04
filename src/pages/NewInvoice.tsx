@@ -47,8 +47,13 @@ export default function Invoice(): JSX.Element {
     const opt = {
       margin: 0,
       filename: `${transaction.invoiceNo || "invoice"}.pdf`,
-      image: { type: "jpeg" as const, quality: 0.98 },
-      html2canvas: { scale: 2 },
+      image: { type: "png" as const, quality: 1 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        allowTaint: true, 
+        letterRendering: true 
+      },
       jsPDF: { unit: "in" as const, format: "a4" as const, orientation: "portrait" as const },
     };
     html2pdf().set(opt).from(element).save();
@@ -59,25 +64,27 @@ export default function Invoice(): JSX.Element {
       {/* Invoice */}
       <div
         ref={invoiceRef}
-        className="bg-white border font-[Montserrat] flex flex-col justify-between"
+        className="bg-white font-[Montserrat] flex flex-col justify-between leading-none"
         style={{
           width: "8.27in",
           height: "11.69in", // Exact A4 size
           margin: 0,
           padding: 0,
+          border: "none",
+          boxSizing: "border-box",
         }}
       >
         {/* Header */}
-        <div className="bg-[#025291] text-white p-4 flex justify-between items-start">
+        <div className="bg-[#025291] text-white p-4 flex justify-between items-start leading-tight">
           <div className="flex items-start gap-2">
             <img
               src={Logo}
               alt="Company Logo"
               className="w-12 h-12 object-contain bg-white rounded flex-shrink-0"
             />
-            <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold leading-tight">MA’S DE COZTA</h1>
-              <p className="text-xs leading-tight">Ma’s De cozta (PVT)LTD</p>
+            <div className="flex-shrink-0 leading-tight">
+              <h1 className="text-xl font-bold">MA’S DE COZTA</h1>
+              <p className="text-xs">Ma’s De cozta (PVT)LTD</p>
             </div>
           </div>
           <div className="text-right text-xs leading-tight max-w-[3.5in]">
@@ -99,54 +106,54 @@ export default function Invoice(): JSX.Element {
           </div>
 
           {/* Main Content */}
-          <div className="relative flex-1 flex flex-col px-6 py-10 space-y-6">
+          <div className="relative flex-1 flex flex-col px-6 py-10 space-y-6 leading-tight">
             {/* Invoice Title */}
-            <div className="text-center py-4 border-b">
+            <div className="text-center py-4 border-b leading-tight">
               <h2 className="text-2xl font-bold text-[#025291]">INVOICE</h2>
               <p className="text-[#025291]/50 text-sm">Ma’s De cozta (PVT)LTD</p>
             </div>
 
             {/* Details Section */}
-            <div>
-              <table className="w-full border-collapse text-xs">
+            <div className="leading-tight">
+              <table className="w-full border-collapse text-xs leading-tight">
                 <tbody>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-3 py-3">
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3 leading-tight">
                       Date
                     </td>
-                    <td className="bg-[#C3E4FF] px-3 py-3">{formatDate(transaction.date)}</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3 leading-tight">{formatDate(transaction.date)}</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-3 py-3">
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3 leading-tight">
                       Invoice No
                     </td>
-                    <td className="bg-[#C3E4FF] px-3 py-3">{transaction.invoiceNo}</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3 leading-tight">{transaction.invoiceNo}</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-3 py-3">
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3 leading-tight">
                       Due Date
                     </td>
-                    <td className="bg-[#C3E4FF] px-3 py-3">{formatDate(transaction.dateOfExpiration)}</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3 leading-tight">{formatDate(transaction.dateOfExpiration)}</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-3 py-3">
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3 leading-tight">
                       PO No
                     </td>
-                    <td className="bg-[#C3E4FF] px-3 py-3">{transaction.poNumber}</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3 leading-tight">{transaction.poNumber}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             {/* Shipping Section */}
-            <div className="grid grid-cols-2 gap-6">
-              <div>
+            <div className="grid grid-cols-2 gap-6 leading-tight">
+              <div className="leading-tight">
                 <h3 className="font-bold text-[#025291] mb-2 text-sm">SHIP TO :</h3>
                 <p className="text-sm">Ceylon Agro Industries,</p>
                 <p className="text-sm">346, Negombo Road,</p>
                 <p className="text-sm">Seeduwa.</p>
               </div>
-              <div>
+              <div className="leading-tight">
                 <h3 className="font-bold text-[#025291] mb-2 text-sm">TO :</h3>
                 <p className="text-sm">Ceylon Agro Industries,</p>
                 <p className="text-sm">346, Negombo Road,</p>
@@ -155,47 +162,47 @@ export default function Invoice(): JSX.Element {
             </div>
 
             {/* Table */}
-            <div className="flex-1 flex flex-col">
-              <table className="w-full border-collapse text-xs bg-transparent flex-1">
+            <div className="flex-1 flex flex-col leading-tight">
+              <table className="w-full border-collapse text-xs bg-transparent flex-1 leading-tight">
                 <thead>
-                  <tr className="bg-[#025291] text-white text-left">
-                    <th className="p-1">NO</th>
-                    <th className="p-1">Description</th>
-                    <th className="p-1">Quantity</th>
-                    <th className="p-1">Unit Price</th>
-                    <th className="p-1">Amount</th>
+                  <tr className="bg-[#025291] text-white text-left leading-tight">
+                    <th className="p-1 leading-tight">NO</th>
+                    <th className="p-1 leading-tight">Description</th>
+                    <th className="p-1 leading-tight">Quantity</th>
+                    <th className="p-1 leading-tight">Unit Price</th>
+                    <th className="p-1 leading-tight">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-b bg-white/80">
-                    <td className="p-1">01</td>
-                    <td className="p-1 font-semibold text-left">
+                  <tr className="border-b bg-white/80 leading-tight">
+                    <td className="p-1 leading-tight">01</td>
+                    <td className="p-1 font-semibold text-left leading-tight">
                       Scotch Bonnet (Nai Miris) Powder
                     </td>
-                    <td className="p-1">{transaction.kilosDelivered}kg</td>
-                    <td className="p-1">{unitPrice}LKR/kg</td>
-                    <td className="p-1 text-right">{transaction.amount.toLocaleString()}LKR</td>
+                    <td className="p-1 leading-tight">{transaction.kilosDelivered}kg</td>
+                    <td className="p-1 leading-tight">{unitPrice}LKR/kg</td>
+                    <td className="p-1 text-right leading-tight">{transaction.amount.toLocaleString()}LKR</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             {/* Totals */}
-            <div className="flex justify-end">
-              <div className="w-64 text-xs bg-white/80 p-3 rounded">
-                <div className="flex justify-between py-1 border-b">
+            <div className="flex justify-end leading-tight">
+              <div className="w-64 text-xs bg-white/80 p-3 rounded leading-tight">
+                <div className="flex justify-between py-1 border-b leading-tight">
                   <span>Sub Total :</span>
                   <span className="font-bold">{transaction.amount.toLocaleString()}LKR</span>
                 </div>
-                <div className="flex justify-between py-1 border-b">
+                <div className="flex justify-between py-1 border-b leading-tight">
                   <span>Taxes :</span>
                   <span>0LKR</span>
                 </div>
-                <div className="flex justify-between py-1 border-b">
+                <div className="flex justify-between py-1 border-b leading-tight">
                   <span>Discount :</span>
                   <span>0LKR</span>
                 </div>
-                <div className="flex justify-between font-bold py-1">
+                <div className="flex justify-between font-bold py-1 leading-tight">
                   <span>Total Amount :</span>
                   <span>{transaction.amount.toLocaleString()}LKR</span>
                 </div>
@@ -203,18 +210,18 @@ export default function Invoice(): JSX.Element {
             </div>
 
             {/* Bank Details */}
-            <div>
+            <div className="leading-tight">
               <h3 className="font-bold text-[#025291] mb-2 text-xs">Bank Details</h3>
-              <p className="text-xs">
+              <p className="text-xs leading-tight">
                 <strong>Bank:</strong> Sampath Bank
               </p>
-              <p className="text-xs">
+              <p className="text-xs leading-tight">
                 <strong>Branch:</strong> Pannala
               </p>
-              <p className="text-xs">
+              <p className="text-xs leading-tight">
                 <strong>Account Name:</strong> Ma’s De Cozta Pvt Ltd
               </p>
-              <p className="text-xs">
+              <p className="text-xs leading-tight">
                 <strong>Account Number:</strong> 016610003145
               </p>
             </div>
@@ -223,14 +230,14 @@ export default function Invoice(): JSX.Element {
 
         {/* Footer (sticks to bottom) */}
         <div>
-          <div className="text-center py-4 bg-[#F5F9FD]">
-            <p className="text-base font-bold text-[#025291]">
+          <div className="text-center py-4 bg-[#F5F9FD] leading-tight">
+            <p className="text-base font-bold text-[#025291] leading-tight">
               Thank you for Business with us!
             </p>
-            <p className="text-[#2B64A0] text-xs">Ma’s De cozta (PVT)LTD</p>
+            <p className="text-[#2B64A0] text-xs leading-tight">Ma’s De cozta (PVT)LTD</p>
           </div>
           <div className="bg-[#025291]">
-            <div className="text-center py-2 text-xs text-white">PV 00259719</div>
+            <div className="text-center py-2 text-xs text-white leading-tight">PV 00259719</div>
           </div>
         </div>
       </div>
