@@ -237,7 +237,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
 
                     {/* Chemical Section */}
                     <tr>
-                      <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3 pb-4 border border-gray-300 m-0">
+                      <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3 pb-1 border border-gray-300 m-0">
                         Chemical
                       </td>
                     </tr>
@@ -296,7 +296,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
         {/* Footer */}
         <div>
           <div className="bg-[#025291]">
-            <div className="text-center py-2 text-xs text-white" style={{ lineHeight: 1 }}>PV 00259719</div>
+            <div className="text-center pb-4 text-xs text-white" style={{ lineHeight: 1 }}>PV 00259719</div>
           </div>
         </div>
       </div>
