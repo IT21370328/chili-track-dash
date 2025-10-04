@@ -43,54 +43,55 @@ export default function CertificateOfAnalysis() {
 
         {/* Certificate Info */}
         <div className="relative px-6 py-6 grid grid-cols-2 gap-6 text-sm">
-          <div>
-            <p>
-              <strong>Customer Name :</strong> Ceylon Agro Industries
-            </p>
-            <p>
-              <strong>PO No :</strong>
-            </p>
-            <p>
-              <strong>Product Name :</strong> Scotch Bonnet Powder
-            </p>
-            <p>
-              <strong>Product Code :</strong> MASI00003
-            </p>
-            <p>
-              <strong>Quantity :</strong> 30 kg
-            </p>
-            <p>
-              <strong>Container / Truck Number :</strong>
-            </p>
-          </div>
+            <div className="space-y-3"> {/* Added space between lines */}
+                <p>
+                <strong>Customer Name :</strong> Ceylon Agro Industries
+                </p>
+                <p>
+                <strong>PO No :</strong>
+                </p>
+                <p>
+                <strong>Product Name :</strong> Scotch Bonnet Powder
+                </p>
+                <p>
+                <strong>Product Code :</strong> MASI00003
+                </p>
+                <p>
+                <strong>Quantity :</strong> 30 kg
+                </p>
+                <p>
+                <strong>Container / Truck Number :</strong>
+                </p>
+            </div>
 
-          <div>
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="bg-[#025291] text-white">
-                  <th className="p-2">Doc No.</th>
-                  <th className="p-2">QAP002</th>
-                  <th className="p-2">Certificate No</th>
-                  <th className="p-2">A2580</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="bg-[#C3E4FF] p-2">Date of Production</td>
-                  <td className="bg-[#C3E4FF] p-2"></td>
-                  <td className="bg-[#C3E4FF] p-2">Date of Expiry</td>
-                  <td className="bg-[#C3E4FF] p-2"></td>
-                </tr>
-                <tr>
-                  <td className="bg-[#C3E4FF] p-2">Batch Code/s</td>
-                  <td className="bg-[#C3E4FF] p-2"></td>
-                  <td className="bg-[#C3E4FF] p-2">No. of Boxes</td>
-                  <td className="bg-[#C3E4FF] p-2"></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+            <div>
+                <table className="w-full border-collapse text-sm table-fixed"> {/* table-fixed fixes column alignment */}
+                <thead>
+                    <tr className="bg-[#025291] text-white text-center"> {/* text-center for header */}
+                    <th className="p-2">Doc No.</th>
+                    <th className="p-2">QAP002</th>
+                    <th className="p-2">Certificate No</th>
+                    <th className="p-2">A2580</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr className="text-center"> {/* text-center for body */}
+                    <td className="bg-[#C3E4FF] p-2">Date of Production</td>
+                    <td className="bg-[#C3E4FF] p-2"></td>
+                    <td className="bg-[#C3E4FF] p-2">Date of Expiry</td>
+                    <td className="bg-[#C3E4FF] p-2"></td>
+                    </tr>
+                    <tr className="text-center">
+                    <td className="bg-[#C3E4FF] p-2">Batch Code/s</td>
+                    <td className="bg-[#C3E4FF] p-2"></td>
+                    <td className="bg-[#C3E4FF] p-2">No. of Boxes</td>
+                    <td className="bg-[#C3E4FF] p-2"></td>
+                    </tr>
+                </tbody>
+                </table>
+            </div>
+            </div>
+
 
         {/* Analysis Table */}
         <div className="relative px-6 py-6">
