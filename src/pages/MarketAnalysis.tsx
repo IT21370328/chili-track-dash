@@ -8,7 +8,7 @@ interface TransactionData {
   poNumber?: string;
   productName?: string;
   productCode?: string;
-  amount?: number;
+  kilosDelivered?: number;
   truckNo?: string;
   date?: string;
   dateOfExpiration?: string;
@@ -72,6 +72,13 @@ export default function CertificateOfAnalysis(): JSX.Element {
         }}
       >
         {/* Header */}
+        {/* Download Button */}
+        <button
+          onClick={handleDownload}
+          className="mt-6 px-6 py-2 bg-[#025291] text-white rounded-lg shadow hover:bg-[#013d6e] transition"
+        >
+        Download Certificate
+      </button>
         <div className="bg-[#025291] text-white p-4 flex justify-between items-start leading-tight">
           <div className="flex items-start gap-2">
             <img
@@ -119,13 +126,13 @@ export default function CertificateOfAnalysis(): JSX.Element {
                   <strong>PO No :</strong> {transaction.poNumber}
                 </p>
                 <p className="leading-tight">
-                  <strong>Product Name :</strong> {transaction.productName}
+                  <strong>Product Name :</strong> Scotch Bonnet Powder
                 </p>
                 <p className="leading-tight">
                   <strong>Product Code :</strong> {transaction.productCode}
                 </p>
                 <p className="leading-tight">
-                  <strong>Quantity :</strong> {transaction.amount} kg
+                  <strong>Quantity :</strong> {transaction.kilosDelivered} kg
                 </p>
                 <p className="leading-tight">
                   <strong>Container / Truck Number :</strong> {transaction.truckNo}
@@ -268,7 +275,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
               </p>
             </div>
             {/* Signatures */}
-            <div className="flex justify-between text-center text-xs mt-12 leading-tight">
+            <div className="flex justify-between text-center text-xs mt-20 leading-tight">
               <div className="w-1/4 border-t-2 border-gray-300 pt-6 leading-tight">Quality Assurance Manager</div>
               <div className="w-1/4 border-t-2 border-gray-300 pt-6 leading-tight">Production Manager</div>
               <div className="w-1/4 border-t-2 border-gray-300 pt-6 leading-tight">Date</div>
@@ -284,13 +291,6 @@ export default function CertificateOfAnalysis(): JSX.Element {
         </div>
       </div>
 
-      {/* Download Button */}
-      <button
-        onClick={handleDownload}
-        className="mt-6 px-6 py-2 bg-[#025291] text-white rounded-lg shadow hover:bg-[#013d6e] transition"
-      >
-        Download Certificate
-      </button>
     </div>
   );
 }
