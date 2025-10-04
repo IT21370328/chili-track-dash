@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Plus, Eye, X, Truck, DollarSign, Clock, Package, Download, Pencil, Trash2 } from "lucide-react";
 // import { generateInvoice } from './NewInvoice';
 import { logAction } from "@/pages/logHelper"; // ✅ Added logger import
@@ -10,7 +11,7 @@ interface PO {
   id: number;
   poNumber: string;
   date: string;
-  totalKilos: number;F
+  totalKilos: number;
   remainingKilos: number;
   amount: number;
   status: "Pending" | "Completed";
@@ -100,6 +101,7 @@ const CardTitle = ({ children, className = "" }) => <h3 className={`text-2xl fon
 
 // -------------------- Main Component --------------------
 const PrimaPage = () => {
+  const navigate = useNavigate();
   const [pos, setPOs] = useState<PO[]>([]);
   const [transactions, setTransactions] = useState<PrimaTransaction[]>([]);
   const [production, setProduction] = useState<Production[]>([]);
@@ -147,7 +149,7 @@ const PrimaPage = () => {
 
   const filteredTransactions = transactions.filter(tx => {
     const txDate = new Date(tx.date);
-    const fromMatch = !dateFrom || txDate >= new Date(txDate + "T00:00:00");
+    const fromMatch = !dateFrom || txDate >= new Date(dateFrom + "T00:00:00");
     const toMatch = !dateTo || txDate <= new Date(dateTo + "T23:59:59");
     return fromMatch && toMatch;
   });
@@ -501,6 +503,44 @@ const PrimaPage = () => {
       console.error("Delivery addition failed:", error.message);
       showToast({ title: "Error", description: `Failed to add delivery: ${error.message}`, variant: "destructive" }); 
     }
+  };
+
+  // -------------------- Invoice Navigation --------------------
+  const handleGenerateInvoice = (transaction: PrimaTransaction) => {
+    // Navigate to the separate invoice page, passing the transaction data via state
+    // This includes date, dateOfExpiration, invoiceNo, poNumber, and other relevant fields
+    navigate('/invoice', { 
+      state: { 
+        transaction: {
+          date: transaction.date,
+          dateOfExpiration: transaction.dateOfExpiration,
+          invoiceNo: transaction.invoiceNo,
+          poNumber: transaction.poNumber,
+          // Include other fields if needed for the invoice, e.g., amount, kilosDelivered, etc.
+          amount: transaction.amount,
+          kilosDelivered: transaction.kilosDelivered,
+          productCode: transaction.productCode,
+          batchCode: transaction.batchCode,
+          truckNo: transaction.truckNo,
+          numberOfBoxes: transaction.numberOfBoxes,
+        }
+      } 
+    });
+
+    try {
+      logAction(
+        currentUser,
+        "Generate Invoice",
+        `Generated invoice for transaction ID: ${transaction.id} (PO ${transaction.poNumber})`
+      );
+    } catch (error) {
+      console.error("Failed to log generate invoice action:", error);
+    }
+
+    showToast({ 
+      title: "Success", 
+      description: `Navigating to invoice for delivery ${transaction.id}` 
+    });
   };
 
   // -------------------- Edit Functions --------------------
@@ -1229,7 +1269,7 @@ const PrimaPage = () => {
                             size="sm" 
                             variant="outline" 
                             className="w-full"
-                            // onClick={() => handleGenerateInvoice(tx)}
+                            onClick={() => handleGenerateInvoice(tx)}
                           >
                             <Download className="w-3 h-3 mr-1" />
                             Invoice
