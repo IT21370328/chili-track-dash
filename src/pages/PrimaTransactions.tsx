@@ -1319,7 +1319,7 @@ const PrimaPage = () => {
                             onClick={() => handleGenerateAnalysis(tx)}
                           >
                             <Download className="w-3 h-3 mr-1" />
-                            Invoice
+                            Analysis
                           </Button>
                           <Button size="sm" variant="outline" className="w-full" onClick={() => handleEditTransaction(tx)}>
                             <Pencil className="w-3 h-3 mr-1" />

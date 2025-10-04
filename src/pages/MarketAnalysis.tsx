@@ -4,7 +4,7 @@ import Logo from "../../src/assets/logo.jpg";
 import AnalysisBg from "../../src/assets/invoicebg.jpg";
 import html2pdf from "html2pdf.js";
 
-interface CertificateData {
+interface TransactionData {
   poNumber?: string;
   productName?: string;
   productCode?: string;
@@ -19,16 +19,16 @@ interface CertificateData {
 
 export default function CertificateOfAnalysis(): JSX.Element {
   const location = useLocation();
-  const certificate: CertificateData = location.state?.certificate || {
+  const certificate: TransactionData = location.state?.certificate || {
     poNumber: "PO-2025-123",
     productName: "Scotch Bonnet Powder",
     productCode: "MASI00003",
-    quantity: 30,
-    containerTruckNumber: "",
-    dateOfProduction: "2025-10-04",
-    dateOfExpiry: "2026-10-04",
-    batchCodes: "",
-    noOfBoxes: 3,
+    amount: 30,
+    truckNo: "",
+    date: "2025-10-04",
+    dateOfExpiration: "2026-10-04",
+    batchCode: "",
+    numberOfBoxes: 3,
   };
 
   const certRef = useRef<HTMLDivElement>(null);
