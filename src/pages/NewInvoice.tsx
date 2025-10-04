@@ -170,11 +170,11 @@ export default function Invoice(): JSX.Element {
               <table className="w-full border-collapse text-xs bg-transparent flex-1" style={{ lineHeight: 1 }}>
                 <thead>
                   <tr className="bg-[#025291] text-white text-left" style={{ lineHeight: 1 }}>
-                    <th className="p-1 pb-4" style={{ lineHeight: 1 }}>NO</th>
-                    <th className="p-1 pb-4" style={{ lineHeight: 1 }}>Description</th>
-                    <th className="p-1 pb-4" style={{ lineHeight: 1 }}>Quantity</th>
-                    <th className="p-1 pb-4" style={{ lineHeight: 1 }}>Unit Price</th>
-                    <th className="p-1 pb-4" style={{ lineHeight: 1 }}>Amount</th>
+                    <th className="p-1 pb-6" style={{ lineHeight: 1 }}>NO</th>
+                    <th className="p-1 pb-6" style={{ lineHeight: 1 }}>Description</th>
+                    <th className="p-1 pb-6" style={{ lineHeight: 1 }}>Quantity</th>
+                    <th className="p-1 pb-6" style={{ lineHeight: 1 }}>Unit Price</th>
+                    <th className="p-1 pb-6" style={{ lineHeight: 1 }}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
