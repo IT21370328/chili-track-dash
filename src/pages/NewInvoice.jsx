@@ -9,7 +9,7 @@ export default function Invoice() {
   const handleDownload = () => {
     const element = invoiceRef.current;
     const opt = {
-      margin: 0.5, // inches
+      margin: 0.5,
       filename: "invoice.pdf",
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2 },
@@ -24,7 +24,7 @@ export default function Invoice() {
       <div
         ref={invoiceRef}
         className="bg-white shadow-lg rounded-lg overflow-hidden border font-[Montserrat]"
-        style={{ width: "8.27in", height: "11.69in" }} // Exact A4 size in inches to ensure one page
+        style={{ width: "8.27in", height: "11.69in" }} // Exact A4 size to fill one page
       >
         {/* Header */}
         <div className="bg-[#025291] text-white p-4 flex justify-between items-start">
@@ -39,7 +39,7 @@ export default function Invoice() {
               <p className="text-xs leading-tight">Ma’s De cozta (PVT)LTD</p>
             </div>
           </div>
-          <div className="text-right text-xs leading-tight">
+          <div className="text-right text-xs leading-tight max-w-[3.5in]">
             <p>39/3/5 A, Pannala Watta, Pannala</p>
             <p>+94 76 15 18 884 / +94 33 62 137</p>
             <p>decostamadu81924@gmail.com</p>
@@ -47,7 +47,7 @@ export default function Invoice() {
         </div>
 
         {/* Background Pattern Section */}
-        <div className="relative bg-gray-50 h-[2.5in]">
+        <div className="relative bg-gray-50 flex-1">
           <div className="absolute inset-0 opacity-20">
             <img
               src={InvoiceBg}
@@ -63,29 +63,29 @@ export default function Invoice() {
           </div>
 
           {/* Invoice Details Section */}
-          <div className="relative grid grid-cols-2 gap-2 px-4 py-4">
+          <div className="relative px-4 py-2">
             <table className="w-full border-collapse text-xs">
               <tbody>
                 <tr>
-                  <td className="bg-[#025291] text-white font-semibold px-2 py-1 w-full">
+                  <td className="bg-[#025291] text-white font-semibold px-2 py-1">
                     Date
                   </td>
                   <td className="bg-[#C3E4FF] px-2 py-1">October 04, 2025</td>
                 </tr>
                 <tr>
-                  <td className="bg-[#025291] text-white font-semibold px-2 py-1 w-full">
+                  <td className="bg-[#025291] text-white font-semibold px-2 py-1">
                     Invoice No
                   </td>
                   <td className="bg-[#C3E4FF] px-2 py-1">INV-2025-001</td>
                 </tr>
                 <tr>
-                  <td className="bg-[#025291] text-white font-semibold px-2 py-1 w-full">
+                  <td className="bg-[#025291] text-white font-semibold px-2 py-1">
                     Due Date
                   </td>
                   <td className="bg-[#C3E4FF] px-2 py-1">November 03, 2025</td>
                 </tr>
                 <tr>
-                  <td className="bg-[#025291] text-white font-semibold px-2 py-1 w-full">
+                  <td className="bg-[#025291] text-white font-semibold px-2 py-1">
                     PO No
                   </td>
                   <td className="bg-[#C3E4FF] px-2 py-1">PO-2025-123</td>
@@ -95,7 +95,7 @@ export default function Invoice() {
           </div>
 
           {/* Shipping Section */}
-          <div className="relative grid grid-cols-2 gap-4 px-4 py-4">
+          <div className="relative grid grid-cols-2 gap-2 px-4 py-2">
             <div>
               <h3 className="font-bold text-[#025291] mb-1 text-xs">SHIP TO :</h3>
               <p className="text-xs">Ceylon Agro Industries,</p>
@@ -112,7 +112,7 @@ export default function Invoice() {
         </div>
 
         {/* Table */}
-        <div className="px-4 py-2 overflow-hidden">
+        <div className="px-4 py-2 flex-1">
           <table className="w-full border-collapse text-xs">
             <thead>
               <tr className="bg-[#025291] text-white text-left">
@@ -142,7 +142,7 @@ export default function Invoice() {
           <div className="w-48 text-xs">
             <div className="flex justify-between py-1 border-b">
               <span>Sub Total :</span>
-              <span>360,000LKR</span>
+              <span className="font-bold">360,000LKR</span>
             </div>
             <div className="flex justify-between py-1 border-b">
               <span>Taxes :</span>
