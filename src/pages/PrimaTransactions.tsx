@@ -543,6 +543,44 @@ const PrimaPage = () => {
     });
   };
 
+   // -------------------- Invoice Navigation --------------------
+  const handleGenerateAnalysis = (transaction: PrimaTransaction) => {
+    // Navigate to the separate invoice page, passing the transaction data via state
+    // This includes date, dateOfExpiration, invoiceNo, poNumber, and other relevant fields
+    navigate('/analysis', { 
+      state: { 
+        transaction: {
+          date: transaction.date,
+          dateOfExpiration: transaction.dateOfExpiration,
+          invoiceNo: transaction.invoiceNo,
+          poNumber: transaction.poNumber,
+          // Include other fields if needed for the invoice, e.g., amount, kilosDelivered, etc.
+          amount: transaction.amount,
+          kilosDelivered: transaction.kilosDelivered,
+          productCode: transaction.productCode,
+          batchCode: transaction.batchCode,
+          truckNo: transaction.truckNo,
+          numberOfBoxes: transaction.numberOfBoxes,
+        }
+      } 
+    });
+
+    try {
+      logAction(
+        currentUser,
+        "Generate Invoice",
+        `Generated invoice for transaction ID: ${transaction.id} (PO ${transaction.poNumber})`
+      );
+    } catch (error) {
+      console.error("Failed to log generate invoice action:", error);
+    }
+
+    showToast({ 
+      title: "Success", 
+      description: `Navigating to invoice for delivery ${transaction.id}` 
+    });
+  };
+
   // -------------------- Edit Functions --------------------
   const handleEditPO = (po: PO) => {
     setEditModal({ 
@@ -1270,6 +1308,15 @@ const PrimaPage = () => {
                             variant="outline" 
                             className="w-full"
                             onClick={() => handleGenerateInvoice(tx)}
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            Invoice
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="w-full"
+                            onClick={() => handleGenerateAnalysis(tx)}
                           >
                             <Download className="w-3 h-3 mr-1" />
                             Invoice
