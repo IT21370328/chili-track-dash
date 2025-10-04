@@ -14,6 +14,7 @@ import Salaries from "./pages/Salaries";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Logs from "./pages/AuditLogTracker"
+import Invoice from "./pages/Invoice";
 
 const queryClient = new QueryClient();
 
@@ -35,8 +36,10 @@ const App = () => (
             <Route path="/production" element={<Production />} />
             <Route path="/prima" element={<PrimaTransactions />} />
             <Route path="/salaries" element={<Salaries />} />
+            <Route path="/invoice" element={<Invoice />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="*" element={<NotFound />} />
+
           </Route>
         </Routes>
       </BrowserRouter>
