@@ -13,10 +13,11 @@ import Expenses from "./pages/Expenses";
 import Production from "./pages/Production";
 import PrimaTransactions from "./pages/PrimaTransactions";
 import Salaries from "./pages/Salaries";
-import Invoice from "./pages/Invoice";
 import Logs from "./pages/AuditLogTracker";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import Invoice from "./pages/NewInvoice";
+
 
 // React Query client
 const queryClient = new QueryClient();
