@@ -105,16 +105,16 @@ export default function Invoice() {
             {/* Shipping Section */}
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <h3 className="font-bold text-[#025291] mb-2 text-xs">SHIP TO :</h3>
-                <p className="text-xs">Ceylon Agro Industries,</p>
-                <p className="text-xs">346, Negombo Road,</p>
-                <p className="text-xs">Seeduwa.</p>
+                <h3 className="font-bold text-[#025291] mb-2 text-sm">SHIP TO :</h3>
+                <p className="text-sm">Ceylon Agro Industries,</p>
+                <p className="text-sm">346, Negombo Road,</p>
+                <p className="text-sm">Seeduwa.</p>
               </div>
               <div>
-                <h3 className="font-bold text-[#025291] mb-2 text-xs">TO :</h3>
-                <p className="text-xs">Ceylon Agro Industries,</p>
-                <p className="text-xs">346, Negombo Road,</p>
-                <p className="text-xs">Seeduwa.</p>
+                <h3 className="font-bold text-[#025291] mb-2 text-sm">TO :</h3>
+                <p className="text-sm">Ceylon Agro Industries,</p>
+                <p className="text-sm">346, Negombo Road,</p>
+                <p className="text-sm">Seeduwa.</p>
               </div>
             </div>
 
@@ -123,22 +123,22 @@ export default function Invoice() {
               <table className="w-full border-collapse text-xs bg-transparent flex-1">
                 <thead>
                   <tr className="bg-[#025291] text-white text-left">
-                    <th className="p-2">NO</th>
-                    <th className="p-2">Description</th>
-                    <th className="p-2">Quantity</th>
-                    <th className="p-2">Unit Price</th>
-                    <th className="p-2">Amount</th>
+                    <th className="p-1">NO</th>
+                    <th className="p-1">Description</th>
+                    <th className="p-1">Quantity</th>
+                    <th className="p-1">Unit Price</th>
+                    <th className="p-1">Amount</th>
                   </tr>
                 </thead>
-                <tbody className="flex-1">
+                <tbody>
                   <tr className="border-b bg-white/80">
-                    <td className="p-2">01</td>
-                    <td className="p-2 font-semibold text-left">
+                    <td className="p-1">01</td>
+                    <td className="p-1 font-semibold text-left">
                       Scotch Bonnet (Nai Miris) Powder
                     </td>
-                    <td className="p-2">30kg</td>
-                    <td className="p-2">12,000LKR/kg</td>
-                    <td className="p-2 text-right">360,000LKR</td>
+                    <td className="p-1">30kg</td>
+                    <td className="p-1">12,000LKR/kg</td>
+                    <td className="p-1 text-right">360,000LKR</td>
                   </tr>
                 </tbody>
               </table>
@@ -188,7 +188,7 @@ export default function Invoice() {
         {/* Footer (sticks to bottom) */}
         <div>
           <div className="text-center py-4 bg-[#F5F9FD]">
-            <p className="text-sm font-bold text-[#025291]">
+            <p className="text-base font-bold text-[#025291]">
               Thank you for Business with us!
             </p>
             <p className="text-[#2B64A0] text-xs">Ma’s De cozta (PVT)LTD</p>
