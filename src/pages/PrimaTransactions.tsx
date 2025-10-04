@@ -10,7 +10,7 @@ interface PO {
   id: number;
   poNumber: string;
   date: string;
-  totalKilos: number;
+  totalKilos: number;F
   remainingKilos: number;
   amount: number;
   status: "Pending" | "Completed";
