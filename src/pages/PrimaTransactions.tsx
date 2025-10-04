@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Eye, X, Truck, DollarSign, Clock, Package, Download, Pencil, Trash2 } from "lucide-react";
-import { generateInvoice } from './NewInvoice';
+// import { generateInvoice } from './NewInvoice';
 import { logAction } from "@/pages/logHelper"; // ✅ Added logger import
 
 // Use environment variable for API URL
@@ -821,32 +821,32 @@ const PrimaPage = () => {
   };
 
   // -------------------- Invoice Generation Wrapper --------------------
-  const handleGenerateInvoice = async (transaction: PrimaTransaction) => {
-    try {
-      await generateInvoice(transaction, () => {
-        try {
-          logAction(
-            currentUser,
-            "Generate Invoice",
-            `Generated invoice for transaction ID: ${transaction.id} (PO ${transaction.poNumber})`
-          );
-        } catch (error) {
-          console.error("Failed to log generate invoice action:", error);
-        }
-        showToast({ 
-          title: "Success", 
-          description: `Invoice for delivery ${transaction.id} generated and downloaded.` 
-        });
-      });
-    } catch (error) {
-      console.error("Invoice generation failed:", error);
-      showToast({
-        title: "Error",
-        description: "Failed to generate invoice",
-        variant: "destructive",
-      });
-    }
-  };
+  // const handleGenerateInvoice = async (transaction: PrimaTransaction) => {
+  //   try {
+  //     await generateInvoice(transaction, () => {
+  //       try {
+  //         logAction(
+  //           currentUser,
+  //           "Generate Invoice",
+  //           `Generated invoice for transaction ID: ${transaction.id} (PO ${transaction.poNumber})`
+  //         );
+  //       } catch (error) {
+  //         console.error("Failed to log generate invoice action:", error);
+  //       }
+  //       showToast({ 
+  //         title: "Success", 
+  //         description: `Invoice for delivery ${transaction.id} generated and downloaded.` 
+  //       });
+  //     });
+  //   } catch (error) {
+  //     console.error("Invoice generation failed:", error);
+  //     showToast({
+  //       title: "Error",
+  //       description: "Failed to generate invoice",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
 
   return (
     <div className="min-h-screen p-6 bg-slate-50 space-y-6">
@@ -1229,7 +1229,7 @@ const PrimaPage = () => {
                             size="sm" 
                             variant="outline" 
                             className="w-full"
-                            onClick={() => handleGenerateInvoice(tx)}
+                            // onClick={() => handleGenerateInvoice(tx)}
                           >
                             <Download className="w-3 h-3 mr-1" />
                             Invoice
