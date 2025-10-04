@@ -66,7 +66,7 @@ export default function Invoice() {
           <div className="relative flex-1 flex flex-col px-4 py-6 space-y-3">
             {/* Invoice Title */}
             <div className="text-center py-2 border-b">
-              <h2 className="text-[80px] font-bold text-[#025291]">INVOICE</h2>
+              <h2 className="text-3xl font-bold text-[#025291]">INVOICE</h2>
               <p className="text-[#025291]/50 text-sm">Ma’s De cozta (PVT)LTD</p>
             </div>
 
@@ -188,13 +188,13 @@ export default function Invoice() {
         {/* Footer (sticks to bottom) */}
         <div>
           <div className="text-center py-4 bg-[#F5F9FD]">
-            <p className="text-sm font-bold text-[#025291]">
+            <p className="text-lg font-bold text-[#025291]">
               Thank you for Business with us!
             </p>
-            <p className="text-[#2B64A0] text-xs">Ma’s De cozta (PVT)LTD</p>
+            <p className="text-[#2B64A0] text-md">Ma’s De cozta (PVT)LTD</p>
           </div>
           <div className="bg-[#025291]">
-            <div className="text-center py-2 text-xs text-white">PV 00259719</div>
+            <div className="text-center py-2 text-md text-white">PV 00259719</div>
           </div>
         </div>
       </div>
