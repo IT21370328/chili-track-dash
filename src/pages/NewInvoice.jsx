@@ -9,7 +9,7 @@ export default function Invoice() {
   const handleDownload = () => {
     const element = invoiceRef.current;
     const opt = {
-      margin: 0, // ✅ No margins at all
+      margin: 0,
       filename: "invoice.pdf",
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2 },
@@ -23,10 +23,10 @@ export default function Invoice() {
       {/* Invoice */}
       <div
         ref={invoiceRef}
-        className="bg-white border font-[Montserrat]"
+        className="bg-white border font-[Montserrat] flex flex-col justify-between"
         style={{
           width: "8.27in",
-          height: "11.69in",
+          height: "11.69in", // Exact A4 size
           margin: 0,
           padding: 0,
         }}
@@ -37,9 +37,9 @@ export default function Invoice() {
             <img
               src={Logo}
               alt="Company Logo"
-              className="w-12 h-12 object-contain bg-white"
+              className="w-12 h-12 object-contain bg-white rounded flex-shrink-0"
             />
-            <div>
+            <div className="flex-shrink-0">
               <h1 className="text-xl font-bold leading-tight">MA’S DE COZTA</h1>
               <p className="text-xs leading-tight">Ma’s De cozta (PVT)LTD</p>
             </div>
@@ -51,8 +51,9 @@ export default function Invoice() {
           </div>
         </div>
 
-        {/* Background Pattern Section */}
-        <div className="relative bg-gray-50 flex-1">
+        {/* Background + Content */}
+        <div className="relative flex-1 flex flex-col">
+          {/* Background Image */}
           <div className="absolute inset-0 opacity-20">
             <img
               src={InvoiceBg}
@@ -61,135 +62,140 @@ export default function Invoice() {
             />
           </div>
 
-          {/* Invoice Title */}
-          <div className="relative text-center py-4 border-b">
-            <h2 className="text-2xl font-bold text-[#025291]">INVOICE</h2>
-            <p className="text-[#025291]/50 text-sm">Ma’s De cozta (PVT)LTD</p>
+          {/* Main Content */}
+          <div className="relative flex-1 flex flex-col">
+            {/* Invoice Title */}
+            <div className="text-center py-4 border-b">
+              <h2 className="text-2xl font-bold text-[#025291]">INVOICE</h2>
+              <p className="text-[#025291]/50 text-sm">Ma’s De cozta (PVT)LTD</p>
+            </div>
+
+            {/* Details Section */}
+            <div className="px-4 py-2">
+              <table className="w-full border-collapse text-xs">
+                <tbody>
+                  <tr>
+                    <td className="bg-[#025291] text-white font-semibold px-2 py-1">
+                      Date
+                    </td>
+                    <td className="bg-[#C3E4FF] px-2 py-1">October 04, 2025</td>
+                  </tr>
+                  <tr>
+                    <td className="bg-[#025291] text-white font-semibold px-2 py-1">
+                      Invoice No
+                    </td>
+                    <td className="bg-[#C3E4FF] px-2 py-1">INV-2025-001</td>
+                  </tr>
+                  <tr>
+                    <td className="bg-[#025291] text-white font-semibold px-2 py-1">
+                      Due Date
+                    </td>
+                    <td className="bg-[#C3E4FF] px-2 py-1">November 03, 2025</td>
+                  </tr>
+                  <tr>
+                    <td className="bg-[#025291] text-white font-semibold px-2 py-1">
+                      PO No
+                    </td>
+                    <td className="bg-[#C3E4FF] px-2 py-1">PO-2025-123</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Shipping Section */}
+            <div className="grid grid-cols-2 gap-2 px-4 py-2">
+              <div>
+                <h3 className="font-bold text-[#025291] mb-1 text-xs">SHIP TO :</h3>
+                <p className="text-xs">Ceylon Agro Industries,</p>
+                <p className="text-xs">346, Negombo Road,</p>
+                <p className="text-xs">Seeduwa.</p>
+              </div>
+              <div>
+                <h3 className="font-bold text-[#025291] mb-1 text-xs">TO :</h3>
+                <p className="text-xs">Ceylon Agro Industries,</p>
+                <p className="text-xs">346, Negombo Road,</p>
+                <p className="text-xs">Seeduwa.</p>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="px-4 py-2 flex-1">
+              <table className="w-full border-collapse text-xs bg-transparent">
+                <thead>
+                  <tr className="bg-[#025291] text-white text-left">
+                    <th className="p-2">NO</th>
+                    <th className="p-2">Description</th>
+                    <th className="p-2">Quantity</th>
+                    <th className="p-2">Unit Price</th>
+                    <th className="p-2">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b bg-white/80">
+                    <td className="p-2">01</td>
+                    <td className="p-2 font-semibold text-left">
+                      Scotch Bonnet (Nai Miris) Powder
+                    </td>
+                    <td className="p-2">30kg</td>
+                    <td className="p-2">12,000LKR/kg</td>
+                    <td className="p-2 text-right">360,000LKR</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Totals */}
+            <div className="flex justify-end px-4 py-2">
+              <div className="w-48 text-xs bg-white/80 p-2 rounded">
+                <div className="flex justify-between py-1 border-b">
+                  <span>Sub Total :</span>
+                  <span className="font-bold">360,000LKR</span>
+                </div>
+                <div className="flex justify-between py-1 border-b">
+                  <span>Taxes :</span>
+                  <span>0LKR</span>
+                </div>
+                <div className="flex justify-between py-1 border-b">
+                  <span>Discount :</span>
+                  <span>0LKR</span>
+                </div>
+                <div className="flex justify-between font-bold py-1">
+                  <span>Total Amount :</span>
+                  <span>360,000LKR</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bank Details */}
+            <div className="px-4 py-2">
+              <h3 className="font-bold text-[#025291] mb-1 text-xs">Bank Details</h3>
+              <p className="text-xs">
+                <strong>Bank:</strong> Sampath Bank
+              </p>
+              <p className="text-xs">
+                <strong>Branch:</strong> Pannala
+              </p>
+              <p className="text-xs">
+                <strong>Account Name:</strong> Ma’s De Cozta Pvt Ltd
+              </p>
+              <p className="text-xs">
+                <strong>Account Number:</strong> 016610003145
+              </p>
+            </div>
           </div>
+        </div>
 
-          {/* Invoice Details Section */}
-          <div className="relative px-4 py-2">
-            <table className="w-full border-collapse text-xs">
-              <tbody>
-                <tr>
-                  <td className="bg-[#025291] text-white font-semibold px-2 py-1">
-                    Date
-                  </td>
-                  <td className="bg-[#C3E4FF] px-2 py-1">October 04, 2025</td>
-                </tr>
-                <tr>
-                  <td className="bg-[#025291] text-white font-semibold px-2 py-1">
-                    Invoice No
-                  </td>
-                  <td className="bg-[#C3E4FF] px-2 py-1">INV-2025-001</td>
-                </tr>
-                <tr>
-                  <td className="bg-[#025291] text-white font-semibold px-2 py-1">
-                    Due Date
-                  </td>
-                  <td className="bg-[#C3E4FF] px-2 py-1">November 03, 2025</td>
-                </tr>
-                <tr>
-                  <td className="bg-[#025291] text-white font-semibold px-2 py-1">
-                    PO No
-                  </td>
-                  <td className="bg-[#C3E4FF] px-2 py-1">PO-2025-123</td>
-                </tr>
-              </tbody>
-            </table>
+        {/* Footer (sticks to bottom) */}
+        <div>
+          <div className="text-center py-4 bg-[#F5F9FD]">
+            <p className="text-sm font-bold text-[#025291]">
+              Thank you for Business with us!
+            </p>
+            <p className="text-[#2B64A0] text-xs">Ma’s De cozta (PVT)LTD</p>
           </div>
-
-          {/* Shipping Section */}
-          <div className="relative grid grid-cols-2 gap-2 px-4 py-2">
-            <div>
-              <h3 className="font-bold text-[#025291] mb-1 text-xs">SHIP TO :</h3>
-              <p className="text-xs">Ceylon Agro Industries,</p>
-              <p className="text-xs">346, Negombo Road,</p>
-              <p className="text-xs">Seeduwa.</p>
-            </div>
-            <div>
-              <h3 className="font-bold text-[#025291] mb-1 text-xs">TO :</h3>
-              <p className="text-xs">Ceylon Agro Industries,</p>
-              <p className="text-xs">346, Negombo Road,</p>
-              <p className="text-xs">Seeduwa.</p>
-            </div>
+          <div className="bg-[#025291]">
+            <div className="text-center py-2 text-xs text-white">PV 00259719</div>
           </div>
-        </div>
-
-        {/* Table */}
-        <div className="px-4 py-2 flex-1">
-          <table className="w-full border-collapse text-xs">
-            <thead>
-              <tr className="bg-[#025291] text-white text-left">
-                <th className="p-2">NO</th>
-                <th className="p-2">Description</th>
-                <th className="p-2">Quantity</th>
-                <th className="p-2">Unit Price</th>
-                <th className="p-2">Amount</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white">
-              <tr className="border-b">
-                <td className="p-2">01</td>
-                <td className="p-2 font-semibold text-left">
-                  Scotch Bonnet (Nai Miris) Powder
-                </td>
-                <td className="p-2">30kg</td>
-                <td className="p-2">12,000LKR/kg</td>
-                <td className="p-2 text-right">360,000LKR</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Totals */}
-        <div className="flex justify-end px-4 py-2">
-          <div className="w-48 text-xs">
-            <div className="flex justify-between py-1 border-b">
-              <span>Sub Total :</span>
-              <span className="font-bold">360,000LKR</span>
-            </div>
-            <div className="flex justify-between py-1 border-b">
-              <span>Taxes :</span>
-              <span>0LKR</span>
-            </div>
-            <div className="flex justify-between py-1 border-b">
-              <span>Discount :</span>
-              <span>0LKR</span>
-            </div>
-            <div className="flex justify-between font-bold py-1">
-              <span>Total Amount :</span>
-              <span>360,000LKR</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Bank Details */}
-        <div className="px-4 py-2">
-          <h3 className="font-bold text-[#025291] mb-1 text-xs">Bank Details</h3>
-          <p className="text-xs">
-            <strong>Bank:</strong> Sampath Bank
-          </p>
-          <p className="text-xs">
-            <strong>Branch:</strong> Pannala
-          </p>
-          <p className="text-xs">
-            <strong>Account Name:</strong> Ma’s De Cozta Pvt Ltd
-          </p>
-          <p className="text-xs">
-            <strong>Account Number:</strong> 016610003145
-          </p>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center py-4 bg-[#F5F9FD]">
-          <p className="text-sm font-bold text-[#025291]">
-            Thank you for Business with us!
-          </p>
-          <p className="text-[#2B64A0] text-xs">Ma’s De cozta (PVT)LTD</p>
-        </div>
-        <div className="bg-[#025291]">
-          <div className="text-center py-2 text-xs text-white">PV 00259719</div>
         </div>
       </div>
 
