@@ -32,7 +32,7 @@ export default function Invoice() {
         }}
       >
         {/* Header */}
-        <div className="bg-[#025291] text-white p-4 flex justify-between items-start">
+        <div className="bg-[#025291] text-white p-6 flex justify-between items-start">
           <div className="flex items-start gap-2">
             <img
               src={Logo}
@@ -63,37 +63,37 @@ export default function Invoice() {
           </div>
 
           {/* Main Content */}
-          <div className="relative flex-1 flex flex-col px-4 py-3 space-y-3">
+          <div className="relative flex-1 flex flex-col px-4 py-6 space-y-3">
             {/* Invoice Title */}
             <div className="text-center py-2 border-b">
-              <h2 className="text-2xl font-bold text-[#025291]">INVOICE</h2>
+              <h2 className="text-[80px] font-bold text-[#025291]">INVOICE</h2>
               <p className="text-[#025291]/50 text-sm">Ma’s De cozta (PVT)LTD</p>
             </div>
 
             {/* Details Section */}
-            <div>
+            <div className="mt-6">
               <table className="w-full border-collapse text-xs">
                 <tbody>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-2 py-1">
+                    <td className="bg-[#025291] text-white font-semibold px-2 py-2">
                       Date
                     </td>
                     <td className="bg-[#C3E4FF] px-2 py-1">October 04, 2025</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-2 py-1">
+                    <td className="bg-[#025291] text-white font-semibold px-2 py-2">
                       Invoice No
                     </td>
                     <td className="bg-[#C3E4FF] px-2 py-1">INV-2025-001</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-2 py-1">
+                    <td className="bg-[#025291] text-white font-semibold px-2 py-2">
                       Due Date
                     </td>
                     <td className="bg-[#C3E4FF] px-2 py-1">November 03, 2025</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-2 py-1">
+                    <td className="bg-[#025291] text-white font-semibold px-2 py-2">
                       PO No
                     </td>
                     <td className="bg-[#C3E4FF] px-2 py-1">PO-2025-123</td>
@@ -103,24 +103,24 @@ export default function Invoice() {
             </div>
 
             {/* Shipping Section */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-6 mt-6">
               <div>
-                <h3 className="font-bold text-[#025291] mb-1 text-xs">SHIP TO :</h3>
-                <p className="text-xs">Ceylon Agro Industries,</p>
-                <p className="text-xs">346, Negombo Road,</p>
-                <p className="text-xs">Seeduwa.</p>
+                <h3 className="font-bold text-[#025291] mb-2 text-md">SHIP TO :</h3>
+                <p className="text-md">Ceylon Agro Industries,</p>
+                <p className="text-md">346, Negombo Road,</p>
+                <p className="text-md">Seeduwa.</p>
               </div>
               <div>
-                <h3 className="font-bold text-[#025291] mb-1 text-xs">TO :</h3>
-                <p className="text-xs">Ceylon Agro Industries,</p>
-                <p className="text-xs">346, Negombo Road,</p>
-                <p className="text-xs">Seeduwa.</p>
+                <h3 className="font-bold text-[#025291] mb-2 text-md">TO :</h3>
+                <p className="text-md">Ceylon Agro Industries,</p>
+                <p className="text-md">346, Negombo Road,</p>
+                <p className="text-md">Seeduwa.</p>
               </div>
             </div>
 
             {/* Table */}
-            <div className="flex-1">
-              <table className="w-full border-collapse text-xs bg-transparent">
+            <div className="flex-1 mt-6">
+              <table className="w-full border-collapse text-md bg-transparent">
                 <thead>
                   <tr className="bg-[#025291] text-white text-left">
                     <th className="p-2">NO</th>
@@ -145,21 +145,21 @@ export default function Invoice() {
             </div>
 
             {/* Totals */}
-            <div className="flex justify-end">
+            <div className="flex mt-6">
               <div className="w-48 text-xs bg-white/80 p-2 rounded">
-                <div className="flex justify-between py-1 border-b">
+                <div className="flex justify-between py-2 border-b">
                   <span>Sub Total :</span>
                   <span className="font-bold">360,000LKR</span>
                 </div>
-                <div className="flex justify-between py-1 border-b">
+                <div className="flex justify-between py-2 border-b">
                   <span>Taxes :</span>
                   <span>0LKR</span>
                 </div>
-                <div className="flex justify-between py-1 border-b">
+                <div className="flex justify-between py-2 border-b">
                   <span>Discount :</span>
                   <span>0LKR</span>
                 </div>
-                <div className="flex justify-between font-bold py-1">
+                <div className="flex justify-between font-bold py-2">
                   <span>Total Amount :</span>
                   <span>360,000LKR</span>
                 </div>
@@ -167,18 +167,18 @@ export default function Invoice() {
             </div>
 
             {/* Bank Details */}
-            <div>
-              <h3 className="font-bold text-[#025291] mb-1 text-xs">Bank Details</h3>
-              <p className="text-xs">
+            <div className="mt-6">
+              <h3 className="font-bold text-[#025291] mb-1 text-lg">Bank Details</h3>
+              <p className="text-md">
                 <strong>Bank:</strong> Sampath Bank
               </p>
-              <p className="text-xs">
+              <p className="text-md">
                 <strong>Branch:</strong> Pannala
               </p>
-              <p className="text-xs">
+              <p className="text-md">
                 <strong>Account Name:</strong> Ma’s De Cozta Pvt Ltd
               </p>
-              <p className="text-xs">
+              <p className="text-md">
                 <strong>Account Number:</strong> 016610003145
               </p>
             </div>
@@ -187,7 +187,7 @@ export default function Invoice() {
 
         {/* Footer (sticks to bottom) */}
         <div>
-          <div className="text-center py-3 bg-[#F5F9FD]">
+          <div className="text-center py-4 bg-[#F5F9FD]">
             <p className="text-sm font-bold text-[#025291]">
               Thank you for Business with us!
             </p>
