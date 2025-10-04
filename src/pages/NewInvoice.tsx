@@ -91,10 +91,19 @@ export default function Invoice(): JSX.Element {
               <p className="text-xs m-0 p-0">Ma’s De cozta (PVT)LTD</p>
             </div>
           </div>
-          <div className="text-right text-xs max-w-[3.5in]" style={{ lineHeight: 1 }}>
-            <p className="m-0 p-0">39/3/5 A, Pannala Watta, Pannala</p>
-            <p className="m-0 p-0">+94 76 15 18 884 / +94 33 62 137</p>
-            <p className="m-0 p-0">decostamadu81924@gmail.com</p>
+          <div className="text-left text-xs max-w-[3.5in]" style={{ lineHeight: 1 }}>
+            <p className="m-0 p-0 flex items-center gap-2">
+              <span>📍</span>
+              <span>39/3/5 A, Pannala Watta, Pannala</span>
+            </p>
+            <p className="m-0 p-0 flex items-center gap-2 mt-1">
+              <span>📞</span>
+              <span>+94 76 15 18 884 / +94 33 62 137</span>
+            </p>
+            <p className="m-0 p-0 flex items-center gap-2 mt-1">
+              <span>✉️</span>
+              <span>decostamadu81924@gmail.com</span>
+            </p>
           </div>
         </div>
 
