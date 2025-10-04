@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Eye, X, Truck, DollarSign, Clock, Package, Download, Pencil, Trash2 } from "lucide-react";
-import { generateInvoice } from './Invoice';
+import { generateInvoice } from './NewInvoice';
 import { logAction } from "@/pages/logHelper"; // ✅ Added logger import
 
 // Use environment variable for API URL
