@@ -122,25 +122,25 @@ export default function Invoice(): JSX.Element {
               <table className="w-full border-collapse text-xs" style={{ lineHeight: 1 }}>
                 <tbody>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-3 py-3" style={{ lineHeight: 1 }}>
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3 pb-1" style={{ lineHeight: 1 }}>
                       Date
                     </td>
                     <td className="bg-[#C3E4FF] px-3 py-3" style={{ lineHeight: 1 }}>{formatDate(transaction.date)}</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-3 py-3" style={{ lineHeight: 1 }}>
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3 pb-1" style={{ lineHeight: 1 }}>
                       Invoice No
                     </td>
                     <td className="bg-[#C3E4FF] px-3 py-3" style={{ lineHeight: 1 }}>{transaction.invoiceNo}</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-3 py-3" style={{ lineHeight: 1 }}>
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3 pb-1" style={{ lineHeight: 1 }}>
                       Due Date
                     </td>
                     <td className="bg-[#C3E4FF] px-3 py-3" style={{ lineHeight: 1 }}>{formatDate(transaction.dateOfExpiration)}</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-3 py-3" style={{ lineHeight: 1 }}>
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3 pb-1" style={{ lineHeight: 1 }}>
                       PO No
                     </td>
                     <td className="bg-[#C3E4FF] px-3 py-3" style={{ lineHeight: 1 }}>{transaction.poNumber}</td>
@@ -170,11 +170,11 @@ export default function Invoice(): JSX.Element {
               <table className="w-full border-collapse text-xs bg-transparent flex-1" style={{ lineHeight: 1 }}>
                 <thead>
                   <tr className="bg-[#025291] text-white text-left" style={{ lineHeight: 1 }}>
-                    <th className="p-1" style={{ lineHeight: 1 }}>NO</th>
-                    <th className="p-1" style={{ lineHeight: 1 }}>Description</th>
-                    <th className="p-1" style={{ lineHeight: 1 }}>Quantity</th>
-                    <th className="p-1" style={{ lineHeight: 1 }}>Unit Price</th>
-                    <th className="p-1" style={{ lineHeight: 1 }}>Amount</th>
+                    <th className="p-1 pb-2" style={{ lineHeight: 1 }}>NO</th>
+                    <th className="p-1 pb-2" style={{ lineHeight: 1 }}>Description</th>
+                    <th className="p-1 pb-2" style={{ lineHeight: 1 }}>Quantity</th>
+                    <th className="p-1 pb-2" style={{ lineHeight: 1 }}>Unit Price</th>
+                    <th className="p-1 pb-2" style={{ lineHeight: 1 }}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
