@@ -61,8 +61,6 @@ export default function CertificateOfAnalysis(): JSX.Element {
   };
 
   return (
-    <div>
-    <div>
     <div className="flex flex-col items-center">
       <div
         ref={certRef}
@@ -278,9 +276,9 @@ export default function CertificateOfAnalysis(): JSX.Element {
             </div >
             {/* Signatures */}
             <div className="pt-6 flex justify-between text-center text-xs" style={{ lineHeight: 1 }}>
-              <div className="w-1/4 border-t-2 border-gray-300 pt-6 m-0 p-0">Quality Assurance Manager</div>
-              <div className="w-1/4 border-t-2 border-gray-300 pt-6 m-0 p-0">Production Manager</div>
-              <div className="w-1/4 border-t-2 border-gray-300 pt-6 m-0 p-0">Date</div>
+              <div className="w-1/4 border-t-1 border-gray-300 pt-6 m-0 p-0">Quality Assurance Manager</div>
+              <div className="w-1/4 border-t-1 border-gray-300 pt-6 m-0 p-0">Production Manager</div>
+              <div className="w-1/4 border-t-1 border-gray-300 pt-6 m-0 p-0">Date</div>
             </div>
           </div>
         </div>
@@ -292,18 +290,15 @@ export default function CertificateOfAnalysis(): JSX.Element {
           </div>
         </div>
       </div>
-      </div>
 
-      <div>
       {/* Download Button */}
+      <div className="h-32"></div>
       <button
         onClick={handleDownload}
-        className="mt-6 px-6 py-2 bg-[#025291] text-white rounded-lg shadow hover:bg-[#013d6e] transition"
+        className="px-6 py-2 bg-[#025291] text-white rounded-lg shadow hover:bg-[#013d6e] transition"
       >
         Download Certificate
       </button>
-    </div>
-    </div>
     </div>
   );
 }
