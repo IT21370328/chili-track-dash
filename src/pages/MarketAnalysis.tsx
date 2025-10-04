@@ -3,17 +3,18 @@ import Logo from "../../src/assets/logo.jpg";
 import AnalysisBg from "../../src/assets/invoicebg.jpg";
 import html2pdf from "html2pdf.js";
 
-export default function CertificateOfAnalysis() {
-  const certRef = useRef();
+export default function CertificateOfAnalysis(): JSX.Element {
+  const certRef = useRef<HTMLDivElement>(null);
 
-  const handleDownload = () => {
+  const handleDownload = (): void => {
     const element = certRef.current;
+    if (!element) return;
     const opt = {
       margin: 0,
       filename: "certificate-of-analysis.pdf",
-      image: { type: "jpeg", quality: 0.98 },
+      image: { type: "jpeg" as const, quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+      jsPDF: { unit: "in" as const, format: "a4" as const, orientation: "portrait" as const },
     };
     html2pdf().set(opt).from(element).save();
   };
