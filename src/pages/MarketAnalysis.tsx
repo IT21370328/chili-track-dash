@@ -294,7 +294,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
       {/* Download Button */}
       <button
         onClick={handleDownload}
-        className="mt-6 px-6 py-2 bg-[#025291] text-white rounded-lg shadow hover:bg-[#013d6e] transition"
+        className="mt-20 px-6 py-2 bg-[#025291] text-white rounded-lg shadow hover:bg-[#013d6e] transition"
       >
         Download Certificate
       </button>
