@@ -137,7 +137,7 @@ export default function Invoice(): JSX.Element {
                     <td className="bg-[#025291] text-white font-semibold px-3 py-3" style={{ lineHeight: 1 }}>
                       Due Date
                     </td>
-                    <td className="bg-[#C3E4FF] px-3 py-3" style={{ lineHeight: 1 }}>{formatDate(transaction.dateOfExpiration)}</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3" style={{ lineHeight: 1 }}>N/A</td>
                   </tr>
                   <tr className="pb-3">
                     <td className="bg-[#025291] text-white font-semibold px-3 py-3" style={{ lineHeight: 1 }}>
