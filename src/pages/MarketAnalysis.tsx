@@ -102,7 +102,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
               <span>✉️</span>
               <span>decostamadu81924@gmail.com</span>
             </p>
-          </div>ss
+          </div>
         </div>
 
         {/* Background + Content */}
@@ -276,7 +276,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
 
             {/* Additional Remarks */}
             <div className="text-xs" style={{ lineHeight: 1 }}>
-              <h3 className="font-bold text-[#025291] mb-2 m-0 p-0">Additional Remarks :</h3>
+              <h3 className="font-bold text-[#025291] -mt-4 m-0 p-0">Additional Remarks :</h3>
               <p className="m-0 p-0">
                 We hereby certify that the aforementioned product meets the most
                 recent Ma's De Cozta (Pvt) Ltd. product specifications and was
