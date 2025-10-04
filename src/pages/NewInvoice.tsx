@@ -3,17 +3,18 @@ import Logo from "../../src/assets/logo.jpg";
 import InvoiceBg from "../../src/assets/invoicebg.jpg";
 import html2pdf from "html2pdf.js";
 
-export default function Invoice() {
-  const invoiceRef = useRef();
+export default function Invoice(): JSX.Element {
+  const invoiceRef = useRef<HTMLDivElement>(null);
 
-  const handleDownload = () => {
+  const handleDownload = (): void => {
     const element = invoiceRef.current;
+    if (!element) return;
     const opt = {
       margin: 0,
       filename: "invoice.pdf",
-      image: { type: "jpeg", quality: 0.98 },
+      image: { type: "jpeg" as const, quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+      jsPDF: { unit: "in" as const, format: "a4" as const, orientation: "portrait" as const },
     };
     html2pdf().set(opt).from(element).save();
   };
