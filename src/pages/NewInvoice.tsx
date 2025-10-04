@@ -1,12 +1,15 @@
+import Logo from "../../src/assets/logo.jpg";
+import InvoiceBg from "../../src/assets/invoicebg.jpg";
+
 export default function Invoice() {
   return (
     <div className="bg-white w-[900px] mx-auto shadow-lg rounded-lg overflow-hidden border">
       {/* Header */}
-      <div className="bg-[#0B2D6D] text-white p-6 flex justify-between items-center">
+      <div className="bg-[#025291] text-white p-6 flex justify-between items-center">
         <div className="flex items-center gap-4">
           {/* Logo Placeholder */}
           <img
-            src="/sample-logo.png"
+            src={Logo}
             alt="Company Logo"
             className="w-16 h-16 object-contain bg-white rounded"
           />
@@ -27,7 +30,7 @@ export default function Invoice() {
         {/* Placeholder for patterned background image */}
         <div className="absolute inset-0 opacity-20">
           <img
-            src="/sample-bg.png"
+            src={InvoiceBg}
             alt="Background pattern"
             className="w-full h-full object-cover"
           />
@@ -35,8 +38,8 @@ export default function Invoice() {
 
         {/* Invoice Title */}
         <div className="relative text-center py-10 border-b">
-          <h2 className="text-3xl font-bold text-[#0B2D6D]">INVOICE</h2>
-          <p className="text-[#2B64A0]">Ma’s De cozta (PVT)LTD</p>
+          <h2 className="text-3xl font-bold text-[#025291]">INVOICE</h2>
+          <p className="text-[#025291]/50">Ma’s De cozta (PVT)LTD</p>
         </div>
 
         {/* Invoice Details Section */}
@@ -44,20 +47,20 @@ export default function Invoice() {
           <table className="w-full border-collapse text-sm">
             <tbody>
               <tr>
-                <td className="bg-[#0B2D6D] text-white font-semibold px-4 py-2 w-1/4">Date</td>
-                <td className="bg-[#E9F2FA] px-4 py-2">__________</td>
+                <td className="bg-[#025291] text-white font-semibold px-4 py-2 w-1/4">Date</td>
+                <td className="bg-[#C3E4FF] px-4 py-2"></td>
               </tr>
               <tr>
-                <td className="bg-[#0B2D6D] text-white font-semibold px-4 py-2">Invoice No</td>
-                <td className="bg-[#E9F2FA] px-4 py-2">__________</td>
+                <td className="bg-[#025291] text-white font-semibold px-4 py-2">Invoice No</td>
+                <td className="bg-[#C3E4FF] px-4 py-2"></td>
               </tr>
               <tr>
-                <td className="bg-[#0B2D6D] text-white font-semibold px-4 py-2">Due Date</td>
-                <td className="bg-[#E9F2FA] px-4 py-2">__________</td>
+                <td className="bg-[#025291] text-white font-semibold px-4 py-2">Due Date</td>
+                <td className="bg-[#C3E4FF] px-4 py-2"></td>
               </tr>
               <tr>
-                <td className="bg-[#0B2D6D] text-white font-semibold px-4 py-2">PO No</td>
-                <td className="bg-[#E9F2FA] px-4 py-2">__________</td>
+                <td className="bg-[#025291] text-white font-semibold px-4 py-2">PO No</td>
+                <td className="bg-[#C3E4FF] px-4 py-2"></td>
               </tr>
             </tbody>
           </table>
@@ -66,13 +69,13 @@ export default function Invoice() {
         {/* Shipping Section */}
         <div className="relative grid grid-cols-2 gap-4 p-6">
           <div>
-            <h3 className="font-bold text-[#0B2D6D] mb-1">SHIP TO :</h3>
+            <h3 className="font-bold text-[#025291] mb-1">SHIP TO :</h3>
             <p>Ceylon Agro Industries,</p>
             <p>346, Negombo Road,</p>
             <p>Seeduwa.</p>
           </div>
           <div>
-            <h3 className="font-bold text-[#0B2D6D] mb-1">TO :</h3>
+            <h3 className="font-bold text-[#025291] mb-1">TO :</h3>
             <p>Ceylon Agro Industries,</p>
             <p>346, Negombo Road,</p>
             <p>Seeduwa.</p>
@@ -83,7 +86,7 @@ export default function Invoice() {
       {/* Table */}
       <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="bg-[#0B2D6D] text-white text-left">
+          <tr className="bg-[#025291] text-white text-left">
             <th className="p-3">NO</th>
             <th className="p-3">Description</th>
             <th className="p-3">Quantity</th>
@@ -135,11 +138,13 @@ export default function Invoice() {
 
       {/* Footer */}
       <div className="text-center py-8 bg-[#F5F9FD]">
-        <p className="text-lg font-bold text-[#0B2D6D]">Thank you for Business with us!</p>
+        <p className="text-lg font-bold text-[#025291]">Thank you for Business with us!</p>
         <p className="text-[#2B64A0]">Ma’s De cozta (PVT)LTD</p>
       </div>
-      <div className="text-center py-2 text-xs text-gray-600">
+      <div className="bg-[#025291]">
+      <div className="text-center py-3 text-xs text-white">
         PV 00259719
+      </div>
       </div>
     </div>
   );
