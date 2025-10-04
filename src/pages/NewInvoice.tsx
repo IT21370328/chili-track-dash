@@ -52,7 +52,9 @@ export default function Invoice(): JSX.Element {
         scale: 2, 
         useCORS: true, 
         allowTaint: true, 
-        letterRendering: true 
+        letterRendering: true,
+        logging: false,
+        backgroundColor: '#ffffff'
       },
       jsPDF: { unit: "in" as const, format: "a4" as const, orientation: "portrait" as const },
     };
@@ -64,7 +66,7 @@ export default function Invoice(): JSX.Element {
       {/* Invoice */}
       <div
         ref={invoiceRef}
-        className="bg-white font-[Montserrat] flex flex-col justify-between leading-none"
+        className="bg-white font-[Montserrat] flex flex-col justify-between"
         style={{
           width: "8.27in",
           height: "11.69in", // Exact A4 size
@@ -72,25 +74,27 @@ export default function Invoice(): JSX.Element {
           padding: 0,
           border: "none",
           boxSizing: "border-box",
+          lineHeight: 1,
+          fontSize: '16px'
         }}
       >
         {/* Header */}
-        <div className="bg-[#025291] text-white p-4 flex justify-between items-start leading-tight">
+        <div className="bg-[#025291] text-white p-4 flex justify-between items-start" style={{ lineHeight: 1 }}>
           <div className="flex items-start gap-2">
             <img
               src={Logo}
               alt="Company Logo"
               className="w-12 h-12 object-contain bg-white rounded flex-shrink-0"
             />
-            <div className="flex-shrink-0 leading-tight">
-              <h1 className="text-xl font-bold">MA’S DE COZTA</h1>
-              <p className="text-xs">Ma’s De cozta (PVT)LTD</p>
+            <div className="flex-shrink-0" style={{ lineHeight: 1 }}>
+              <h1 className="text-xl font-bold m-0 p-0">MA’S DE COZTA</h1>
+              <p className="text-xs m-0 p-0">Ma’s De cozta (PVT)LTD</p>
             </div>
           </div>
-          <div className="text-right text-xs leading-tight max-w-[3.5in]">
-            <p>39/3/5 A, Pannala Watta, Pannala</p>
-            <p>+94 76 15 18 884 / +94 33 62 137</p>
-            <p>decostamadu81924@gmail.com</p>
+          <div className="text-right text-xs max-w-[3.5in]" style={{ lineHeight: 1 }}>
+            <p className="m-0 p-0">39/3/5 A, Pannala Watta, Pannala</p>
+            <p className="m-0 p-0">+94 76 15 18 884 / +94 33 62 137</p>
+            <p className="m-0 p-0">decostamadu81924@gmail.com</p>
           </div>
         </div>
 
@@ -106,103 +110,103 @@ export default function Invoice(): JSX.Element {
           </div>
 
           {/* Main Content */}
-          <div className="relative flex-1 flex flex-col px-6 py-10 space-y-6 leading-tight">
+          <div className="relative flex-1 flex flex-col px-6 py-10 space-y-6" style={{ lineHeight: 1 }}>
             {/* Invoice Title */}
-            <div className="text-center py-4 border-b leading-tight">
-              <h2 className="text-2xl font-bold text-[#025291]">INVOICE</h2>
-              <p className="text-[#025291]/50 text-sm">Ma’s De cozta (PVT)LTD</p>
+            <div className="text-center py-4 border-b" style={{ lineHeight: 1 }}>
+              <h2 className="text-2xl font-bold text-[#025291] m-0 p-0">INVOICE</h2>
+              <p className="text-[#025291]/50 text-sm m-0 p-0">Ma’s De cozta (PVT)LTD</p>
             </div>
 
             {/* Details Section */}
-            <div className="leading-tight">
-              <table className="w-full border-collapse text-xs leading-tight">
+            <div style={{ lineHeight: 1 }}>
+              <table className="w-full border-collapse text-xs" style={{ lineHeight: 1 }}>
                 <tbody>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-3 py-3 leading-tight">
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3" style={{ lineHeight: 1 }}>
                       Date
                     </td>
-                    <td className="bg-[#C3E4FF] px-3 py-3 leading-tight">{formatDate(transaction.date)}</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3" style={{ lineHeight: 1 }}>{formatDate(transaction.date)}</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-3 py-3 leading-tight">
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3" style={{ lineHeight: 1 }}>
                       Invoice No
                     </td>
-                    <td className="bg-[#C3E4FF] px-3 py-3 leading-tight">{transaction.invoiceNo}</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3" style={{ lineHeight: 1 }}>{transaction.invoiceNo}</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-3 py-3 leading-tight">
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3" style={{ lineHeight: 1 }}>
                       Due Date
                     </td>
-                    <td className="bg-[#C3E4FF] px-3 py-3 leading-tight">{formatDate(transaction.dateOfExpiration)}</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3" style={{ lineHeight: 1 }}>{formatDate(transaction.dateOfExpiration)}</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-3 py-3 leading-tight">
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3" style={{ lineHeight: 1 }}>
                       PO No
                     </td>
-                    <td className="bg-[#C3E4FF] px-3 py-3 leading-tight">{transaction.poNumber}</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3" style={{ lineHeight: 1 }}>{transaction.poNumber}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             {/* Shipping Section */}
-            <div className="grid grid-cols-2 gap-6 leading-tight">
-              <div className="leading-tight">
-                <h3 className="font-bold text-[#025291] mb-2 text-sm">SHIP TO :</h3>
-                <p className="text-sm">Ceylon Agro Industries,</p>
-                <p className="text-sm">346, Negombo Road,</p>
-                <p className="text-sm">Seeduwa.</p>
+            <div className="grid grid-cols-2 gap-6" style={{ lineHeight: 1 }}>
+              <div style={{ lineHeight: 1 }}>
+                <h3 className="font-bold text-[#025291] mb-2 text-sm m-0 p-0">SHIP TO :</h3>
+                <p className="text-sm m-0 p-0">Ceylon Agro Industries,</p>
+                <p className="text-sm m-0 p-0">346, Negombo Road,</p>
+                <p className="text-sm m-0 p-0">Seeduwa.</p>
               </div>
-              <div className="leading-tight">
-                <h3 className="font-bold text-[#025291] mb-2 text-sm">TO :</h3>
-                <p className="text-sm">Ceylon Agro Industries,</p>
-                <p className="text-sm">346, Negombo Road,</p>
-                <p className="text-sm">Seeduwa.</p>
+              <div style={{ lineHeight: 1 }}>
+                <h3 className="font-bold text-[#025291] mb-2 text-sm m-0 p-0">TO :</h3>
+                <p className="text-sm m-0 p-0">Ceylon Agro Industries,</p>
+                <p className="text-sm m-0 p-0">346, Negombo Road,</p>
+                <p className="text-sm m-0 p-0">Seeduwa.</p>
               </div>
             </div>
 
             {/* Table */}
-            <div className="flex-1 flex flex-col leading-tight">
-              <table className="w-full border-collapse text-xs bg-transparent flex-1 leading-tight">
+            <div className="flex-1 flex flex-col" style={{ lineHeight: 1 }}>
+              <table className="w-full border-collapse text-xs bg-transparent flex-1" style={{ lineHeight: 1 }}>
                 <thead>
-                  <tr className="bg-[#025291] text-white text-left leading-tight">
-                    <th className="p-1 leading-tight">NO</th>
-                    <th className="p-1 leading-tight">Description</th>
-                    <th className="p-1 leading-tight">Quantity</th>
-                    <th className="p-1 leading-tight">Unit Price</th>
-                    <th className="p-1 leading-tight">Amount</th>
+                  <tr className="bg-[#025291] text-white text-left" style={{ lineHeight: 1 }}>
+                    <th className="p-1" style={{ lineHeight: 1 }}>NO</th>
+                    <th className="p-1" style={{ lineHeight: 1 }}>Description</th>
+                    <th className="p-1" style={{ lineHeight: 1 }}>Quantity</th>
+                    <th className="p-1" style={{ lineHeight: 1 }}>Unit Price</th>
+                    <th className="p-1" style={{ lineHeight: 1 }}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-b bg-white/80 leading-tight">
-                    <td className="p-1 leading-tight">01</td>
-                    <td className="p-1 font-semibold text-left leading-tight">
+                  <tr className="border-b bg-white/80" style={{ lineHeight: 1 }}>
+                    <td className="p-1" style={{ lineHeight: 1 }}>01</td>
+                    <td className="p-1 font-semibold text-left" style={{ lineHeight: 1 }}>
                       Scotch Bonnet (Nai Miris) Powder
                     </td>
-                    <td className="p-1 leading-tight">{transaction.kilosDelivered}kg</td>
-                    <td className="p-1 leading-tight">{unitPrice}LKR/kg</td>
-                    <td className="p-1 text-right leading-tight">{transaction.amount.toLocaleString()}LKR</td>
+                    <td className="p-1" style={{ lineHeight: 1 }}>{transaction.kilosDelivered}kg</td>
+                    <td className="p-1" style={{ lineHeight: 1 }}>{unitPrice}LKR/kg</td>
+                    <td className="p-1 text-right" style={{ lineHeight: 1 }}>{transaction.amount.toLocaleString()}LKR</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             {/* Totals */}
-            <div className="flex justify-end leading-tight">
-              <div className="w-64 text-xs bg-white/80 p-3 rounded leading-tight">
-                <div className="flex justify-between py-1 border-b leading-tight">
+            <div className="flex justify-end" style={{ lineHeight: 1 }}>
+              <div className="w-64 text-xs bg-white/80 p-3 rounded" style={{ lineHeight: 1 }}>
+                <div className="flex justify-between py-1 border-b" style={{ lineHeight: 1 }}>
                   <span>Sub Total :</span>
                   <span className="font-bold">{transaction.amount.toLocaleString()}LKR</span>
                 </div>
-                <div className="flex justify-between py-1 border-b leading-tight">
+                <div className="flex justify-between py-1 border-b" style={{ lineHeight: 1 }}>
                   <span>Taxes :</span>
                   <span>0LKR</span>
                 </div>
-                <div className="flex justify-between py-1 border-b leading-tight">
+                <div className="flex justify-between py-1 border-b" style={{ lineHeight: 1 }}>
                   <span>Discount :</span>
                   <span>0LKR</span>
                 </div>
-                <div className="flex justify-between font-bold py-1 leading-tight">
+                <div className="flex justify-between font-bold py-1" style={{ lineHeight: 1 }}>
                   <span>Total Amount :</span>
                   <span>{transaction.amount.toLocaleString()}LKR</span>
                 </div>
@@ -210,18 +214,18 @@ export default function Invoice(): JSX.Element {
             </div>
 
             {/* Bank Details */}
-            <div className="leading-tight">
-              <h3 className="font-bold text-[#025291] mb-2 text-xs">Bank Details</h3>
-              <p className="text-xs leading-tight">
+            <div style={{ lineHeight: 1 }}>
+              <h3 className="font-bold text-[#025291] mb-2 text-xs m-0 p-0">Bank Details</h3>
+              <p className="text-xs m-0 p-0">
                 <strong>Bank:</strong> Sampath Bank
               </p>
-              <p className="text-xs leading-tight">
+              <p className="text-xs m-0 p-0">
                 <strong>Branch:</strong> Pannala
               </p>
-              <p className="text-xs leading-tight">
+              <p className="text-xs m-0 p-0">
                 <strong>Account Name:</strong> Ma’s De Cozta Pvt Ltd
               </p>
-              <p className="text-xs leading-tight">
+              <p className="text-xs m-0 p-0">
                 <strong>Account Number:</strong> 016610003145
               </p>
             </div>
@@ -230,14 +234,14 @@ export default function Invoice(): JSX.Element {
 
         {/* Footer (sticks to bottom) */}
         <div>
-          <div className="text-center py-4 bg-[#F5F9FD] leading-tight">
-            <p className="text-base font-bold text-[#025291] leading-tight">
+          <div className="text-center py-4 bg-[#F5F9FD]" style={{ lineHeight: 1 }}>
+            <p className="text-base font-bold text-[#025291] m-0 p-0">
               Thank you for Business with us!
             </p>
-            <p className="text-[#2B64A0] text-xs leading-tight">Ma’s De cozta (PVT)LTD</p>
+            <p className="text-[#2B64A0] text-xs m-0 p-0">Ma’s De cozta (PVT)LTD</p>
           </div>
           <div className="bg-[#025291]">
-            <div className="text-center py-2 text-xs text-white leading-tight">PV 00259719</div>
+            <div className="text-center py-2 text-xs text-white" style={{ lineHeight: 1 }}>PV 00259719</div>
           </div>
         </div>
       </div>
