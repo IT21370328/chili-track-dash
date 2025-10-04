@@ -63,7 +63,7 @@ export default function Invoice() {
           </div>
 
           {/* Main Content */}
-          <div className="relative flex-1 flex flex-col px-4 py-8 space-y-6">
+          <div className="relative flex-1 flex flex-col px-6 py-10 space-y-6">
             {/* Invoice Title */}
             <div className="text-center py-4 border-b">
               <h2 className="text-2xl font-bold text-[#025291]">INVOICE</h2>
@@ -75,28 +75,28 @@ export default function Invoice() {
               <table className="w-full border-collapse text-xs">
                 <tbody>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-2 py-1">
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3">
                       Date
                     </td>
-                    <td className="bg-[#C3E4FF] px-2 py-1">October 04, 2025</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3">October 04, 2025</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-2 py-1">
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3">
                       Invoice No
                     </td>
-                    <td className="bg-[#C3E4FF] px-2 py-1">INV-2025-001</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3">INV-2025-001</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-2 py-1">
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3">
                       Due Date
                     </td>
-                    <td className="bg-[#C3E4FF] px-2 py-1">November 03, 2025</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3">November 03, 2025</td>
                   </tr>
                   <tr>
-                    <td className="bg-[#025291] text-white font-semibold px-2 py-1">
+                    <td className="bg-[#025291] text-white font-semibold px-3 py-3">
                       PO No
                     </td>
-                    <td className="bg-[#C3E4FF] px-2 py-1">PO-2025-123</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3">PO-2025-123</td>
                   </tr>
                 </tbody>
               </table>

@@ -35,14 +35,14 @@ export default function CertificateOfAnalysis() {
         </div>
 
         {/* Title */}
-        <div className="relative text-center py-10 border-b">
+        <div className="relative text-center py-12 border-b">
           <h2 className="text-3xl font-bold text-[#025291]">
             CERTIFICATE OF ANALYSIS
           </h2>
         </div>
 
         {/* Certificate Info */}
-        <div className="relative px-6 py-6 grid grid-cols-2 gap-6 text-sm">
+        <div className="relative px-8 py-8 grid grid-cols-2 gap-6 text-sm space-y-3">
             <div className="space-y-3"> {/* Added space between lines */}
                 <p>
                 <strong>Customer Name :</strong> Ceylon Agro Industries
@@ -68,24 +68,24 @@ export default function CertificateOfAnalysis() {
                 <table className="w-full border-collapse text-sm table-fixed"> {/* table-fixed fixes column alignment */}
                 <thead>
                     <tr className="bg-[#025291] text-white text-center"> {/* text-center for header */}
-                    <th className="p-2">Doc No.</th>
-                    <th className="p-2">QAP002</th>
-                    <th className="p-2">Certificate No</th>
-                    <th className="p-2">A2580</th>
+                    <th className="p-3">Doc No.</th>
+                    <th className="p-3">QAP002</th>
+                    <th className="p-3">Certificate No</th>
+                    <th className="p-3">A2580</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr className="text-center"> {/* text-center for body */}
-                    <td className="bg-[#C3E4FF] p-2">Date of Production</td>
-                    <td className="bg-[#C3E4FF] p-2"></td>
-                    <td className="bg-[#C3E4FF] p-2">Date of Expiry</td>
-                    <td className="bg-[#C3E4FF] p-2"></td>
+                    <td className="bg-[#C3E4FF] p-3">Date of Production</td>
+                    <td className="bg-[#C3E4FF] p-3"></td>
+                    <td className="bg-[#C3E4FF] p-3">Date of Expiry</td>
+                    <td className="bg-[#C3E4FF] p-3"></td>
                     </tr>
                     <tr className="text-center">
-                    <td className="bg-[#C3E4FF] p-2">Batch Code/s</td>
-                    <td className="bg-[#C3E4FF] p-2"></td>
-                    <td className="bg-[#C3E4FF] p-2">No. of Boxes</td>
-                    <td className="bg-[#C3E4FF] p-2"></td>
+                    <td className="bg-[#C3E4FF] p-3">Batch Code/s</td>
+                    <td className="bg-[#C3E4FF] p-3"></td>
+                    <td className="bg-[#C3E4FF] p-3">No. of Boxes</td>
+                    <td className="bg-[#C3E4FF] p-3"></td>
                     </tr>
                 </tbody>
                 </table>
@@ -94,105 +94,105 @@ export default function CertificateOfAnalysis() {
 
 
         {/* Analysis Table */}
-        <div className="relative px-6 py-6">
+        <div className="relative px-8 py-8">
           <h3 className="text-lg font-bold text-[#025291] mb-2">Analysis</h3>
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="bg-[#025291] text-white text-left">
-                <th className="p-2">Parameters</th>
-                <th className="p-2">No of Samples</th>
-                <th className="p-2">Average Test Result</th>
-                <th className="p-2">Specifications</th>
-                <th className="p-2">Test Method</th>
+                <th className="p-3">Parameters</th>
+                <th className="p-3">No of Samples</th>
+                <th className="p-3">Average Test Result</th>
+                <th className="p-3">Specifications</th>
+                <th className="p-3">Test Method</th>
               </tr>
             </thead>
             <tbody>
               {/* Physical Section */}
               <tr>
-                <td colSpan={5} className="bg-[#C3E4FF] font-bold p-2">
+                <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3">
                   Physical
                 </td>
               </tr>
               <tr>
-                <td className="p-2">Appearance</td>
-                <td className="p-2">3</td>
-                <td className="p-2">Match with the specifications</td>
-                <td className="p-2">Light brownish-green color powder</td>
-                <td className="p-2">Visually</td>
+                <td className="p-3">Appearance</td>
+                <td className="p-3">3</td>
+                <td className="p-3">Match with the specifications</td>
+                <td className="p-3">Light brownish-green color powder</td>
+                <td className="p-3">Visually</td>
               </tr>
               <tr>
-                <td className="p-2">Flavour</td>
-                <td className="p-2">3</td>
-                <td className="p-2">Match with the specifications</td>
-                <td className="p-2">
+                <td className="p-3">Flavour</td>
+                <td className="p-3">3</td>
+                <td className="p-3">Match with the specifications</td>
+                <td className="p-3">
                   The characteristic extra pungent flavor
                 </td>
-                <td className="p-2">Sensory</td>
+                <td className="p-3">Sensory</td>
               </tr>
               <tr>
-                <td className="p-2">Aroma</td>
-                <td className="p-2">3</td>
-                <td className="p-2">Match with the specifications</td>
-                <td className="p-2">
+                <td className="p-3">Aroma</td>
+                <td className="p-3">3</td>
+                <td className="p-3">Match with the specifications</td>
+                <td className="p-3">
                   Characteristic, mixed chili and fruity odor of scotch bonnets
                 </td>
-                <td className="p-2">Sensory</td>
+                <td className="p-3">Sensory</td>
               </tr>
               <tr>
-                <td className="p-2">Particle Size</td>
-                <td className="p-2">3</td>
-                <td className="p-2">100%, &lt; 50 mesh</td>
-                <td className="p-2">100% through 50 mesh</td>
-                <td className="p-2">Vibratory Sifter</td>
+                <td className="p-3">Particle Size</td>
+                <td className="p-3">3</td>
+                <td className="p-3">100%, &lt; 50 mesh</td>
+                <td className="p-3">100% through 50 mesh</td>
+                <td className="p-3">Vibratory Sifter</td>
               </tr>
               <tr>
-                <td className="p-2">Foreign Matters</td>
-                <td className="p-2">3</td>
-                <td className="p-2">Free</td>
-                <td className="p-2">Free</td>
-                <td className="p-2">Visually</td>
+                <td className="p-3">Foreign Matters</td>
+                <td className="p-3">3</td>
+                <td className="p-3">Free</td>
+                <td className="p-3">Free</td>
+                <td className="p-3">Visually</td>
               </tr>
 
               {/* Chemical Section */}
               <tr>
-                <td colSpan={5} className="bg-[#C3E4FF] font-bold p-2">
+                <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3">
                   Chemical
                 </td>
               </tr>
               <tr>
-                <td className="p-2">Moisture Content</td>
-                <td className="p-2">3</td>
-                <td className="p-2">6.0%</td>
-                <td className="p-2">8% Max.</td>
-                <td className="p-2">Electronic MoistureAnalyzer</td>
+                <td className="p-3">Moisture Content</td>
+                <td className="p-3">3</td>
+                <td className="p-3">6.0%</td>
+                <td className="p-3">8% Max.</td>
+                <td className="p-3">Electronic MoistureAnalyzer</td>
               </tr>
 
               {/* Microbiological Section */}
               <tr>
-                <td colSpan={5} className="bg-[#C3E4FF] font-bold p-2">
+                <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3">
                   Microbiological
                 </td>
               </tr>
               <tr>
-                <td className="p-2">Coliform</td>
-                <td className="p-2">1</td>
-                <td className="p-2">&lt;10</td>
-                <td className="p-2">&lt;10 cfu/g</td>
-                <td className="p-2">ISO 4831:2006</td>
+                <td className="p-3">Coliform</td>
+                <td className="p-3">1</td>
+                <td className="p-3">&lt;10</td>
+                <td className="p-3">&lt;10 cfu/g</td>
+                <td className="p-3">ISO 4831:2006</td>
               </tr>
               <tr>
-                <td className="p-2">Foreign Matters</td>
-                <td className="p-2">3</td>
-                <td className="p-2">Negative</td>
-                <td className="p-2">Negative</td>
-                <td className="p-2">ISO 6579-1:2017</td>
+                <td className="p-3">Foreign Matters</td>
+                <td className="p-3">3</td>
+                <td className="p-3">Negative</td>
+                <td className="p-3">Negative</td>
+                <td className="p-3">ISO 6579-1:2017</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         {/* Additional Remarks */}
-        <div className="relative px-6 py-6 text-sm">
+        <div className="relative px-8 py-8 text-sm">
           <h3 className="font-bold text-[#025291] mb-2">Additional Remarks :</h3>
           <p>
             We hereby certify that the aforementioned product meets the most
@@ -202,7 +202,7 @@ export default function CertificateOfAnalysis() {
         </div>
 
         {/* Signatures */}
-        <div className="relative px-6 py-10 flex justify-between text-center text-sm">
+        <div className="relative px-8 py-12 flex justify-between text-center text-sm">
           <div className="w-1/4 border-t">Quality Assurance Manager</div>
           <div className="w-1/4 border-t">Production Manager</div>
           <div className="w-1/4 border-t">Date</div>
@@ -211,7 +211,7 @@ export default function CertificateOfAnalysis() {
 
       {/* Footer */}
       <div className="bg-[#025291]">
-        <div className="text-center py-3 text-xs text-white">PV 00259719</div>
+        <div className="text-center py-4 text-xs text-white">PV 00259719</div>
       </div>
     </div>
   );
