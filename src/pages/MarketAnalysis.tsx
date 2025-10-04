@@ -8,12 +8,13 @@ interface CertificateData {
   poNumber?: string;
   productName?: string;
   productCode?: string;
-  quantity?: number;
-  containerTruckNumber?: string;
-  dateOfProduction?: string;
-  dateOfExpiry?: string;
-  batchCodes?: string;
-  noOfBoxes?: number;
+  amount?: number;
+  truckNo?: string;
+  date?: string;
+  dateOfExpiration?: string;
+  batchCode?: string;
+  numberOfBoxes?: number;
+
 }
 
 export default function CertificateOfAnalysis(): JSX.Element {
@@ -124,10 +125,10 @@ export default function CertificateOfAnalysis(): JSX.Element {
                   <strong>Product Code :</strong> {certificate.productCode}
                 </p>
                 <p className="leading-tight">
-                  <strong>Quantity :</strong> {certificate.quantity} kg
+                  <strong>Quantity :</strong> {certificate.amount} kg
                 </p>
                 <p className="leading-tight">
-                  <strong>Container / Truck Number :</strong> {certificate.containerTruckNumber}
+                  <strong>Container / Truck Number :</strong> {certificate.truckNo}
                 </p>
               </div>
 
@@ -144,15 +145,15 @@ export default function CertificateOfAnalysis(): JSX.Element {
                   <tbody>
                     <tr className="text-center leading-tight">
                       <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">Date of Production</td>
-                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{formatDate(certificate.dateOfProduction || "")}</td>
+                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{formatDate(certificate.date || "")}</td>
                       <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">Date of Expiry</td>
-                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{formatDate(certificate.dateOfExpiry || "")}</td>
+                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{formatDate(certificate.dateOfExpiration || "")}</td>
                     </tr>
                     <tr className="text-center leading-tight">
                       <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">Batch Code/s</td>
-                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{certificate.batchCodes}</td>
+                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{certificate.batchCode}</td>
                       <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">No. of Boxes</td>
-                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{certificate.noOfBoxes}</td>
+                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{certificate.numberOfBoxes}</td>
                     </tr>
                   </tbody>
                 </table>
