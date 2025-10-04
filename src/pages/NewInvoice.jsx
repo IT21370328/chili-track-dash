@@ -9,7 +9,7 @@ export default function Invoice() {
   const handleDownload = () => {
     const element = invoiceRef.current;
     const opt = {
-      margin: 0.5,
+      margin: 0, // ✅ No margins at all
       filename: "invoice.pdf",
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2 },
@@ -23,8 +23,13 @@ export default function Invoice() {
       {/* Invoice */}
       <div
         ref={invoiceRef}
-        className="bg-white shadow-lg rounded-lg overflow-hidden border font-[Montserrat]"
-        style={{ width: "8.27in", height: "11.69in" }} // Exact A4 size to fill one page
+        className="bg-white border font-[Montserrat]"
+        style={{
+          width: "8.27in",
+          height: "11.69in",
+          margin: 0,
+          padding: 0,
+        }}
       >
         {/* Header */}
         <div className="bg-[#025291] text-white p-4 flex justify-between items-start">
@@ -32,9 +37,9 @@ export default function Invoice() {
             <img
               src={Logo}
               alt="Company Logo"
-              className="w-12 h-12 object-contain bg-white rounded flex-shrink-0"
+              className="w-12 h-12 object-contain bg-white"
             />
-            <div className="flex-shrink-0">
+            <div>
               <h1 className="text-xl font-bold leading-tight">MA’S DE COZTA</h1>
               <p className="text-xs leading-tight">Ma’s De cozta (PVT)LTD</p>
             </div>
