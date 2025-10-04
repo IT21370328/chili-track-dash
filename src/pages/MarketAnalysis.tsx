@@ -296,7 +296,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
         {/* Footer */}
         <div>
           <div className="bg-[#025291]">
-            <div className="text-center py-2 text-xs text-white" style={{ lineHeight: 1 }}>PV 00259719</div>
+            <div className="text-center pb-4 text-xs text-white" style={{ lineHeight: 1 }}>PV 00259719</div>
           </div>
         </div>
       </div>
