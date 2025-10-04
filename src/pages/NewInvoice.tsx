@@ -3,11 +3,11 @@ import InvoiceBg from "../../src/assets/invoicebg.jpg";
 
 export default function Invoice() {
   return (
-    <div className="bg-white w-[900px] mx-auto shadow-lg rounded-lg overflow-hidden border">
+    <div className="bg-white w-[900px] mx-auto shadow-lg rounded-lg overflow-hidden border font-[Montserrat]">
       {/* Header */}
       <div className="bg-[#025291] text-white p-6 flex justify-between items-center">
         <div className="flex items-center gap-4">
-          {/* Logo Placeholder */}
+          {/* Logo */}
           <img
             src={Logo}
             alt="Company Logo"
@@ -27,7 +27,6 @@ export default function Invoice() {
 
       {/* Background Pattern Section */}
       <div className="relative bg-gray-50">
-        {/* Placeholder for patterned background image */}
         <div className="absolute inset-0 opacity-20">
           <img
             src={InvoiceBg}
@@ -43,23 +42,31 @@ export default function Invoice() {
         </div>
 
         {/* Invoice Details Section */}
-        <div className="relative grid grid-cols-1 p-6">
+        <div className="relative grid grid-cols-1 px-6 py-6">
           <table className="w-full border-collapse text-sm">
             <tbody>
               <tr>
-                <td className="bg-[#025291] text-white font-semibold px-4 py-2 w-1/4">Date</td>
+                <td className="bg-[#025291] text-white font-semibold px-4 py-2 w-1/4">
+                  Date
+                </td>
                 <td className="bg-[#C3E4FF] px-4 py-2"></td>
               </tr>
               <tr>
-                <td className="bg-[#025291] text-white font-semibold px-4 py-2">Invoice No</td>
+                <td className="bg-[#025291] text-white font-semibold px-4 py-2">
+                  Invoice No
+                </td>
                 <td className="bg-[#C3E4FF] px-4 py-2"></td>
               </tr>
               <tr>
-                <td className="bg-[#025291] text-white font-semibold px-4 py-2">Due Date</td>
+                <td className="bg-[#025291] text-white font-semibold px-4 py-2">
+                  Due Date
+                </td>
                 <td className="bg-[#C3E4FF] px-4 py-2"></td>
               </tr>
               <tr>
-                <td className="bg-[#025291] text-white font-semibold px-4 py-2">PO No</td>
+                <td className="bg-[#025291] text-white font-semibold px-4 py-2">
+                  PO No
+                </td>
                 <td className="bg-[#C3E4FF] px-4 py-2"></td>
               </tr>
             </tbody>
@@ -67,7 +74,7 @@ export default function Invoice() {
         </div>
 
         {/* Shipping Section */}
-        <div className="relative grid grid-cols-2 gap-4 p-6">
+        <div className="relative grid grid-cols-2 gap-4 px-6 py-6">
           <div>
             <h3 className="font-bold text-[#025291] mb-1">SHIP TO :</h3>
             <p>Ceylon Agro Industries,</p>
@@ -84,26 +91,30 @@ export default function Invoice() {
       </div>
 
       {/* Table */}
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="bg-[#025291] text-white text-left">
-            <th className="p-3">NO</th>
-            <th className="p-3">Description</th>
-            <th className="p-3">Quantity</th>
-            <th className="p-3">Unit Price</th>
-            <th className="p-3">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="border-b">
-            <td className="p-3">01</td>
-            <td className="p-3 font-semibold">Scotch Bonnet (Nai Miris) Powder</td>
-            <td className="p-3">30kg (30kgx1)</td>
-            <td className="p-3">12,000LKR/kg</td>
-            <td className="p-3">360,000LKR</td>
-          </tr>
-        </tbody>
-      </table>
+      <div className="px-6">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="bg-[#025291] text-white text-left">
+              <th className="p-3">NO</th>
+              <th className="p-3">Description</th>
+              <th className="p-3">Quantity</th>
+              <th className="p-3">Unit Price</th>
+              <th className="p-3">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border-b">
+              <td className="p-3">01</td>
+              <td className="p-3 font-semibold">
+                Scotch Bonnet (Nai Miris) Powder
+              </td>
+              <td className="p-3">30kg (30kgx1)</td>
+              <td className="p-3">12,000LKR/kg</td>
+              <td className="p-3">360,000LKR</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       {/* Totals */}
       <div className="flex justify-end p-6">
@@ -128,23 +139,31 @@ export default function Invoice() {
       </div>
 
       {/* Bank Details */}
-      <div className="p-6">
-        <h3 className="font-bold text-[#0B2D6D] mb-2">Bank Details</h3>
-        <p><strong>Bank:</strong> Sampath Bank</p>
-        <p><strong>Branch:</strong> Pannala</p>
-        <p><strong>Account Name:</strong> Ma’s De Cozta Pvt Ltd</p>
-        <p><strong>Account Number:</strong> 016610003145</p>
+      <div className="px-6 pb-6">
+        <h3 className="font-bold text-[#025291] mb-2">Bank Details</h3>
+        <p>
+          <strong>Bank:</strong> Sampath Bank
+        </p>
+        <p>
+          <strong>Branch:</strong> Pannala
+        </p>
+        <p>
+          <strong>Account Name:</strong> Ma’s De Cozta Pvt Ltd
+        </p>
+        <p>
+          <strong>Account Number:</strong> 016610003145
+        </p>
       </div>
 
       {/* Footer */}
       <div className="text-center py-8 bg-[#F5F9FD]">
-        <p className="text-lg font-bold text-[#025291]">Thank you for Business with us!</p>
+        <p className="text-lg font-bold text-[#025291]">
+          Thank you for Business with us!
+        </p>
         <p className="text-[#2B64A0]">Ma’s De cozta (PVT)LTD</p>
       </div>
       <div className="bg-[#025291]">
-      <div className="text-center py-3 text-xs text-white">
-        PV 00259719
-      </div>
+        <div className="text-center py-3 text-xs text-white">PV 00259719</div>
       </div>
     </div>
   );
