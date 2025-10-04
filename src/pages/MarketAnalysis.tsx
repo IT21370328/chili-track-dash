@@ -19,7 +19,7 @@ interface TransactionData {
 
 export default function CertificateOfAnalysis(): JSX.Element {
   const location = useLocation();
-  const certificate: TransactionData = location.state?.certificate || {
+  const transaction: TransactionData = location.state?.transaction || {
     poNumber: "PO-2025-123",
     productName: "Scotch Bonnet Powder",
     productCode: "MASI00003",
@@ -116,19 +116,19 @@ export default function CertificateOfAnalysis(): JSX.Element {
                   <strong>Customer Name :</strong> Ceylon Agro Industries
                 </p>
                 <p className="leading-tight">
-                  <strong>PO No :</strong> {certificate.poNumber}
+                  <strong>PO No :</strong> {transaction.poNumber}
                 </p>
                 <p className="leading-tight">
-                  <strong>Product Name :</strong> {certificate.productName}
+                  <strong>Product Name :</strong> {transaction.productName}
                 </p>
                 <p className="leading-tight">
-                  <strong>Product Code :</strong> {certificate.productCode}
+                  <strong>Product Code :</strong> {transaction.productCode}
                 </p>
                 <p className="leading-tight">
-                  <strong>Quantity :</strong> {certificate.amount} kg
+                  <strong>Quantity :</strong> {transaction.amount} kg
                 </p>
                 <p className="leading-tight">
-                  <strong>Container / Truck Number :</strong> {certificate.truckNo}
+                  <strong>Container / Truck Number :</strong> {transaction.truckNo}
                 </p>
               </div>
 
@@ -145,15 +145,15 @@ export default function CertificateOfAnalysis(): JSX.Element {
                   <tbody>
                     <tr className="text-center leading-tight">
                       <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">Date of Production</td>
-                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{formatDate(certificate.date || "")}</td>
+                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{formatDate(transaction.date || "")}</td>
                       <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">Date of Expiry</td>
-                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{formatDate(certificate.dateOfExpiration || "")}</td>
+                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{formatDate(transaction.dateOfExpiration || "")}</td>
                     </tr>
                     <tr className="text-center leading-tight">
                       <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">Batch Code/s</td>
-                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{certificate.batchCode}</td>
+                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{transaction.batchCode}</td>
                       <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">No. of Boxes</td>
-                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{certificate.numberOfBoxes}</td>
+                      <td className="p-3 pb-4 bg-[#C3E4FF] border border-gray-300 leading-tight">{transaction.numberOfBoxes}</td>
                     </tr>
                   </tbody>
                 </table>
