@@ -1,17 +1,52 @@
 import { useRef } from "react";
+import { useLocation } from "react-router-dom";
 import Logo from "../../src/assets/logo.jpg";
 import InvoiceBg from "../../src/assets/invoicebg.jpg";
 import html2pdf from "html2pdf.js";
 
+interface TransactionData {
+  date: string;
+  dateOfExpiration: string;
+  invoiceNo: string;
+  poNumber: string;
+  amount: number;
+  kilosDelivered: number;
+  productCode?: string;
+  batchCode?: string;
+  truckNo?: string;
+  numberOfBoxes?: number;
+}
+
 export default function Invoice(): JSX.Element {
+  const location = useLocation();
+  const transaction: TransactionData = location.state?.transaction || {
+    date: "2025-10-04",
+    dateOfExpiration: "2025-11-03",
+    invoiceNo: "INV-2025-001",
+    poNumber: "PO-2025-123",
+    amount: 360000,
+    kilosDelivered: 30,
+    productCode: "MASI00003",
+  };
+
   const invoiceRef = useRef<HTMLDivElement>(null);
+
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "2-digit",
+    });
+  };
+
+  const unitPrice = transaction.kilosDelivered > 0 ? Math.round(transaction.amount / transaction.kilosDelivered) : 0;
 
   const handleDownload = (): void => {
     const element = invoiceRef.current;
     if (!element) return;
     const opt = {
       margin: 0,
-      filename: "invoice.pdf",
+      filename: `${transaction.invoiceNo || "invoice"}.pdf`,
       image: { type: "jpeg" as const, quality: 0.98 },
       html2canvas: { scale: 2 },
       jsPDF: { unit: "in" as const, format: "a4" as const, orientation: "portrait" as const },
@@ -79,25 +114,25 @@ export default function Invoice(): JSX.Element {
                     <td className="bg-[#025291] text-white font-semibold px-3 py-3">
                       Date
                     </td>
-                    <td className="bg-[#C3E4FF] px-3 py-3">October 04, 2025</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3">{formatDate(transaction.date)}</td>
                   </tr>
                   <tr>
                     <td className="bg-[#025291] text-white font-semibold px-3 py-3">
                       Invoice No
                     </td>
-                    <td className="bg-[#C3E4FF] px-3 py-3">INV-2025-001</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3">{transaction.invoiceNo}</td>
                   </tr>
                   <tr>
                     <td className="bg-[#025291] text-white font-semibold px-3 py-3">
                       Due Date
                     </td>
-                    <td className="bg-[#C3E4FF] px-3 py-3">November 03, 2025</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3">{formatDate(transaction.dateOfExpiration)}</td>
                   </tr>
                   <tr>
                     <td className="bg-[#025291] text-white font-semibold px-3 py-3">
                       PO No
                     </td>
-                    <td className="bg-[#C3E4FF] px-3 py-3">PO-2025-123</td>
+                    <td className="bg-[#C3E4FF] px-3 py-3">{transaction.poNumber}</td>
                   </tr>
                 </tbody>
               </table>
@@ -137,9 +172,9 @@ export default function Invoice(): JSX.Element {
                     <td className="p-1 font-semibold text-left">
                       Scotch Bonnet (Nai Miris) Powder
                     </td>
-                    <td className="p-1">30kg</td>
-                    <td className="p-1">12,000LKR/kg</td>
-                    <td className="p-1 text-right">360,000LKR</td>
+                    <td className="p-1">{transaction.kilosDelivered}kg</td>
+                    <td className="p-1">{unitPrice}LKR/kg</td>
+                    <td className="p-1 text-right">{transaction.amount.toLocaleString()}LKR</td>
                   </tr>
                 </tbody>
               </table>
@@ -150,7 +185,7 @@ export default function Invoice(): JSX.Element {
               <div className="w-64 text-xs bg-white/80 p-3 rounded">
                 <div className="flex justify-between py-1 border-b">
                   <span>Sub Total :</span>
-                  <span className="font-bold">360,000LKR</span>
+                  <span className="font-bold">{transaction.amount.toLocaleString()}LKR</span>
                 </div>
                 <div className="flex justify-between py-1 border-b">
                   <span>Taxes :</span>
@@ -162,7 +197,7 @@ export default function Invoice(): JSX.Element {
                 </div>
                 <div className="flex justify-between font-bold py-1">
                   <span>Total Amount :</span>
-                  <span>360,000LKR</span>
+                  <span>{transaction.amount.toLocaleString()}LKR</span>
                 </div>
               </div>
             </div>
