@@ -61,6 +61,8 @@ export default function CertificateOfAnalysis(): JSX.Element {
   };
 
   return (
+    <div>
+    <div>
     <div className="flex flex-col items-center">
       <div
         ref={certRef}
@@ -290,7 +292,9 @@ export default function CertificateOfAnalysis(): JSX.Element {
           </div>
         </div>
       </div>
+      </div>
 
+      <div>
       {/* Download Button */}
       <button
         onClick={handleDownload}
@@ -298,6 +302,8 @@ export default function CertificateOfAnalysis(): JSX.Element {
       >
         Download Certificate
       </button>
+    </div>
+    </div>
     </div>
   );
 }
