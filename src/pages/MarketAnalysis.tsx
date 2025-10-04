@@ -108,7 +108,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
           </div>
 
           {/* Main Content */}
-          <div className="relative flex-1 flex flex-col px-6 py-10 space-y-6" style={{ lineHeight: 1 }}>
+          <div className="relative flex-1 flex flex-col px-6 py-2 space-y-6" style={{ lineHeight: 1 }}>
             {/* Title */}
             <div className="text-center py-4 border-b border-[#025291]" style={{ lineHeight: 1 }}>
               <h2 className="text-2xl font-bold text-[#025291] m-0 p-0">CERTIFICATE OF ANALYSIS</h2>
@@ -294,7 +294,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
       {/* Download Button */}
       <button
         onClick={handleDownload}
-        className="mt-20 px-6 py-2 bg-[#025291] text-white rounded-lg shadow hover:bg-[#013d6e] transition"
+        className="mt-28 px-6 py-2 bg-[#025291] text-white rounded-lg shadow hover:bg-[#013d6e] transition"
       >
         Download Certificate
       </button>
