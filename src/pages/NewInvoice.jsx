@@ -9,7 +9,7 @@ export default function Invoice() {
   const handleDownload = () => {
     const element = invoiceRef.current;
     const opt = {
-      margin: 0.5,
+      margin: 0.5, // inches
       filename: "invoice.pdf",
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2 },
@@ -23,12 +23,12 @@ export default function Invoice() {
       {/* Invoice */}
       <div
         ref={invoiceRef}
-        className="bg-white w-[900px] mx-auto shadow-lg rounded-lg overflow-hidden border font-[Montserrat]"
+        className="bg-white shadow-lg rounded-lg overflow-hidden border font-[Montserrat]"
+        style={{ width: "8.27in", minHeight: "11.69in" }} // A4 size in inches
       >
         {/* Header */}
         <div className="bg-[#025291] text-white p-6 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            {/* Logo */}
             <img
               src={Logo}
               alt="Company Logo"
@@ -66,48 +66,28 @@ export default function Invoice() {
           <div className="relative grid grid-cols-1 px-6 py-6">
             <table className="w-full border-collapse text-sm">
               <tbody>
-                <tr>
-                  <td className="bg-[#025291] text-white font-semibold px-4 py-2 w-1/4">
-                    Date
-                  </td>
-                  <td className="bg-[#C3E4FF] px-4 py-2"></td>
-                </tr>
-                <tr>
-                  <td className="bg-[#025291] text-white font-semibold px-4 py-2">
-                    Invoice No
-                  </td>
-                  <td className="bg-[#C3E4FF] px-4 py-2"></td>
-                </tr>
-                <tr>
-                  <td className="bg-[#025291] text-white font-semibold px-4 py-2">
-                    Due Date
-                  </td>
-                  <td className="bg-[#C3E4FF] px-4 py-2"></td>
-                </tr>
-                <tr>
-                  <td className="bg-[#025291] text-white font-semibold px-4 py-2">
-                    PO No
-                  </td>
-                  <td className="bg-[#C3E4FF] px-4 py-2"></td>
-                </tr>
+                {["Date", "Invoice No", "Due Date", "PO No"].map((item, i) => (
+                  <tr key={i}>
+                    <td className="bg-[#025291] text-white font-semibold px-4 py-2 w-1/4">
+                      {item}
+                    </td>
+                    <td className="bg-[#C3E4FF] px-4 py-2"></td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
 
           {/* Shipping Section */}
           <div className="relative grid grid-cols-2 gap-4 px-6 py-6">
-            <div>
-              <h3 className="font-bold text-[#025291] mb-1">SHIP TO :</h3>
-              <p>Ceylon Agro Industries,</p>
-              <p>346, Negombo Road,</p>
-              <p>Seeduwa.</p>
-            </div>
-            <div>
-              <h3 className="font-bold text-[#025291] mb-1">TO :</h3>
-              <p>Ceylon Agro Industries,</p>
-              <p>346, Negombo Road,</p>
-              <p>Seeduwa.</p>
-            </div>
+            {["SHIP TO :", "TO :"].map((title, i) => (
+              <div key={i}>
+                <h3 className="font-bold text-[#025291] mb-1">{title}</h3>
+                <p>Ceylon Agro Industries,</p>
+                <p>346, Negombo Road,</p>
+                <p>Seeduwa.</p>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -140,18 +120,19 @@ export default function Invoice() {
         {/* Totals */}
         <div className="flex justify-end p-6">
           <div className="w-72 text-sm">
-            <div className="flex justify-between border-b py-2">
-              <span>Sub Total :</span>
-              <span className="font-bold">360,000LKR</span>
-            </div>
-            <div className="flex justify-between border-b py-2">
-              <span>Taxes :</span>
-              <span>0LKR</span>
-            </div>
-            <div className="flex justify-between border-b py-2">
-              <span>Discount :</span>
-              <span>0LKR</span>
-            </div>
+            {[
+              ["Sub Total :", "360,000LKR"],
+              ["Taxes :", "0LKR"],
+              ["Discount :", "0LKR"],
+            ].map(([label, value], i) => (
+              <div
+                key={i}
+                className={`flex justify-between py-2 ${i < 2 ? "border-b" : ""}`}
+              >
+                <span>{label}</span>
+                <span className={i === 2 ? "font-bold" : ""}>{value}</span>
+              </div>
+            ))}
             <div className="flex justify-between font-bold py-2">
               <span>Total Amount :</span>
               <span>360,000LKR</span>
