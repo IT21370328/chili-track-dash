@@ -113,7 +113,7 @@ export default function Invoice(): JSX.Element {
           <div className="relative flex-1 flex flex-col px-6 py-10 space-y-6" style={{ lineHeight: 1 }}>
             {/* Invoice Title */}
             <div className="text-center py-4 border-b" style={{ lineHeight: 1 }}>
-              <h2 className="text-2xl font-bold text-[#025291] m-0 p-0">INVOICE</h2>
+              <h2 className="text-3xl font-bold text-[#025291] m-0 p-0">INVOICE</h2>
               <p className="text-[#025291]/50 text-sm m-0 p-0">Ma’s De cozta (PVT)LTD</p>
             </div>
 
@@ -235,12 +235,12 @@ export default function Invoice(): JSX.Element {
         {/* Footer (sticks to bottom) */}
         <div>
           <div className="text-center py-4 bg-[#F5F9FD]" style={{ lineHeight: 1 }}>
-            <p className="text-base font-bold text-[#025291] m-0 p-0">
+            <p className="text-2xl font-bold text-[#025291] m-0 p-0">
               Thank you for Business with us!
             </p>
             <p className="text-[#2B64A0] text-xs m-0 p-0">Ma’s De cozta (PVT)LTD</p>
           </div>
-          <div className="bg-[#025291]">
+          <div className="bg-[#025291] pb-4">
             <div className="text-center py-2 text-xs text-white" style={{ lineHeight: 1 }}>PV 00259719</div>
           </div>
         </div>
