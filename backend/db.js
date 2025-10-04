@@ -88,6 +88,7 @@ export async function initializeTables() {
         poNumber TEXT,
         dateOfExpiration TEXT,
         productCode TEXT,
+        invoiceNo TEXT,
         batchCode TEXT,
         numberOfBoxes INTEGER, -- Changed to INTEGER assuming it's a count
         truckNo TEXT,
