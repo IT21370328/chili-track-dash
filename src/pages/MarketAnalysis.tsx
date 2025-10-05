@@ -249,6 +249,8 @@ export default function CertificateOfAnalysis(): JSX.Element {
   <div className="w-1/4 border-t border-gray-300 pt-2 m-0 p-0">Production Manager</div>
   <div className="w-1/4 border-t border-gray-300 pt-2 m-0 p-0">Date</div>
 </div>
+</div>
+</div>
 
         {/* Footer */}
         <div>
