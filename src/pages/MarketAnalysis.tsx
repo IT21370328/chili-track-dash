@@ -275,6 +275,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
             </div>
 
             {/* Additional Remarks */}
+            <div className="-mt-6">
             <div className="text-xs mt-2" style={{ lineHeight: 1 }}>
               <h3 className="font-bold text-[#025291] mb-2 m-0 p-0">Additional Remarks :</h3>
               <p className="m-0 p-0">
@@ -283,7 +284,8 @@ export default function CertificateOfAnalysis(): JSX.Element {
                 produced in accordance with GMP principles
               </p>
             </div>
-            
+            </div>
+
             {/* Signatures */}
             <div className="mt-auto pt-4 flex justify-between text-center text-xs" style={{ lineHeight: 1 }}>
               <div className="w-1/4 border-t border-gray-300 pt-2 m-0 p-0">Quality Assurance Manager</div>
