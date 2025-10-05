@@ -22,7 +22,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
     poNumber: "PO-2025-123",
     productName: "Scotch Bonnet Powder",
     productCode: "MASI00003",
-    amount: 30,
+    kilosDelivered: 30,
     truckNo: "",
     date: "2025-10-04",
     dateOfExpiration: "2026-10-04",
@@ -175,7 +175,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
             </div>
 
             {/* Analysis Table */}
-            <div className="flex flex-col flex-1 -mb-2" style={{ lineHeight: 1 }}>
+            <div className="flex flex-col -mb-2" style={{ lineHeight: 1 }}>
               <h3 className="text-lg font-bold text-[#025291] mb-2 m-0 p-0">Analysis</h3>
               <div className="overflow-hidden">
                 <table className="w-full border-collapse text-xs bg-transparent border border-gray-300" style={{ lineHeight: 1 }}>
@@ -275,7 +275,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
             </div>
 
             {/* Additional Remarks */}
-            <div className="text-xs -mt-4" style={{ lineHeight: 1 }}>
+            <div className="text-xs mt-2" style={{ lineHeight: 1 }}>
               <h3 className="font-bold text-[#025291] mb-2 m-0 p-0">Additional Remarks :</h3>
               <p className="m-0 p-0">
                 We hereby certify that the aforementioned product meets the most
@@ -285,7 +285,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
             </div>
             
             {/* Signatures */}
-            <div className="pt-4 flex justify-between text-center text-xs" style={{ lineHeight: 1 }}>
+            <div className="mt-6 pt-4 flex justify-between text-center text-xs" style={{ lineHeight: 1 }}>
               <div className="w-1/4 border-t border-gray-300 pt-2 m-0 p-0">Quality Assurance Manager</div>
               <div className="w-1/4 border-t border-gray-300 pt-2 m-0 p-0">Production Manager</div>
               <div className="w-1/4 border-t border-gray-300 pt-2 m-0 p-0">Date</div>
