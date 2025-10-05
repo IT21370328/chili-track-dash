@@ -285,7 +285,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
             </div>
             
             {/* Signatures */}
-            <div className="mt-6 pt-4 flex justify-between text-center text-xs" style={{ lineHeight: 1 }}>
+            <div className="mt-12 pt-4 flex justify-between text-center text-xs" style={{ lineHeight: 1 }}>
               <div className="w-1/4 border-t border-gray-300 pt-2 m-0 p-0">Quality Assurance Manager</div>
               <div className="w-1/4 border-t border-gray-300 pt-2 m-0 p-0">Production Manager</div>
               <div className="w-1/4 border-t border-gray-300 pt-2 m-0 p-0">Date</div>
