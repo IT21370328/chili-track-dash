@@ -228,13 +228,50 @@ export default function CertificateOfAnalysis(): JSX.Element {
           <td className="p-2 border border-gray-300 m-0 p-0">Free</td>
           <td className="p-2 border border-gray-300 m-0 p-0">Visually</td>
         </tr>
-      </tbody>
-    </table>
+
+        {/* Chemical Section */}
+                    <tr>
+                      <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3 pb-4 border border-gray-300 m-0 p-0">
+                        Chemical
+                      </td>
+                    </tr>
+                    <tr style={{ lineHeight: 1 }}>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Moisture Content</td>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">3</td>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">6.0%</td>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">8% Max.</td>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Electronic Moisture Analyzer</td>
+                    </tr>
+
+                    {/* Microbiological Section */}
+                    <tr>
+                      <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3 pb-4 border border-gray-300 m-0 p-0">
+                        Microbiological
+                      </td>
+                    </tr>
+                    <tr style={{ lineHeight: 1 }}>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Coliform</td>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">1</td>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">&lt;10</td>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">&lt;10 cfu/g</td>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">ISO 4831:2006</td>
+                    </tr>
+                    <tr style={{ lineHeight: 1 }}>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Foreign Matters</td>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">3</td>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Negative</td>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Negative</td>
+                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">ISO 6579-1:2017</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
   </div>
 </div>
 
 {/* Additional Remarks */}
-<div className="text-xs -mt-1" style={{ lineHeight: 1 }}>
+<div className="text-xs -mt-2" style={{ lineHeight: 1 }}>
   <h3 className="font-bold text-[#025291] mb-1 m-0 p-0">Additional Remarks :</h3>
   <p className="m-0 p-0">
     We hereby certify that the aforementioned product meets the most
@@ -248,8 +285,6 @@ export default function CertificateOfAnalysis(): JSX.Element {
   <div className="w-1/4 border-t border-gray-300 pt-2 m-0 p-0">Quality Assurance Manager</div>
   <div className="w-1/4 border-t border-gray-300 pt-2 m-0 p-0">Production Manager</div>
   <div className="w-1/4 border-t border-gray-300 pt-2 m-0 p-0">Date</div>
-</div>
-</div>
 </div>
 
         {/* Footer */}
