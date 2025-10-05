@@ -271,7 +271,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
 </div>
 
 {/* Additional Remarks */}
-<div className="text-xs -mt-1" style={{ lineHeight: 1 }}>
+<div className="text-xs -mt-2" style={{ lineHeight: 1 }}>
   <h3 className="font-bold text-[#025291] mb-1 m-0 p-0">Additional Remarks :</h3>
   <p className="m-0 p-0">
     We hereby certify that the aforementioned product meets the most
