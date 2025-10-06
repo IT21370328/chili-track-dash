@@ -119,7 +119,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
           {/* Main Content */}
           <div className="relative flex-1 flex flex-col px-6 py-4 space-y-3" style={{ lineHeight: 1 }}>
             {/* Title */}
-            <div className="text-center py-2 border-b border-[#025291]" style={{ lineHeight: 1 }}>
+            <div className="text-center py-2" style={{ lineHeight: 1 }}>
               <h2 className="text-xl font-bold text-[#025291] -mt-2 p-0">CERTIFICATE OF ANALYSIS</h2>
             </div>
 
