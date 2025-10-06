@@ -126,22 +126,22 @@ export default function CertificateOfAnalysis(): JSX.Element {
             {/* Certificate Info */}
             <div className="grid grid-cols-2 gap-4 text-xs" style={{ lineHeight: 1 }}>
               <div className="space-y-2" style={{ lineHeight: 1 }}>
-                <p className="m-0 p-0">
+                <p className="m-0 p-1">
                   <strong>Customer Name :</strong> Ceylon Agro Industries
                 </p>
-                <p className="m-0 p-0">
+                <p className="m-0 p-1">
                   <strong>PO No :</strong> {transaction.poNumber}
                 </p>
-                <p className="m-0 p-0">
+                <p className="m-0 p-1">
                   <strong>Product Name :</strong> Scotch Bonnet Powder
                 </p>
-                <p className="m-0 p-0">
+                <p className="m-0 p-1">
                   <strong>Product Code :</strong> {transaction.productCode}
                 </p>
-                <p className="m-0 p-0">
+                <p className="m-0 p-1">
                   <strong>Quantity :</strong> {transaction.kilosDelivered} kg
                 </p>
-                <p className="m-0 p-0">
+                <p className="m-0 p-1">
                   <strong>Container / Truck Number :</strong> {transaction.truckNo}
                 </p>
               </div>
@@ -232,7 +232,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
                       <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
                       <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Free</td>
                       <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Free</td>
-                      <td className="p-3 pb-4 m-0 p-0bg-[#E9F5FF]">Visually</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Visually</td>
                     </tr>
 
                     {/* Chemical Section */}
