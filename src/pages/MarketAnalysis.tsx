@@ -120,7 +120,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
           <div className="relative flex-1 flex flex-col px-6 py-4 space-y-3" style={{ lineHeight: 1 }}>
             {/* Title */}
             <div className="text-center py-2" style={{ lineHeight: 1 }}>
-              <h2 className="text-xl font-bold text-[#025291] -mt-2 p-0">CERTIFICATE OF ANALYSIS</h2>
+              <h2 className="text-2xl font-bold text-[#025291] -mt-2 p-0">CERTIFICATE OF ANALYSIS</h2>
             </div>
 
             {/* Certificate Info */}
@@ -147,7 +147,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
               </div>
 
               <div style={{ lineHeight: 1 }}>
-                <table className="w-full border-collapse text-xs table-fixed border border-gray-300" style={{ lineHeight: 1 }}>
+                <table className="w-full border-collapse text-xs table-fixed border border-gray-300 pb-3" style={{ lineHeight: 1 }}>
                   <thead>
                     <tr className="bg-[#025291] text-white text-center" style={{ lineHeight: 1 }}>
                       <th className="p-3 pb-4 border border-gray-300 m-0 p-0">Doc No.</th>
@@ -176,7 +176,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
 
             {/* Analysis Table */}
             <div className="flex flex-col -mb-2" style={{ lineHeight: 1 }}>
-              <h3 className="text-lg font-bold text-[#025291] mb-2 m-0 p-0">Analysis</h3>
+              <h3 className="font-bold text-[#025291] mb-2 m-0 p-0">Analysis</h3>
               <div className="overflow-hidden">
                 <table className="w-full border-collapse text-xs bg-transparent" style={{ lineHeight: 1 }}>
                   <thead>
@@ -191,83 +191,83 @@ export default function CertificateOfAnalysis(): JSX.Element {
                   <tbody>
                     {/* Physical Section */}
                     <tr>
-                      <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3 pb-4 m-0 p-0">
+                      <td colSpan={5} className="bg-[#C3E4FF] text-[#025291] font-bold p-3 pb-4 m-0 p-0">
                         Physical
                       </td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Appearance</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Match with the specifications</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Light brownish-green color powder</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Visually</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Appearance</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">3</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Match with the specifications</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Light brownish-green color powder</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Visually</td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Flavour</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Match with the specifications</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Flavour</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">3</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Match with the specifications</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">
                         The characteristic extra pungent flavor
                       </td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Sensory</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Sensory</td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Aroma</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Match with the specifications</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Aroma</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">3</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Match with the specifications</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">
                         Characteristic, mixed chili and fruity odor of scotch bonnets
                       </td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Sensory</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Sensory</td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Particle Size</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">100%, &lt; 50 mesh</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">100% through 50 mesh</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Vibratory Sifter</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Particle Size</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">3</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">100%, &lt; 50 mesh</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">100% through 50 mesh</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Vibratory Sifter</td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Foreign Matters</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Free</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Free</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Visually</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Foreign Matters</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">3</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Free</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Free</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Visually</td>
                     </tr>
 
                     {/* Chemical Section */}
                     <tr>
-                      <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3 pb-4 m-0 p-0">
+                      <td colSpan={5} className="bg-[#C3E4FF] text-[#025291] font-bold p-3 pb-4 m-0 p-0">
                         Chemical
                       </td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Moisture Content</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">6.0%</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">8% Max.</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Electronic Moisture Analyzer</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Moisture Content</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">3</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">6.0%</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">8% Max.</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Electronic Moisture Analyzer</td>
                     </tr>
 
                     {/* Microbiological Section */}
                     <tr>
-                      <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3 pb-4 m-0 p-0">
+                      <td colSpan={5} className="bg-[#C3E4FF] text-[#025291] font-bold p-3 pb-4 m-0 p-0">
                         Microbiological
                       </td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Coliform</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">1</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">&lt;10</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">&lt;10 cfu/g</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">ISO 4831:2006</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Coliform</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">1</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">&lt;10</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">&lt;10 cfu/g</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">ISO 4831:2006</td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Foreign Matters</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Negative</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Negative</td>
-                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">ISO 6579-1:2017</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Foreign Matters</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">3</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Negative</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">Negative</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF] text-[#025291]">ISO 6579-1:2017</td>
                     </tr>
                   </tbody>
                 </table>
