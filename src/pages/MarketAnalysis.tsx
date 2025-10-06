@@ -178,96 +178,96 @@ export default function CertificateOfAnalysis(): JSX.Element {
             <div className="flex flex-col -mb-2" style={{ lineHeight: 1 }}>
               <h3 className="text-lg font-bold text-[#025291] mb-2 m-0 p-0">Analysis</h3>
               <div className="overflow-hidden">
-                <table className="w-full border-collapse text-xs bg-transparent border border-gray-300" style={{ lineHeight: 1 }}>
+                <table className="w-full border-collapse text-xs bg-transparent" style={{ lineHeight: 1 }}>
                   <thead>
                     <tr className="bg-[#025291] text-white text-left" style={{ lineHeight: 1 }}>
-                      <th className="p-3 pb-4 border border-gray-300 m-0 p-0">Parameters</th>
-                      <th className="p-3 pb-4 border border-gray-300 m-0 p-0">No of Samples</th>
-                      <th className="p-3 pb-4 border border-gray-300 m-0 p-0">Average Test Result</th>
-                      <th className="p-3 pb-4 border border-gray-300 m-0 p-0">Specifications</th>
-                      <th className="p-3 pb-4 border border-gray-300 m-0 p-0">Test Method</th>
+                      <th className="p-3 pb-4 m-0 p-0">Parameters</th>
+                      <th className="p-3 pb-4 m-0 p-0">No of Samples</th>
+                      <th className="p-3 pb-4 m-0 p-0">Average Test Result</th>
+                      <th className="p-3 pb-4 m-0 p-0">Specifications</th>
+                      <th className="p-3 pb-4 m-0 p-0">Test Method</th>
                     </tr>
                   </thead>
                   <tbody>
                     {/* Physical Section */}
                     <tr>
-                      <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3 pb-4 border border-gray-300 m-0 p-0">
+                      <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3 pb-4 m-0 p-0">
                         Physical
                       </td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Appearance</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">3</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Match with the specifications</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Light brownish-green color powder</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Visually</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Appearance</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Match with the specifications</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Light brownish-green color powder</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Visually</td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Flavour</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">3</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Match with the specifications</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Flavour</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Match with the specifications</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">
                         The characteristic extra pungent flavor
                       </td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Sensory</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Sensory</td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Aroma</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">3</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Match with the specifications</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Aroma</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Match with the specifications</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">
                         Characteristic, mixed chili and fruity odor of scotch bonnets
                       </td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Sensory</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Sensory</td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Particle Size</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">3</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">100%, &lt; 50 mesh</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">100% through 50 mesh</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Vibratory Sifter</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Particle Size</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">100%, &lt; 50 mesh</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">100% through 50 mesh</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Vibratory Sifter</td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Foreign Matters</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">3</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Free</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Free</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Visually</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Foreign Matters</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Free</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Free</td>
+                      <td className="p-3 pb-4 m-0 p-0bg-[#E9F5FF]">Visually</td>
                     </tr>
 
                     {/* Chemical Section */}
                     <tr>
-                      <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3 pb-4 border border-gray-300 m-0 p-0">
+                      <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3 pb-4 m-0 p-0">
                         Chemical
                       </td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Moisture Content</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">3</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">6.0%</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">8% Max.</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Electronic Moisture Analyzer</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Moisture Content</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">6.0%</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">8% Max.</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Electronic Moisture Analyzer</td>
                     </tr>
 
                     {/* Microbiological Section */}
                     <tr>
-                      <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3 pb-4 border border-gray-300 m-0 p-0">
+                      <td colSpan={5} className="bg-[#C3E4FF] font-bold p-3 pb-4 m-0 p-0">
                         Microbiological
                       </td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Coliform</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">1</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">&lt;10</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">&lt;10 cfu/g</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">ISO 4831:2006</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Coliform</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">1</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">&lt;10</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">&lt;10 cfu/g</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">ISO 4831:2006</td>
                     </tr>
                     <tr style={{ lineHeight: 1 }}>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Foreign Matters</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">3</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Negative</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">Negative</td>
-                      <td className="p-3 pb-4 border border-gray-300 m-0 p-0">ISO 6579-1:2017</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Foreign Matters</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">3</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Negative</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">Negative</td>
+                      <td className="p-3 pb-4 m-0 p-0 bg-[#E9F5FF]">ISO 6579-1:2017</td>
                     </tr>
                   </tbody>
                 </table>
