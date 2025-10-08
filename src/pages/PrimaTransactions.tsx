@@ -412,7 +412,7 @@ const PrimaPage = () => {
   const calculateExpirationDate = (date: string) => {
     if (!date) return "";
     const expDate = new Date(date);
-    expDate.setFullYear(expDate.getFullYear() + 1);
+    expDate.setFullYear(expDate.getFullYear() + 2);
     return expDate.toISOString().split("T")[0];
   };
 
