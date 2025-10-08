@@ -32,12 +32,14 @@ export default function Invoice(): JSX.Element {
   const invoiceRef = useRef<HTMLDivElement>(null);
 
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "2-digit",
-    });
-  };
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 
   const unitPrice = transaction.kilosDelivered > 0 ? Math.round(transaction.amount / transaction.kilosDelivered) : 0;
 
