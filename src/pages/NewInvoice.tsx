@@ -187,7 +187,7 @@ export default function Invoice(): JSX.Element {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-b bg-white/80" style={{ lineHeight: 1 }}>
+                  <tr className="border-b bg-[#E9F5FF]" style={{ lineHeight: 1 }}>
                     <td className="p-1" style={{ lineHeight: 1 }}>01</td>
                     <td className="p-1 font-semibold text-left" style={{ lineHeight: 1 }}>
                       Scotch Bonnet (Nai Miris) Powder
