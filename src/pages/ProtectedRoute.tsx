@@ -1,3 +1,4 @@
+// src/pages/ProtectedRoute.tsx  ✅ (or move to src/components/auth/)
 import { Navigate } from "react-router-dom";
 
 interface ProtectedRouteProps {
@@ -7,8 +8,8 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const isLoggedIn = localStorage.getItem("isLoggedIn");
 
-  if (!isLoggedIn) {
-    // Redirect to login page if not logged in
+  // Add strict check to avoid accidental truthy strings like "false"
+  if (isLoggedIn !== "true") {
     return <Navigate to="/" replace />;
   }
 
