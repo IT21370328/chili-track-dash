@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ProtectedRoute } from "./pages/ProtectedRoute";
 
 // Pages
 import Dashboard from "./pages/Dashboard";
@@ -17,8 +18,7 @@ import Logs from "./pages/AuditLogTracker";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Invoice from "./pages/NewInvoice";
-import MarketAnalysis from "./pages/MarketAnalysis"
-
+import MarketAnalysis from "./pages/MarketAnalysis";
 
 // React Query client
 const queryClient = new QueryClient();
@@ -30,11 +30,17 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Login page (no MainLayout wrapper) */}
+          {/* Public route */}
           <Route path="/" element={<Login />} />
 
-          {/* Protected pages (with MainLayout wrapper) */}
-          <Route element={<MainLayout />}>
+          {/* Protected routes */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <MainLayout />
+              </ProtectedRoute>
+            }
+          >
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/purchasing" element={<Purchasing />} />
             <Route path="/petty-cash" element={<PettyCash />} />
