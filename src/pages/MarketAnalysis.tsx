@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef , useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import Logo from "../../src/assets/logo.jpg";
 import AnalysisBg from "../../src/assets/invoicebg.jpg";
@@ -32,6 +32,19 @@ export default function CertificateOfAnalysis(): JSX.Element {
 
   const certRef = useRef<HTMLDivElement>(null);
 
+   // ✅ Load Montserrat font from Google Fonts
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.href =
+      "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap";
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, []);
+
+
   const formatDate = (dateString: string): string => {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -45,6 +58,15 @@ export default function CertificateOfAnalysis(): JSX.Element {
   const handleDownload = (): void => {
     const element = certRef.current;
     if (!element) return;
+
+    // ✅ Inline Montserrat font import inside the element for html2canvas
+    const style = document.createElement("style");
+    style.innerHTML = `
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+      * { font-family: 'Montserrat', sans-serif !important; }
+    `;
+    element.prepend(style);
+    
     const opt = {
       margin: 0,
       filename: `${transaction.poNumber || "certificate-of-analysis"}.pdf`,
