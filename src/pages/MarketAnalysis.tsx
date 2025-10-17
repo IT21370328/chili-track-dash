@@ -116,7 +116,7 @@ export default function CertificateOfAnalysis(): JSX.Element {
           <div className="text-left text-xs max-w-[3.5in]" style={{ lineHeight: 1 }}>
             <p className="m-0 p-0 flex items-center gap-2">
               <span>📍</span>
-              <span>39/3/5 A, Pannala Watta, Pannala</span>
+              <span>39/3/3 A, Pannala Watta, Pannala</span>
             </p>
             <p className="m-0 p-0 flex items-center gap-2 mt-1">
               <span>📞</span>
