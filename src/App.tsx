@@ -17,8 +17,7 @@ import Salaries from "./pages/Salaries";
 import Logs from "./pages/AuditLogTracker";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import Invoice from "./pages/NewInvoice";
-import MarketAnalysis from "./pages/MarketAnalysis";
+
 
 // React Query client
 const queryClient = new QueryClient();
@@ -48,10 +47,9 @@ const App = () => (
             <Route path="/production" element={<Production />} />
             <Route path="/prima" element={<PrimaTransactions />} />
             <Route path="/salaries" element={<Salaries />} />
-            <Route path="/invoice" element={<Invoice />} />
-            <Route path="/analysis" element={<MarketAnalysis />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="*" element={<NotFound />} />
+
           </Route>
         </Routes>
       </BrowserRouter>
