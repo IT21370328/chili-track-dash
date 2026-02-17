@@ -4,8 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { ProtectedRoute } from "./pages/ProtectedRoute"; // ✅ correct path
-
+import { ProtectedRoute } from "./pages/ProtectedRoute"; 
 // Pages
 import Dashboard from "./pages/Dashboard";
 import Purchasing from "./pages/Purchasing";
@@ -17,7 +16,6 @@ import Salaries from "./pages/Salaries";
 import Logs from "./pages/AuditLogTracker";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import Labels from "./pages/ProductLabels"
 
 
 // React Query client
@@ -48,7 +46,6 @@ const App = () => (
             <Route path="/production" element={<Production />} />
             <Route path="/prima" element={<PrimaTransactions />} />
             <Route path="/salaries" element={<Salaries />} />
-            <Route path="/labels" element={<Labels />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="*" element={<NotFound />} />
 
