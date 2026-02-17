@@ -17,6 +17,7 @@ import Salaries from "./pages/Salaries";
 import Logs from "./pages/AuditLogTracker";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import Labels from "./pages/ProductLabels"
 
 
 // React Query client
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/production" element={<Production />} />
             <Route path="/prima" element={<PrimaTransactions />} />
             <Route path="/salaries" element={<Salaries />} />
+            <Route path="/labels" element={<Labels />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="*" element={<NotFound />} />
 
