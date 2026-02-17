@@ -13,7 +13,8 @@ import PrimaTransactions from "./pages/PrimaTransactions";
 import Salaries from "./pages/Salaries";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
-import Logs from "./pages/AuditLogTracker"
+import Logs from "./pages/AuditLogTracker";
+import Labels from "./pages/ProductLabels"
 
 const queryClient = new QueryClient();
 
@@ -35,8 +36,10 @@ const App = () => (
             <Route path="/production" element={<Production />} />
             <Route path="/prima" element={<PrimaTransactions />} />
             <Route path="/salaries" element={<Salaries />} />
+            <Route path="/labels" element={<Labels />} />
             <Route path="/logs" element={<Logs />} />
             <Route path="*" element={<NotFound />} />
+
           </Route>
         </Routes>
       </BrowserRouter>
