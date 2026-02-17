@@ -54,7 +54,7 @@ function App() {
       logging: false,
     });
 
-    const imgData = canvas.toDataURL('image/png');
+    const imgData = canvas.toDataURL('./assets/ProductLabel.png');
     const imgWidthPx = canvas.width;
     const imgHeightPx = canvas.height;
 
