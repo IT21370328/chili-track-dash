@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Download, Plus, Upload } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -10,10 +10,11 @@ export default function LabelGenerator() {
     mfg: "",
     exp: "",
     batch: "",
+    weight: "1KG",
   });
 
   const [labels, setLabels] = useState<
-    { id: number; mfg: string; exp: string; batch: string }[]
+    { id: number; mfg: string; exp: string; batch: string; weight: string }[]
   >([]);
 
   /* ================= UPLOAD DESIGN ================= */
@@ -42,7 +43,12 @@ export default function LabelGenerator() {
       { id: Date.now(), ...labelForm },
     ]);
 
-    setLabelForm({ mfg: "", exp: "", batch: "" });
+    setLabelForm({
+      mfg: "",
+      exp: "",
+      batch: "",
+      weight: "1KG",
+    });
   };
 
   /* ================= DOWNLOAD PDF ================= */
@@ -79,16 +85,16 @@ export default function LabelGenerator() {
   return (
     <div className="min-h-screen bg-gray-100 p-8 space-y-10">
 
-      <h1 className="text-3xl font-bold">Label Generator (Temporary Mode)</h1>
+      <h1 className="text-3xl font-bold">Label Generator (Preview Mode)</h1>
 
       {/* Upload Design */}
       <div className="bg-white p-6 rounded-xl shadow space-y-4">
         <h2 className="font-semibold text-lg">1️⃣ Upload Your Label Design</h2>
-
         <input type="file" accept="image/*" onChange={handleUpload} />
-
         {designImage && (
-          <p className="text-green-600 text-sm">Design uploaded successfully</p>
+          <p className="text-green-600 text-sm">
+            Design uploaded successfully
+          </p>
         )}
       </div>
 
@@ -96,7 +102,7 @@ export default function LabelGenerator() {
       <div className="bg-white p-6 rounded-xl shadow space-y-4">
         <h2 className="font-semibold text-lg">2️⃣ Enter Label Details</h2>
 
-        <div className="grid md:grid-cols-4 gap-4">
+        <div className="grid md:grid-cols-5 gap-4">
           <input
             type="date"
             value={labelForm.mfg}
@@ -105,6 +111,7 @@ export default function LabelGenerator() {
             }
             className="border p-2 rounded"
           />
+
           <input
             type="date"
             value={labelForm.exp}
@@ -113,6 +120,7 @@ export default function LabelGenerator() {
             }
             className="border p-2 rounded"
           />
+
           <input
             placeholder="Batch Code"
             value={labelForm.batch}
@@ -121,11 +129,21 @@ export default function LabelGenerator() {
             }
             className="border p-2 rounded"
           />
+
+          <input
+            placeholder="Net Weight"
+            value={labelForm.weight}
+            onChange={(e) =>
+              setLabelForm({ ...labelForm, weight: e.target.value })
+            }
+            className="border p-2 rounded"
+          />
+
           <button
             onClick={handleAddLabel}
             className="bg-blue-600 text-white rounded px-4 py-2 flex items-center justify-center gap-2"
           >
-            <Plus size={16} /> Add Label
+            <Plus size={16} /> Add
           </button>
         </div>
       </div>
@@ -137,7 +155,7 @@ export default function LabelGenerator() {
 
             <div
               id={`print-${label.id}`}
-              className="relative w-full aspect-[2/1] border rounded-xl overflow-hidden"
+              className="relative w-full aspect-[16/9] border rounded-xl overflow-hidden"
             >
               {designImage && (
                 <img
@@ -147,16 +165,24 @@ export default function LabelGenerator() {
                 />
               )}
 
-              {/* Adjust these positions if needed */}
-              <div className="absolute bottom-16 left-10 text-white font-semibold text-sm">
-                Mfg.Date : {label.mfg}
+              {/* ================= ALIGNED TO RIGHT GREEN PANEL ================= */}
+
+              <div className="absolute right-[8%] top-[52%] text-white font-semibold text-sm">
+                {label.mfg}
               </div>
-              <div className="absolute bottom-10 left-10 text-white font-semibold text-sm">
-                Exp.Date : {label.exp}
+
+              <div className="absolute right-[8%] top-[59%] text-white font-semibold text-sm">
+                {label.exp}
               </div>
-              <div className="absolute bottom-4 left-10 text-white font-semibold text-sm">
-                Batch Code : {label.batch}
+
+              <div className="absolute right-[8%] top-[66%] text-white font-semibold text-sm">
+                {label.batch}
               </div>
+
+              <div className="absolute right-[30%] bottom-[10%] text-green-600 font-bold text-2xl">
+                {label.weight}
+              </div>
+
             </div>
 
             <button
