@@ -1,528 +1,368 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, DollarSign, Clock, Check, Plus, Pencil, Trash2, X, Save, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Plus,
+  DollarSign,
+  Download,
+  TrendingUp,
+  Calendar,
+  Pencil,
+  Trash2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 import { logAction } from "@/pages/logHelper";
 
 interface Employee {
   id: number;
   name: string;
   salary: number;
-  status: "paid" | "unpaid";
-  startDate?: string;
-  endDate?: string;
-  lastPaid?: string;
-}
-
-interface FormData {
-  name: string;
-  salary: string;
   startDate: string;
   endDate: string;
-}
-
-interface SummaryCardData {
-  label: string;
-  value: number; // Explicitly type as number
-  icon: React.ComponentType<{ className?: string }>;
-  description: string;
+  status: "paid" | "unpaid";
+  lastPaid?: string;
 }
 
 const API_URL = "https://chili-track-dash.onrender.com";
 
 const Salaries = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    salary: "",
+    startDate: "",
+    endDate: "",
+  });
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [formData, setFormData] = useState<FormData>({ name: "", salary: "", startDate: "", endDate: "" });
-  const [editModal, setEditModal] = useState<Employee | null>(null);
-  const [editData, setEditData] = useState<FormData>({ name: "", salary: "", startDate: "", endDate: "" });
-  const [deleteConfirm, setDeleteConfirm] = useState<Employee | null>(null);
-  const [filterRange, setFilterRange] = useState({ start: "", end: "" });
+  const [editingId, setEditingId] = useState<number | null>(null);
   const { toast } = useToast();
   const currentUser = localStorage.getItem("username") || "Unknown";
-  const today = new Date().toISOString().split("T")[0];
 
-  // Fetch employees
-  const fetchEmployees = async () => {
+  const fetchData = async () => {
     try {
       const res = await fetch(`${API_URL}/employees`);
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to fetch employees: ${res.statusText}`);
-      }
       const data = await res.json();
       setEmployees(data);
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to fetch employees.", variant: "destructive" });
+      console.error(err);
     }
   };
 
   useEffect(() => {
-    fetchEmployees();
+    fetchData();
   }, []);
 
-  // Add employee
-  const handleAdd = async () => {
-    if (!formData.name || !formData.salary || !formData.startDate || !formData.endDate) {
-      toast({ title: "Error", description: "Please fill all fields.", variant: "destructive" });
-      return;
-    }
-    if (formData.startDate > formData.endDate) {
-      toast({ title: "Error", description: "End date cannot be before start date.", variant: "destructive" });
-      return;
-    }
-    const salaryNum = Number(formData.salary);
-    if (isNaN(salaryNum) || salaryNum <= 0) {
-      toast({ title: "Error", description: "Salary must be a positive number.", variant: "destructive" });
-      return;
-    }
-    try {
-      const employeeData = {
-        name: formData.name,
-        salary: salaryNum,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-      };
-      const res = await fetch(`${API_URL}/employees`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(employeeData),
-      });
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to add employee: ${res.statusText}`);
-      }
-      await fetchEmployees();
-      try {
-        await logAction(
-          currentUser,
-          "Add Employee",
-          `Added employee ${formData.name} with salary Rs${salaryNum}`
-        );
-      } catch (error) {
-        console.error("Failed to log add employee action:", error);
-      }
-      toast({ title: "Added", description: `Employee ${formData.name} added.` });
-      setFormData({ name: "", salary: "", startDate: "", endDate: "" });
-    } catch (error: any) {
-      toast({ title: "Error", description: `Failed to add employee: ${error.message}`, variant: "destructive" });
-    }
-  };
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
-  // Export employees as CSV
-  const exportEmployees = async () => {
+  const filteredEmployees = useMemo(() => {
+    return employees.filter((emp) => {
+      const empDate = new Date(emp.startDate);
+      const fromMatch = !dateFrom || empDate >= new Date(dateFrom + "T00:00:00");
+      const toMatch = !dateTo || empDate <= new Date(dateTo + "T23:59:59");
+      return fromMatch && toMatch;
+    });
+  }, [employees, dateFrom, dateTo]);
+
+  const exportToCSV = async () => {
     if (filteredEmployees.length === 0) {
-      toast({ title: "No data", description: "No employees to export.", variant: "destructive" });
+      toast({ title: "No Data", description: "No employees to export.", variant: "destructive" });
       return;
     }
 
-    const csvContent = [
-      ["ID", "Name", "Salary", "Start Date", "End Date", "Status", "Last Paid"],
-      ...filteredEmployees.map(e => [
-        e.id,
-        e.name,
-        e.salary,
-        e.startDate || "-",
-        e.endDate || "-",
-        e.status,
-        e.lastPaid || "-",
-      ]),
-    ]
-      .map(row => row.join(","))
-      .join("\n");
+    const headers = ["Name", "Salary", "Start Date", "End Date", "Status", "Last Paid"];
+    const rows = filteredEmployees.map((e) => [
+      e.name,
+      e.salary.toFixed(2),
+      e.startDate,
+      e.endDate,
+      e.status,
+      e.lastPaid || "-",
+    ]);
 
+    const csvContent = [headers, ...rows].map((e) => e.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `employees_${new Date().toISOString().split("T")[0]}.csv`;
+    link.setAttribute("download", `employees_${new Date().toISOString().split("T")[0]}.csv`);
     link.click();
+    URL.revokeObjectURL(link.href);
 
     try {
-      await logAction(
-        currentUser,
-        "Export Employees",
-        `Exported ${filteredEmployees.length} employee records`
-      );
-      toast({ title: "Success", description: "Employees exported successfully." });
+      await logAction(currentUser, "Export Employees", `Exported ${filteredEmployees.length} employee records`);
+      toast({ title: "✅ Exported", description: "Employees exported successfully." });
     } catch (error) {
-      console.error("Failed to log export employees action:", error);
-      toast({
-        title: "Warning",
-        description: "Employees exported, but failed to log action.",
-        variant: "default",
-      });
+      console.error("Failed to log export action:", error);
     }
   };
 
-  // Open edit modal
-  const openEditModal = (emp: Employee) => {
-    setEditModal(emp);
-    setEditData({
-      name: emp.name,
-      salary: emp.salary.toString(),
-      startDate: emp.startDate || "",
-      endDate: emp.endDate || "",
+  const summary = useMemo(() => {
+    let paid = 0,
+      unpaid = 0;
+    filteredEmployees.forEach((e) => {
+      if (e.status === "paid") paid += e.salary;
+      else unpaid += e.salary;
+    });
+    return { paid, unpaid, total: paid + unpaid, totalRecords: filteredEmployees.length };
+  }, [filteredEmployees]);
+
+  const resetDateFilter = () => {
+    setDateFrom("");
+    setDateTo("");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { name, salary, startDate, endDate } = formData;
+
+    if (!name || !salary) {
+      toast({ title: "Error", description: "Name and salary are required.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      let savedEmployee: Employee;
+      if (editingId) {
+        const res = await fetch(`${API_URL}/employees/${editingId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            salary: parseFloat(salary),
+            startDate,
+            endDate,
+          }),
+        });
+        if (!res.ok) throw new Error("Failed to update");
+        savedEmployee = await res.json();
+        setEmployees((prev) => prev.map((e) => (e.id === editingId ? savedEmployee : e)));
+        await logAction(currentUser, "Update Employee", `Updated employee ${name} with ID: ${editingId}`);
+        toast({ title: "✅ Employee Updated", description: `Updated ${name}` });
+        setEditingId(null);
+      } else {
+        const res = await fetch(`${API_URL}/employees`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            salary: parseFloat(salary),
+            startDate,
+            endDate,
+          }),
+        });
+        if (!res.ok) throw new Error("Failed to save");
+        savedEmployee = await res.json();
+        if (!savedEmployee.id) savedEmployee.id = Date.now();
+        setEmployees((prev) => [savedEmployee, ...prev]);
+        await logAction(currentUser, "Add Employee", `Added employee ${name}`);
+        toast({ title: "✅ Employee Added", description: `Added ${name}` });
+      }
+
+      setFormData({ name: "", salary: "", startDate: "", endDate: "" });
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to save employee.", variant: "destructive" });
+      console.error(err);
+    }
+  };
+
+  const handleEdit = (employee: Employee) => {
+    setEditingId(employee.id);
+    setFormData({
+      name: employee.name,
+      salary: employee.salary.toString(),
+      startDate: employee.startDate,
+      endDate: employee.endDate,
     });
   };
 
-  // Save edit from modal
-  const saveEditModal = async () => {
-    if (!editData.name || !editData.salary || !editData.startDate || !editData.endDate) {
-      toast({ title: "Error", description: "Please fill all fields.", variant: "destructive" });
-      return;
-    }
-    if (editData.startDate > editData.endDate) {
-      toast({ title: "Error", description: "End date cannot be before start date.", variant: "destructive" });
-      return;
-    }
-    const salaryNum = Number(editData.salary);
-    if (isNaN(salaryNum) || salaryNum <= 0) {
-      toast({ title: "Error", description: "Salary must be a positive number.", variant: "destructive" });
-      return;
-    }
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this employee?")) return;
     try {
-      const employeeData = {
-        name: editData.name,
-        salary: salaryNum,
-        startDate: editData.startDate,
-        endDate: editData.endDate,
-      };
-      const res = await fetch(`${API_URL}/employees/${editModal?.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(employeeData),
-      });
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to update employee: ${res.statusText}`);
-      }
-      await fetchEmployees();
-      try {
-        await logAction(
-          currentUser,
-          "Update Employee",
-          `Updated employee ${editData.name} (ID: ${editModal?.id}, Salary: Rs${salaryNum})`
-        );
-      } catch (error) {
-        console.error("Failed to log update employee action:", error);
-      }
-      toast({ title: "Updated", description: "Employee updated successfully." });
-      setEditModal(null);
-    } catch (error: any) {
-      toast({ title: "Error", description: `Failed to update employee: ${error.message}`, variant: "destructive" });
+      const res = await fetch(`${API_URL}/employees/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete");
+      setEmployees((prev) => prev.filter((e) => e.id !== id));
+      await logAction(currentUser, "Delete Employee", `Deleted employee ID: ${id}`);
+      toast({ title: "✅ Employee Deleted" });
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to delete employee.", variant: "destructive" });
+      console.error(err);
     }
   };
 
-  // Cancel edit modal
-  const cancelEditModal = () => setEditModal(null);
-
-  // Delete employee
-  const deleteEmployee = async (emp: Employee) => {
+  const handleMarkAsPaid = async (id: number) => {
     try {
-      const res = await fetch(`${API_URL}/employees/${emp.id}`, { method: "DELETE" });
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to delete employee: ${res.statusText}`);
-      }
-      await fetchEmployees();
-      try {
-        await logAction(
-          currentUser,
-          "Delete Employee",
-          `Deleted employee ${emp.name} (ID: ${emp.id})`
-        );
-      } catch (error) {
-        console.error("Failed to log delete employee action:", error);
-      }
-      toast({ title: "Deleted", description: `Employee ${emp.name} deleted.` });
-      setDeleteConfirm(null);
-    } catch (error: any) {
-      toast({ title: "Error", description: `Failed to delete employee: ${error.message}`, variant: "destructive" });
+      const res = await fetch(`${API_URL}/employees/${id}/pay`, { method: "PUT" });
+      if (!res.ok) throw new Error("Failed to update payment");
+      const updatedEmployee = await res.json();
+      setEmployees((prev) => prev.map((e) => (e.id === id ? updatedEmployee : e)));
+      await logAction(currentUser, "Mark Salary Paid", `Marked salary paid for employee ID: ${id}`);
+      toast({ title: "✅ Salary Paid", description: "Marked as paid." });
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to mark as paid.", variant: "destructive" });
+      console.error(err);
     }
   };
 
-  // Mark paid
-  const markPaid = async (emp: Employee) => {
-    try {
-      const res = await fetch(`${API_URL}/employees/${emp.id}/pay`, { method: "PUT" });
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to mark as paid: ${res.statusText}`);
-      }
-      await fetchEmployees();
-      try {
-        await logAction(
-          currentUser,
-          "Mark Employee Paid",
-          `Marked employee ${emp.name} (ID: ${emp.id}) as paid`
-        );
-      } catch (error) {
-        console.error("Failed to log mark paid action:", error);
-      }
-      toast({ title: "Paid", description: `${emp.name} marked as paid.` });
-    } catch (error: any) {
-      toast({ title: "Error", description: `Failed to mark as paid: ${error.message}`, variant: "destructive" });
-    }
-  };
-
-  // Calculations
-  const totalSalary = employees.reduce((sum, e) => sum + e.salary, 0);
-  const paidSalary = employees.filter(e => e.status === "paid").reduce((sum, e) => sum + e.salary, 0);
-  const unpaidSalary = totalSalary - paidSalary;
-
-  // Filtered employees
-  const filteredEmployees = useMemo(() => {
-    return employees.filter(emp => {
-      if (!filterRange.start && !filterRange.end) return true;
-      if (filterRange.start && emp.startDate && emp.startDate < filterRange.start) return false;
-      if (filterRange.end && emp.endDate && emp.endDate > filterRange.end) return false;
-      return true;
-    });
-  }, [employees, filterRange]);
+  const today = new Date().toISOString().split("T")[0];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-slate-100 p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="bg-white/80 rounded-2xl p-4 sm:p-6 shadow-lg flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-            <Users className="w-5 h-5 text-white" />
-          </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Employee Salary</h1>
-          <Button
-            variant="outline"
-            size="sm"
-            className="ml-auto mt-2 sm:mt-0 gap-2 border border-black/10 text-black"
-            onClick={exportEmployees}
-          >
-            <Download className="w-4 h-4" /> Export
-          </Button>
+    <div className="p-6 max-w-7xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="bg-white/80 rounded-2xl p-6 shadow-lg flex items-center gap-3">
+        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
+          <DollarSign className="w-5 h-5 text-white" />
         </div>
+        <h1 className="text-2xl font-bold text-slate-800">Salaries Dashboard</h1>
+        <Button variant="outline" size="sm" className="ml-auto gap-2" onClick={exportToCSV}>
+          <Download className="w-4 h-4" /> Export
+        </Button>
+      </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-          {([
-            { label: "Total Salary", value: totalSalary, icon: DollarSign, description: "Total salary obligation" },
-            { label: "Paid Salary", value: paidSalary, icon: Check, description: "Total amount paid" },
-            { label: "Unpaid Salary", value: unpaidSalary, icon: Clock, description: "Pending salary payments" },
-          ] as SummaryCardData[]).map((card, i) => (
-            <Card
-              key={i}
-              className="p-6 bg-white/90 backdrop-blur-sm border border-slate-200/50 shadow-lg flex items-center gap-4 min-w-[220px]"
-            >
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center">
-                <card.icon className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">{card.label}</p>
-                <p className="text-2xl font-bold text-slate-900">{`Rs.${card.value.toLocaleString()}`}</p>
-                <p className="text-xs text-slate-500 mt-1">{card.description}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {/* Add Employee Form */}
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-200/50 shadow-lg">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Add New Employee</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <div>
-              <Label>Name</Label>
-              <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-            </div>
-            <div>
-              <Label>Salary</Label>
-              <Input
-                type="number"
-                value={formData.salary}
-                onChange={e => setFormData({ ...formData, salary: e.target.value })}
-                min={0}
-                step="0.01"
-              />
-            </div>
-            <div>
-              <Label>Start Date</Label>
-              <Input
-                type="date"
-                value={formData.startDate}
-                onChange={e => setFormData({ ...formData, startDate: e.target.value })}
-                max={today}
-              />
-            </div>
-            <div>
-              <Label>End Date</Label>
-              <Input
-                type="date"
-                value={formData.endDate}
-                onChange={e => setFormData({ ...formData, endDate: e.target.value })}
-                max={today}
-              />
-            </div>
-          </div>
-          <Button
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white h-11 font-medium flex items-center justify-center gap-2"
-            onClick={handleAdd}
-          >
-            <Plus className="w-4 h-4" /> Add Employee
-          </Button>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <Card className="bg-white/90 shadow-lg rounded-2xl">
+          <CardContent className="p-4">
+            <h3 className="text-sm font-medium text-slate-600">Paid Salaries</h3>
+            <p className="text-xl font-bold text-blue-600">Rs.{summary.paid.toLocaleString()}</p>
+          </CardContent>
         </Card>
 
-        {/* Filter */}
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-slate-200/50 shadow-lg flex flex-col sm:flex-row gap-4 items-end">
-          <div>
-            <Label>Filter Start Date</Label>
-            <Input
-              type="date"
-              value={filterRange.start}
-              onChange={e => setFilterRange({ ...filterRange, start: e.target.value })}
-              max={today}
-            />
-          </div>
-          <div>
-            <Label>Filter End Date</Label>
-            <Input
-              type="date"
-              value={filterRange.end}
-              onChange={e => setFilterRange({ ...filterRange, end: e.target.value })}
-              max={today}
-            />
-          </div>
-          <Button variant="outline" onClick={() => setFilterRange({ start: "", end: "" })} className="mt-2 sm:mt-0">
-            Clear Filter
-          </Button>
+        <Card className="bg-white/90 shadow-lg rounded-2xl">
+          <CardContent className="p-4">
+            <h3 className="text-sm font-medium text-slate-600">Unpaid Salaries</h3>
+            <p className="text-xl font-bold text-red-600">Rs.{summary.unpaid.toLocaleString()}</p>
+          </CardContent>
         </Card>
 
-        {/* Employee Table */}
-        <Card className="bg-white/90 backdrop-blur-sm rounded-2xl overflow-x-auto border border-slate-200/50 shadow-lg">
-          <Table className="min-w-full">
+        <Card className="bg-white/90 shadow-lg rounded-2xl">
+          <CardContent className="p-4">
+            <h3 className="text-sm font-medium text-slate-600">Total Employees</h3>
+            <p className="text-xl font-bold text-slate-900">{summary.totalRecords}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Add Employee Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{editingId ? "Edit Employee" : "Add Employee"}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="font-bold">Name
+            <Input
+              type="text"
+              placeholder="Name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+            />
+            </div>
+            <div className="font-bold">Salary
+            <Input
+              type="number"
+              placeholder="Salary"
+              value={formData.salary}
+              onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+              required
+              min="0"
+            />
+            </div>
+            <div className="font-bold">Start Date
+            <Input
+              type="date"
+              placeholder="Start Date"
+              value={formData.startDate}
+              onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+              max={today}
+            />
+            </div>
+            <div className="font-bold">End Date
+            <Input
+              type="date"
+              placeholder="End Date"
+              value={formData.endDate}
+              onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+            />
+            </div>
+            <Button type="submit" className="col-span-full bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center gap-2">
+              <Plus className="w-4 h-4" /> {editingId ? "Update Employee" : "Add Employee"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Table & Filters */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 w-full">
+            <CardTitle>Employees</CardTitle>
+            <div className="flex items-center gap-3">
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="w-40"
+              />
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="w-40"
+              />
+              {(dateFrom || dateTo) && (
+                <Button variant="outline" size="sm" onClick={resetDateFilter}>
+                  Reset
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Salary</TableHead>
-                <TableHead>Duration</TableHead>
+                <TableHead>Start Date</TableHead>
+                <TableHead>End Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Last Paid</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredEmployees.map(emp => (
+              {filteredEmployees.map((emp) => (
                 <TableRow key={emp.id}>
                   <TableCell>{emp.name}</TableCell>
-                  <TableCell>Rs.{emp.salary.toLocaleString()}</TableCell>
-                  <TableCell>{emp.startDate && emp.endDate ? `${emp.startDate} to ${emp.endDate}` : "-"}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        emp.status === "paid" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {emp.status.toUpperCase()}
-                    </span>
-                  </TableCell>
+                  <TableCell>Rs.{emp.salary.toFixed(2)}</TableCell>
+                  <TableCell>{emp.startDate}</TableCell>
+                  <TableCell>{emp.endDate || "-"}</TableCell>
+                  <TableCell className="capitalize">{emp.status}</TableCell>
                   <TableCell>{emp.lastPaid || "-"}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-2">
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(emp)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => handleDelete(emp.id)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                       {emp.status === "unpaid" && (
-                        <Button size="sm" onClick={() => markPaid(emp)}>
-                          Mark Paid
+                        <Button variant="secondary" size="sm" onClick={() => handleMarkAsPaid(emp.id)}>
+                          Mark as Paid
                         </Button>
                       )}
-                      <Button size="sm" variant="outline" onClick={() => openEditModal(emp)}>
-                        <Pencil className="w-3 h-3" />
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => setDeleteConfirm(emp)}>
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </Card>
-
-        {/* Edit Modal */}
-        {editModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <Card className="p-6 rounded-2xl max-w-md w-full">
-              <h3 className="text-lg font-semibold mb-4">Edit Employee</h3>
-              <div className="grid grid-cols-1 gap-4 mb-4">
-                <div>
-                  <Label>Name</Label>
-                  <Input value={editData.name} onChange={e => setEditData({ ...editData, name: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Salary</Label>
-                  <Input
-                    type="number"
-                    value={editData.salary}
-                    onChange={e => setEditData({ ...editData, salary: e.target.value })}
-                    min={0}
-                    step="0.01"
-                  />
-                </div>
-                <div>
-                  <Label>Start Date</Label>
-                  <Input
-                    type="date"
-                    value={editData.startDate}
-                    onChange={e => setEditData({ ...editData, startDate: e.target.value })}
-                    max={today}
-                  />
-                </div>
-                <div>
-                  <Label>End Date</Label>
-                  <Input
-                    type="date"
-                    value={editData.endDate}
-                    onChange={e => setEditData({ ...editData, endDate: e.target.value })}
-                    max={today}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row justify-end gap-3">
-                <Button variant="outline" onClick={cancelEditModal}>
-                  Cancel
-                </Button>
-                <Button onClick={saveEditModal}>
-                  Save
-                </Button>
-              </div>
-            </Card>
-          </div>
-        )}
-
-        {/* Delete Modal */}
-        {deleteConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <Card className="p-6 rounded-2xl max-w-sm w-full">
-              <h3 className="text-lg font-semibold mb-2">Delete Employee</h3>
-              <p className="mb-4">
-                Are you sure you want to delete <strong>{deleteConfirm.name}</strong>?
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-end">
-                <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
-                  Cancel
-                </Button>
-                <Button variant="destructive" onClick={() => deleteEmployee(deleteConfirm)}>
-                  Delete
-                </Button>
-              </div>
-            </Card>
-          </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

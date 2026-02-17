@@ -54,6 +54,17 @@ const asyncHandler = fn => (req, res, next) => {
   });
 };
 
+// =================== Callback Handler Helper ===================
+const callbackHandler = (fn) => (req, res, next) => {
+  fn((err, result) => {
+    if (err) {
+      console.error(`Error in ${req.method} ${req.url}:`, err.message);
+      return next(err);
+    }
+    res.json(result);
+  });
+};
+
 // =================== Initialize Database ===================
 const startServer = async () => {
   try {
@@ -188,112 +199,84 @@ const startServer = async () => {
   }));
 
   // Prima Transaction Routes
-app.get("/primatransactions", async (req, res) => {
-  try {
+  app.get("/primatransactions", asyncHandler(async (req, res) => {
     const transactions = await getPrimaTransactions();
     res.json(transactions);
-  } catch (error) {
-    res.status(500).json({ error: error.message, path: req.path, method: req.method, timestamp: new Date().toISOString() });
-  }
-});
+  }));
 
-app.post("/primatransactions", async (req, res) => {
-  try {
+  app.post("/primatransactions", asyncHandler(async (req, res) => {
     const transaction = await addPrimaTransaction(req.body);
     res.status(201).json(transaction);
-  } catch (error) {
-    res.status(400).json({ error: error.message, path: req.path, method: req.method, timestamp: new Date().toISOString() });
-  }
-});
+  }));
 
-app.put("/primatransactions/:id", async (req, res) => {
-  try {
+  app.put("/primatransactions/:id", asyncHandler(async (req, res) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) throw new Error("Invalid transaction ID");
     const transaction = await updatePrimaTransaction(id, req.body);
     res.json(transaction);
-  } catch (error) {
-    res.status(400).json({ error: error.message, path: req.path, method: req.method, timestamp: new Date().toISOString() });
-  }
-});
+  }));
 
-app.put("/primatransactions/:id/status", async (req, res) => {
-  try {
+  app.put("/primatransactions/:id/status", asyncHandler(async (req, res) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) throw new Error("Invalid transaction ID");
     const { paymentStatus } = req.body;
     const transaction = await updatePrimaTransactionStatus(id, paymentStatus);
     res.json(transaction);
-  } catch (error) {
-    res.status(400).json({ error: error.message, path: req.path, method: req.method, timestamp: new Date().toISOString() });
-  }
-});
+  }));
 
-app.delete("/primatransactions/:id", async (req, res) => {
-  try {
+  app.delete("/primatransactions/:id", asyncHandler(async (req, res) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) throw new Error("Invalid transaction ID");
     const result = await deletePrimaTransaction(id);
     res.json(result);
-  } catch (error) {
-    res.status(400).json({ error: error.message, path: req.path, method: req.method, timestamp: new Date().toISOString() });
-  }
-});
+  }));
 
-// Add routes for getPrimaTransactionsSummary and getPrimaTransactionsByDateRange if needed
-app.get("/primatransactions/summary", async (req, res) => {
-  try {
+  // Add routes for getPrimaTransactionsSummary and getPrimaTransactionsByDateRange if needed
+  app.get("/primatransactions/summary", asyncHandler(async (req, res) => {
     const summary = await getPrimaTransactionsSummary();
     res.json(summary);
-  } catch (error) {
-    res.status(500).json({ error: error.message, path: req.path, method: req.method, timestamp: new Date().toISOString() });
-  }
-});
+  }));
 
-app.get("/primatransactions/range", async (req, res) => {
-  try {
+  app.get("/primatransactions/range", asyncHandler(async (req, res) => {
     const { startDate, endDate } = req.query;
     if (!startDate || !endDate) {
       throw new Error("startDate and endDate are required");
     }
     const transactions = await getPrimaTransactionsByDateRange(startDate, endDate);
     res.json(transactions);
-  } catch (error) {
-    res.status(400).json({ error: error.message, path: req.path, method: req.method, timestamp: new Date().toISOString() });
-  }
-});
-
+  }));
 
   // =================== Employees Routes ===================
-  app.get("/employees", asyncHandler(async (req, res) => {
-    const rows = await getEmployees();
-    res.json(rows);
-  }));
+app.get("/employees", asyncHandler(async (req, res) => {
+  const rows = await getEmployees();
+  res.json(rows);
+}));
 
-  app.post("/employees", asyncHandler(async (req, res) => {
-    const result = await addEmployee(req.body);
-    res.status(201).json(result);
-  }));
+app.post("/employees", asyncHandler(async (req, res) => {
+  const result = await addEmployee(req.body);
+  res.status(201).json(result);
+}));
 
-  app.put("/employees/:id", asyncHandler(async (req, res) => {
-    const result = await updateEmployee(req.params.id, req.body);
-    res.json(result);
-  }));
+app.put("/employees/:id", asyncHandler(async (req, res) => {
+  const result = await updateEmployee(req.params.id, req.body);
+  res.json(result);
+}));
 
-  app.put("/employees/:id/pay", asyncHandler(async (req, res) => {
-    const result = await markSalaryPaid(req.params.id);
-    res.json(result);
-  }));
+app.put("/employees/:id/pay", asyncHandler(async (req, res) => {
+  const result = await markSalaryPaid(req.params.id);
+  res.json(result);
+}));
 
-  app.put("/employees/:id/reset", asyncHandler(async (req, res) => {
-    const result = await resetSalaryStatus(req.params.id);
-    res.json(result);
-  }));
+app.put("/employees/:id/reset", asyncHandler(async (req, res) => {
+  const result = await resetSalaryStatus(req.params.id);
+  res.json(result);
+}));
 
-  app.delete("/employees/:id", asyncHandler(async (req, res) => {
-    const result = await deleteEmployee(req.params.id);
-    res.json(result);
-  }));
+app.delete("/employees/:id", asyncHandler(async (req, res) => {
+  const result = await deleteEmployee(req.params.id);
+  res.json(result);
+}));
+
 
   // =================== Stock Routes ===================
   app.get("/stock", asyncHandler(async (req, res) => {
